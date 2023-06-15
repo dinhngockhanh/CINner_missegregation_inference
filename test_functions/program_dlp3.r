@@ -1,13 +1,13 @@
 # ======================================================GINSBURG - ZIJIN
-# .libPaths("/burg/iicd/users/zx2406/rpackages")
-# .libPaths()
-# # tmp <- getwd()
-# # print(tmp)
-# setwd("/burg/iicd/users/zx2406/R/")
-# files_sources <- list.files(pattern = "*.r$")
-# sapply(files_sources, source)
-# setwd("/burg/iicd/users/zx2406/dlp_with_distance")
-# print(getwd())
+.libPaths("/burg/iicd/users/zx2406/rpackages")
+.libPaths()
+# tmp <- getwd()
+# print(tmp)
+setwd("/burg/iicd/users/zx2406/R/")
+files_sources <- list.files(pattern = "*.r$")
+sapply(files_sources, source)
+setwd("/burg/iicd/users/zx2406/dlp_with_distance")
+print(getwd())
 library(readxl)
 library(CancerSimulator)
 library(parallel)
@@ -117,7 +117,7 @@ CN_matrix <- BUILD_cn_normal_XX(model_variables$cn_info)
 drivers <- list()
 model_variables <- BUILD_initial_population(model_variables = model_variables, cell_count = cell_count, CN_matrix = CN_matrix, drivers = drivers)
 
-model_name <- "Simpler_DLP_1p&1q&2p&2q"
+model_name <- "Simpler_DLP_5chr"
 model_variables <- CHECK_model_variables(model_variables)
 SAVE_model_variables(model_name = model_name, model_variables = model_variables)
 # =======================================================MAKE "DLP" DATA
@@ -140,8 +140,8 @@ tmp <- simulator_full_program(
         "sample_genotype_unique",
         "sample_genotype_unique_profile"
     ),
-    R_libPaths = "/burg/iicd/users/knd2127/rpackages"
-    # R_libPaths = "/burg/iicd/users/zx2406/rpackages"
+    # R_libPaths = "/burg/iicd/users/knd2127/rpackages"
+    R_libPaths = "/burg/iicd/users/zx2406/rpackages"
 )
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
@@ -149,7 +149,7 @@ colnames(list_parameters) <- c("Variable", "Type", "Lower_bound", "Upper_bound")
 list_parameters[nrow(list_parameters) + 1, ] <- c("prob_CN_missegregation", "CNA_probability", 1e-4, 5e-4)
 list_parameters[nrow(list_parameters) + 1, ] <- c("prob_CN_chrom_arm_missegregation", "CNA_probability", 1e-4, 5e-4)
 for (i in 1:nrow(model_variables$chromosome_arm_library)) {
-    if (model_variables$chromosome_arm_library$Chromosome %in% selected_chromosomes) {
+    if (model_variables$chromosome_arm_library$Chromosome[i] %in% selected_chromosomes) {
         list_parameters[nrow(list_parameters) + 1, ] <- c(
             model_variables$chromosome_arm_library$Arm_ID[i],
             "Arm_selection_rate",
@@ -157,6 +157,7 @@ for (i in 1:nrow(model_variables$chromosome_arm_library)) {
         )
     }
 }
+
 # =====================================PRINT OUT GROUND TRUTH PARAMETERS
 list_parameters_ground_truth <- list_parameters
 list_parameters_ground_truth$Value <- 0
@@ -168,6 +169,7 @@ for (row in 1:nrow(list_parameters)) {
         list_parameters_ground_truth$Value[row] <- model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)]
     }
 }
+
 write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 # ==========================================INPUT "DLP" DATA FOR FITTING
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
