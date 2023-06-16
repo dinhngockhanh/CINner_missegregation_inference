@@ -225,7 +225,6 @@ library_sc_CN <- function(model_name,
     library(gridExtra)
     library(ggplot2)
     library(signals)
-
     if (is.null(n_cores)) {
         n_cores <- max(detectCores() - 1, 1)
     }
@@ -245,7 +244,18 @@ library_sc_CN <- function(model_name,
     func_ABC <- function(parameters, parameter_IDs, model_variables, list_targets, cn_data = NULL) {
         #   Assign parameters in model variables
         model_variables <- assign_paras(model_variables, parameter_IDs, parameters)
-        #   Make simulation
+        #   Find CN information
+        cn_table <- model_variables$cn_info
+        cn_bin_length <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == "size_CN_block_DNA")])
+
+        cn_table$Length <- cn_table$Bin_count * cn_bin_length
+        cn_table$Centromere <- cn_table$Centromere_location * cn_bin_length
+
+        print(cn_table)
+        print(cn_bin_length)
+
+
+        #   Make simulations
         SIMS_chromosome <- simulator_full_program(
             model = model_variables, model_prefix = "", n_simulations = n_simulations, stage_final = 2,
             save_simulation = FALSE, report_progress = TRUE,
@@ -258,9 +268,13 @@ library_sc_CN <- function(model_name,
                 "sample_genotype_unique_profile"
             )
         )
-        #   Statistics = from single cells in the sample
-        stat <- get_statistics(SIMS_chromosome, list_targets, cn_data = cn_data)
-        print(stat)
+        #   Get statistics from simulations
+        stat <- get_statistics(
+            SIMS_chromosome,
+            list_targets,
+            cn_data = cn_data
+        )
+        return(stat)
     }
     #---------------------------------List of parameter IDs to be fitted
     parameter_IDs <- list_parameters$Variable
@@ -268,8 +282,23 @@ library_sc_CN <- function(model_name,
     #---------------------------------------Simulate table of parameters
     sim_param <- matrix(0, nrow = ABC_simcount, ncol = nrow(list_parameters))
     for (col in 1:ncol(sim_param)) {
-        sim_param[, col] <- runif(ABC_simcount, min = as.numeric(list_parameters$Lower_bound[col]), max = as.numeric(list_parameters$Upper_bound[col]))
+        sim_param[, col] <- runif(
+            ABC_simcount,
+            min = as.numeric(list_parameters$Lower_bound[col]),
+            max = as.numeric(list_parameters$Upper_bound[col])
+        )
     }
+
+
+
+    parameters <- sim_param[1, ]
+    stat <- func_ABC(parameters, parameter_IDs, model_variables, list_targets, cn_data = cn_data)
+    print("here")
+    print(stat)
+    return()
+
+
+
     #-----------------------------------------------Make reference table
     start_time <- Sys.time()
     #   Configure parallel pool
