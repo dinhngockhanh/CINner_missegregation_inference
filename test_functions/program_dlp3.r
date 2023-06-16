@@ -1,15 +1,15 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-R_workplace <- getwd()
-R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-R_libPaths_extra <- "/burg/iicd/users/zx2406/R/"
+# R_workplace <- getwd()
+# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+# R_libPaths_extra <- "/burg/iicd/users/zx2406/R/"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
-R_workplace <- getwd()
-R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
-R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
+# R_workplace <- getwd()
+# R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
+# R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
 R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
 R_libPaths <- ""
@@ -68,16 +68,26 @@ model_variables <- BUILD_general_variables(
     table_population_dynamics = table_population_dynamics,
 )
 #---Set up (randomized) chromosome arm selection rates
-arm_id <- c(paste(model_variables$cn_info$Chromosome, "p", sep = ""), paste(model_variables$cn_info$Chromosome, "q", sep = ""))
+arm_id <- c(
+    paste(model_variables$cn_info$Chromosome, "p", sep = ""),
+    paste(model_variables$cn_info$Chromosome, "q", sep = "")
+)
 arm_chromosome <- rep(model_variables$cn_info$Chromosome, 2)
-arm_start <- c(rep(1, length(model_variables$cn_info$Chromosome)), model_variables$cn_info$Centromere_location + 1)
-arm_end <- c(model_variables$cn_info$Centromere_location, model_variables$cn_info$Bin_count)
+arm_start <- c(
+    rep(1, length(model_variables$cn_info$Chromosome)),
+    model_variables$cn_info$Centromere_location + 1
+)
+arm_end <- c(
+    model_variables$cn_info$Centromere_location,
+    model_variables$cn_info$Bin_count
+)
 arm_s <- rep(1, length(arm_id))
 
 
 
 selected_chromosomes <- c("1", "2", "3", "4", "5")
-arm_s[which(arm_chromosome %in% selected_chromosomes)] <- runif(length(which(arm_chromosome %in% selected_chromosomes)), 1 / 1.2, 1.2)
+arm_s[which(arm_chromosome %in% selected_chromosomes)] <-
+    runif(length(which(arm_chromosome %in% selected_chromosomes)), 1 / 1.2, 1.2)
 
 
 
@@ -91,20 +101,38 @@ table_arm_selection_rates <- data.frame(
 model_variables <- BUILD_driver_library(
     model_variables = model_variables,
     table_arm_selection_rates = table_arm_selection_rates,
-    # table_gene_selection_rates = table_gene_selection_rates
 )
 #---Set up initial cell population
 cell_count <- 20
 CN_matrix <- BUILD_cn_normal_XX(model_variables$cn_info)
 drivers <- list()
-model_variables <- BUILD_initial_population(model_variables = model_variables, cell_count = cell_count, CN_matrix = CN_matrix, drivers = drivers)
+model_variables <- BUILD_initial_population(
+    model_variables = model_variables,
+    cell_count = cell_count,
+    CN_matrix = CN_matrix,
+    drivers = drivers
+)
 #---Save model variables
 model_name <- "Simpler_DLP_5chr"
 model_variables <- CHECK_model_variables(model_variables)
-SAVE_model_variables(model_name = model_name, model_variables = model_variables)
+SAVE_model_variables(
+    model_name = model_name,
+    model_variables = model_variables
+)
 # =======================================================MAKE "DLP" DATA
-N_data <- 10
-cat(paste0("\n\n\nMaking ", N_data, " simulations\n"))
+####
+####
+####
+####
+####
+N_data <- 8
+# N_data <- 10
+####
+####
+####
+####
+####
+cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
 tmp <- simulator_full_program(
     model = model_name,
     n_simulations = N_data,
@@ -122,8 +150,16 @@ tmp <- simulator_full_program(
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
 colnames(list_parameters) <- c("Variable", "Type", "Lower_bound", "Upper_bound")
-list_parameters[nrow(list_parameters) + 1, ] <- c("prob_CN_missegregation", "CNA_probability", 1e-4, 5e-4)
-list_parameters[nrow(list_parameters) + 1, ] <- c("prob_CN_chrom_arm_missegregation", "CNA_probability", 1e-4, 5e-4)
+list_parameters[nrow(list_parameters) + 1, ] <- c(
+    "prob_CN_missegregation",
+    "CNA_probability",
+    1e-4, 5e-4
+)
+list_parameters[nrow(list_parameters) + 1, ] <- c(
+    "prob_CN_chrom_arm_missegregation",
+    "CNA_probability",
+    1e-4, 5e-4
+)
 for (i in 1:nrow(model_variables$chromosome_arm_library)) {
     if (model_variables$chromosome_arm_library$Chromosome[i] %in% selected_chromosomes) {
         list_parameters[nrow(list_parameters) + 1, ] <- c(
@@ -157,12 +193,13 @@ list_targets <- c(
     "statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
     "statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
     "statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
+    "statistic=dist;variable=clonal_CN;metric=euclidean"
 )
 # ===================================INPUT GROUND TRUTH DATA FOR FITTING
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 
-cat(paste0("\n\n\nLoading ", N_data, " data sets...\n"))
+cat(paste0("Loading ", N_data, " data sets...\n"))
 n_cores <- max(detectCores() - 1, 1)
 cl <- makePSOCKcluster(n_cores)
 model_name <<- model_name
@@ -183,7 +220,18 @@ library_sc_CN(
     model_variables = model_variables,
     list_parameters = list_parameters,
     list_targets = list_targets,
-    ABC_simcount = 1000,
+    ####
+    ####
+    ####
+    ####
+    ####
+    ABC_simcount = 8,
+    # ABC_simcount = 1000,
+    ####
+    ####
+    ####
+    ####
+    ####
     n_simulations = n_simulations,
     library_name = model_name,
     cn_data = data_clonal_CN_profiles
