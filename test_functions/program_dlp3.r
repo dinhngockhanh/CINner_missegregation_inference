@@ -133,20 +133,20 @@ N_data <- 8
 ####
 ####
 cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
-tmp <- simulator_full_program(
-    model = model_name,
-    n_simulations = N_data,
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile"
-    ),
-    R_libPaths = R_libPaths
-)
+# tmp <- simulator_full_program(
+#     model = model_name,
+#     n_simulations = N_data,
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile"
+#     ),
+#     R_libPaths = R_libPaths
+# )
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
 colnames(list_parameters) <- c("Variable", "Type", "Lower_bound", "Upper_bound")
@@ -181,7 +181,7 @@ for (row in 1:nrow(list_parameters)) {
     }
 }
 write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
-# ======================================DEFINE STATISTICS TARGETS TO FIT
+# =========================================DEFINE STATISTICS FOR FITTING
 list_targets <- c(
     "statistic=mean;variable=shannon",
     "statistic=var;variable=shannon",
@@ -238,17 +238,18 @@ library_sc_CN(
 )
 #   Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
-#   Fit parameters and compare with ground truth
+#   Get statistics from ground truth
 DLP_stats <- get_statistics(
     simulations = cn_ground_truth,
     list_targets = list_targets,
     cn_data = data_clonal_CN_profiles
 )
-fitting_sc_CN(
-    library_name = model_name,
-    model_name = model_name,
-    copynumber_DATA = DLP_stats,
-    parameters_truth = parameters_truth,
-    list_parameters = list_parameters,
-    list_targets = list_targets
-)
+#   Fit parameters and compare with ground truth
+# fitting_sc_CN(
+#     library_name = model_name,
+#     model_name = model_name,
+#     copynumber_DATA = DLP_stats,
+#     parameters_truth = parameters_truth,
+#     list_parameters = list_parameters,
+#     list_targets = list_targets
+# )
