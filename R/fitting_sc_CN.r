@@ -16,10 +16,16 @@ get_clonal_CN_profiles <- function(simulations) {
 }
 
 #' @export
-get_statistics <- function(simulations, list_targets, cn_data = NULL) {
+get_statistics <- function(simulations,
+                           list_targets,
+                           cn_data = NULL,
+                           arm_level = FALSE,
+                           cn_table = NULL) {
     library(vegan)
     library(matrixStats)
     library(transport)
+    print(arm_level)
+    print(cn_table)
     #---------Function to find shared ancestral clones between subclones
     find_clonal_ancestry <- function(list_subclonal_ancestry) {
         if (length(list_subclonal_ancestry) == 0) {
@@ -247,12 +253,9 @@ library_sc_CN <- function(model_name,
         #   Find CN information
         cn_table <- model_variables$cn_info
         cn_bin_length <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == "size_CN_block_DNA")])
-
         cn_table$Length <- cn_table$Bin_count * cn_bin_length
         cn_table$Centromere <- cn_table$Centromere_location * cn_bin_length
 
-        print(cn_table)
-        print(cn_bin_length)
 
 
         #   Make simulations
@@ -272,7 +275,9 @@ library_sc_CN <- function(model_name,
         stat <- get_statistics(
             SIMS_chromosome,
             list_targets,
-            cn_data = cn_data
+            cn_data = cn_data,
+            arm_level = TRUE,
+            cn_table = cn_table
         )
         return(stat)
     }
