@@ -132,22 +132,22 @@ N_data <- 3
 ####
 ####
 ####
-# cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
-# tmp <- simulator_full_program(
-#     model = model_name,
-#     n_simulations = N_data,
-#     stage_final = 3,
-#     compute_parallel = TRUE,
-#     output_variables = c(
-#         "evolution_origin",
-#         "evolution_genotype_changes",
-#         "sample_clone_ID",
-#         "sample_genotype_unique",
-#         "sample_genotype_unique_profile",
-#         "phylogeny_clustering_truth"
-#     ),
-#     R_libPaths = R_libPaths
-# )
+cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
+tmp <- simulator_full_program(
+    model = model_name,
+    n_simulations = N_data,
+    stage_final = 3,
+    compute_parallel = TRUE,
+    output_variables = c(
+        "evolution_origin",
+        "evolution_genotype_changes",
+        "sample_clone_ID",
+        "sample_genotype_unique",
+        "sample_genotype_unique_profile",
+        "phylogeny_clustering_truth"
+    ),
+    R_libPaths = R_libPaths
+)
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
 colnames(list_parameters) <- c("Variable", "Type", "Lower_bound", "Upper_bound")
@@ -194,20 +194,21 @@ list_targets <- c(
     "statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
     "statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
     "statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    "statistic=dist;variable=clonal_CN;metric=euclidean",
-    ####
-    ####
-    ####
     "statistic=mean;variable=cherries",
     "statistic=mean;variable=pitchforks",
     "statistic=mean;variable=colless",
     "statistic=mean;variable=sackin",
     "statistic=mean;variable=avg_ladder",
     "statistic=mean;variable=IL_number",
-    "statistic=mean;variable=node_depth"
-    ####
-    ####
-    ####
+    "statistic=mean;variable=node_depth",
+    "statistic=var;variable=cherries",
+    "statistic=var;variable=pitchforks",
+    "statistic=var;variable=colless",
+    "statistic=var;variable=sackin",
+    "statistic=var;variable=avg_ladder",
+    "statistic=var;variable=IL_number",
+    "statistic=var;variable=node_depth",
+    "statistic=dist;variable=clonal_CN;metric=euclidean"
 )
 # ===================================INPUT GROUND TRUTH DATA FOR FITTING
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
@@ -229,27 +230,27 @@ data_clonal_CN_profiles <- get_clonal_CN_profiles(cn_ground_truth)
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #   Produce library of simulations for fitting
 n_simulations <- N_data
-library_sc_CN(
-    model_name = model_name,
-    model_variables = model_variables,
-    list_parameters = list_parameters,
-    list_targets = list_targets,
-    ####
-    ####
-    ####
-    ####
-    ####
-    ABC_simcount = 8,
-    # ABC_simcount = 1000,
-    ####
-    ####
-    ####
-    ####
-    ####
-    n_simulations = n_simulations,
-    library_name = model_name,
-    cn_data = data_clonal_CN_profiles
-)
+# library_sc_CN(
+#     model_name = model_name,
+#     model_variables = model_variables,
+#     list_parameters = list_parameters,
+#     list_targets = list_targets,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     ABC_simcount = 8,
+#     # ABC_simcount = 1000,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     n_simulations = n_simulations,
+#     library_name = model_name,
+#     cn_data = data_clonal_CN_profiles
+# )
 #   Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #   Get statistics from ground truth
@@ -259,11 +260,11 @@ DLP_stats <- get_statistics(
     cn_data = data_clonal_CN_profiles
 )
 #   Fit parameters and compare with ground truth
-# fitting_sc_CN(
-#     library_name = model_name,
-#     model_name = model_name,
-#     copynumber_DATA = DLP_stats,
-#     parameters_truth = parameters_truth,
-#     list_parameters = list_parameters,
-#     list_targets = list_targets
-# )
+fitting_sc_CN(
+    library_name = model_name,
+    model_name = model_name,
+    copynumber_DATA = DLP_stats,
+    parameters_truth = parameters_truth,
+    list_parameters = list_parameters,
+    list_targets = list_targets
+)

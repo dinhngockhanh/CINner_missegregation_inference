@@ -343,9 +343,9 @@ library_sc_CN <- function(model_name,
 
 
 
-    parameters <- sim_param[1, ]
-    stat <- func_ABC(parameters, parameter_IDs, model_variables, list_targets, cn_data = cn_data)
-    return()
+    # parameters <- sim_param[1, ]
+    # stat <- func_ABC(parameters, parameter_IDs, model_variables, list_targets, cn_data = cn_data)
+    # return()
 
 
 
