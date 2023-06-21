@@ -20,12 +20,23 @@ dist.topo(ta, tb) # unlikely to be
 # * It returns vectors, but maybe we could get average of them *
 # node.depth: https://rdrr.io/cran/ape/man/node.depth.html
 # depth of a node
-node.depth(c, method = 1)
+node.depth(ta, method = 1)
 # depth of a node by branch lengths
-node.depth.edgelength(c)
-# heights of nodes and tips as plotted by a phylogram or a cladogram.
-node.height(c, clado.style = FALSE)
+node.depth.edgelength(ta)
+mean(node.depth.edgelength(ta))
+mean(node.depth.edgelength(tb))
+mean(node.depth.edgelength(rtree(30, rooted = FALSE)))
+mean(node.depth.edgelength(rtree(30, rooted = FALSE)))
+mean(node.depth.edgelength(rtree(33, rooted = FALSE)))
+mean(node.depth.edgelength(rtree(30, rooted = FALSE)))
+mean(node.depth.edgelength(rtree(30, rooted = FALSE)))
+mean(node.depth.edgelength(rtree(30, rooted = FALSE)))
 
+
+# heights of nodes and tips as plotted by a phylogram or a cladogram.
+node.height(ta, clado.style = FALSE)
+mean(node.height(ta, clado.style = FALSE))
+mean(node.height(tb, clado.style = FALSE))
 
 # =====================================================Package: phyloTop
 # ======================================================================

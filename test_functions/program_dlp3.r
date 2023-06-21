@@ -198,7 +198,13 @@ list_targets <- c(
     ####
     ####
     ####
-    "statistic=mean;variable=cherries"
+    "statistic=mean;variable=cherries",
+    "statistic=mean;variable=pitchforks",
+    "statistic=mean;variable=colless",
+    "statistic=mean;variable=sackin",
+    "statistic=mean;variable=avg_ladder",
+    "statistic=mean;variable=IL_number",
+    "statistic=mean;variable=node_depth"
     ####
     ####
     ####
