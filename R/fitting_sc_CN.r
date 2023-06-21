@@ -26,13 +26,14 @@ get_statistics <- function(simulations,
     library(transport)
 
 
-    
-    print("I am in get_statistics")
-    print(arm_level)
-    print(cn_table)
+
+    # print("I am in get_statistics")
+    # print(arm_level)
+    # print(cn_table)
+    # print(simulations[[1]]$sample_phylogeny$phylogeny_clustering_truth$tree)
 
 
-    
+
     #---------Function to find shared ancestral clones between subclones
     find_clonal_ancestry <- function(list_subclonal_ancestry) {
         if (length(list_subclonal_ancestry) == 0) {
@@ -183,6 +184,11 @@ get_statistics <- function(simulations,
                 } else {
                     stop(paste0("Error: Unknown clonal type: ", stat))
                 }
+            } else if (stat_variable == "cherries") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get number of cherries
+                list_statistics_simulations[[stat_ID]][i] <- i
             } else if (stat_variable == "clonal_CN") {
                 #   Get clonal CN profiles and their populations
                 list_statistics_simulations[["variable=clonal_CN_profiles"]][[i]] <- clonal_CN_profiles_all_simulations[["variable=clonal_CN_profiles"]][[i]]
@@ -267,7 +273,8 @@ library_sc_CN <- function(model_name,
 
         #   Make simulations
         SIMS_chromosome <- simulator_full_program(
-            model = model_variables, model_prefix = "", n_simulations = n_simulations, stage_final = 2,
+            model = model_variables, model_prefix = "", n_simulations = n_simulations,
+            stage_final = 3,
             save_simulation = FALSE, report_progress = TRUE,
             lite_memory = TRUE,
             output_variables = c(
@@ -275,7 +282,8 @@ library_sc_CN <- function(model_name,
                 "evolution_genotype_changes",
                 "sample_clone_ID",
                 "sample_genotype_unique",
-                "sample_genotype_unique_profile"
+                "sample_genotype_unique_profile",
+                "phylogeny_clustering_truth"
             )
         )
         #   Get statistics from simulations

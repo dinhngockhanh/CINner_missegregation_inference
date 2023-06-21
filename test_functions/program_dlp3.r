@@ -143,7 +143,8 @@ N_data <- 3
 #         "evolution_genotype_changes",
 #         "sample_clone_ID",
 #         "sample_genotype_unique",
-#         "sample_genotype_unique_profile"
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
 #     ),
 #     R_libPaths = R_libPaths
 # )
@@ -193,7 +194,14 @@ list_targets <- c(
     "statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
     "statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
     "statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    "statistic=dist;variable=clonal_CN;metric=euclidean"
+    "statistic=dist;variable=clonal_CN;metric=euclidean",
+    ####
+    ####
+    ####
+    "statistic=mean;variable=cherries"
+    ####
+    ####
+    ####
 )
 # ===================================INPUT GROUND TRUTH DATA FOR FITTING
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
