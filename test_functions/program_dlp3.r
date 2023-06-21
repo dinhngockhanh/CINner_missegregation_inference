@@ -125,7 +125,7 @@ SAVE_model_variables(
 ####
 ####
 ####
-N_data <- 8
+N_data <- 3
 # N_data <- 10
 ####
 ####

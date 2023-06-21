@@ -24,8 +24,15 @@ get_statistics <- function(simulations,
     library(vegan)
     library(matrixStats)
     library(transport)
+
+
+    
+    print("I am in get_statistics")
     print(arm_level)
     print(cn_table)
+
+
+    
     #---------Function to find shared ancestral clones between subclones
     find_clonal_ancestry <- function(list_subclonal_ancestry) {
         if (length(list_subclonal_ancestry) == 0) {
@@ -298,8 +305,6 @@ library_sc_CN <- function(model_name,
 
     parameters <- sim_param[1, ]
     stat <- func_ABC(parameters, parameter_IDs, model_variables, list_targets, cn_data = cn_data)
-    print("here")
-    print(stat)
     return()
 
 
