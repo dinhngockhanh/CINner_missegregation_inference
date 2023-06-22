@@ -426,13 +426,9 @@ fitting_sc_CN <- function(library_name,
     library(ggplot2)
     library(signals)
     library(data.table)
+    library(matrixStats)
     if (is.null(n_cores)) {
         n_cores <- max(detectCores() - 1, 1)
-    }
-    #---Function to choose one best parameter from a posterior
-    get_best_para <- function(data_rf, model_rf, obs_rf, post_rf) {
-        df_dist <- densityPlot_df(model_rf, obs_rf, data_rf)
-        best_para <- df_dist$x[which(df_dist$y_posterior == max(df_dist$y_posterior))]
     }
     #-----------------------------------------Input simulated CN library
     filename <- paste0(library_name, "_ABC_input.rda")
@@ -464,7 +460,6 @@ fitting_sc_CN <- function(library_name,
     #---Dataframe for data observation
     all_obs <- data.frame(matrix(DATA_target, nrow = 1))
     colnames(all_obs) <- paste0("stat_", 1:ncol(sim_stat))
-    # colnames(all_obs) <- c(paste0("mean_", list_targets), paste0("var_", list_targets))
     #---Fit each parameter with ABC-rf
     layout <- matrix(NA, nrow = 7, ncol = ceiling(length(parameter_IDs) / 7))
     gs <- list()
@@ -492,12 +487,24 @@ fitting_sc_CN <- function(library_name,
         )
         #   Predict posterior distribution based on found random forest
         post_rf <- predict(model_rf, mini_obs, data_rf, paral = TRUE, ncores = n_cores)
-        #   Choose best value from posterior distribution
-        best_rf <- get_best_para(data_rf, model_rf, mini_obs, post_rf)
+        #   Choose best values from posterior distribution
+        df_dist <- densityPlot_df(model_rf, mini_obs, data_rf)
+        post_mean <- weighted.mean(df_dist$x, df_dist$y_posterior)
+        post_median <- weightedMedian(df_dist$x, df_dist$y_posterior)
+        post_mode <- df_dist$x[which(df_dist$y_posterior == max(df_dist$y_posterior))]
+        cat("Fitting results for parameter ", para_ID, ":\n")
+        if (!is.null(parameters_truth)) {
+            cat("True value: ", parameters_truth$Value[which(parameters_truth$Variable == para_ID)], "\n")
+        }
+        cat("Posterior mean: ", post_mean, "\n")
+        cat("Posterior median: ", post_median, "\n")
+        cat("Posterior mode: ", post_mode, "\n")
         #   Save results for fitting this parameter
         ABC_output <- list()
         ABC_output$para_ID <- para_ID
-        ABC_output$best_rf <- best_rf
+        ABC_output$post_mode <- post_mode
+        ABC_output$post_mean <- post_mean
+        ABC_output$post_median <- post_median
         filename <- paste0(model_name, "_ABC_output_", para_ID, ".rda")
         # filename <- paste0(folder_workplace_tmp, model_name, "_ABC_output_", para_ID, ".rda")
         save(ABC_output, file = filename)
@@ -506,31 +513,30 @@ fitting_sc_CN <- function(library_name,
         if (!is.null(parameters_truth)) {
             true_para <- parameters_truth$Value[which(parameters_truth$Variable == para_ID)]
         }
-
-        print(true_para)
-
         id <- id + 1
         row <- id %% 7
         if (row == 0) row <- 7
         col <- ceiling(id / 7)
         layout[row, col] <- id
-        gs[[id]] <- densityPlot_MODIFIED(
+        gs[[id]] <- plot_parameter_ABC(
             model_rf, all_obs, data_rf,
             protocol = "arm",
+            ###
+            highlight_values = c(true_para, post_mode, post_mean, post_median),
+            highlight_colors = c("black", "#d03333", "#3939ae", "#3da53d"),
+            highlight_linetype = c("solid", "dashed", "dashed", "dashed"),
+            ###
             fontsize = 20,
-            chosen_para = best_rf,
-            true_para = true_para,
-            color_prior = "lightblue", color_posterior = "darkblue", color_vline = "blue",
             main = para_ID
         )
         end_time <- Sys.time()
-        cat(paste0("Best parameter: ", best_rf, "\n"))
+        cat(paste0("Best parameter: ", post_mode, "\n"))
         print(end_time - start_time)
         #   Clear memory
         model_rf <- c()
         data_rf <- c()
         post_rf <- c()
-        best_rf <- c()
+        post_mode <- c()
     }
     #   Plot the prior, posterior and chosen best parameter for all variables
     filename <- paste0(model_name, "_ABC_all.jpeg")
