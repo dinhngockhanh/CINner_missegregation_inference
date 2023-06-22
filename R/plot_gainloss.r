@@ -415,24 +415,27 @@ normalize_cell_ploidy <- function(copynumber, state_mode, round = TRUE) {
     return(copynumber)
 }
 
-densityPlot_MODIFIED <- function(object,
-                                 obs,
-                                 training,
-                                 add = TRUE,
-                                 main = "Posterior density",
-                                 color_prior,
-                                 chosen_para = NULL,
-                                 color_posterior,
-                                 protocol,
-                                 color_vline,
-                                 log = "",
-                                 xlim = NULL,
-                                 ylim = NULL,
-                                 xlab = NULL,
-                                 ylab = NULL,
-                                 paral = FALSE,
-                                 fontsize = 50,
-                                 ncores = if (paral) max(detectCores() - 1, 1) else 1, ...) {
+plot_parameter_ABC <- function(object,
+                               obs,
+                               training,
+                               add = TRUE,
+                               main = "Posterior density",
+                               protocol,
+                               color_prior = "lightblue",
+                               color_posterior = "darkblue",
+                               #    chosen_para = NULL,
+                               #    color_vline,
+                               highlight_values = NULL,
+                               highlight_colors = NULL,
+                               highlight_linetype = NULL,
+                               log = "",
+                               xlim = NULL,
+                               ylim = NULL,
+                               xlab = NULL,
+                               ylab = NULL,
+                               paral = FALSE,
+                               fontsize = 50,
+                               ncores = if (paral) max(detectCores() - 1, 1) else 1, ...) {
     df_plot <- densityPlot_df(
         object,
         obs,
@@ -466,12 +469,15 @@ densityPlot_MODIFIED <- function(object,
         scale_x_continuous(expand = c(0, 0)) +
         scale_y_continuous(expand = c(0, 0))
 
-    print(chosen_para)
-    if (is.null(chosen_para) == FALSE) {
+    if (!is.null(highlight_values)) {
         p_plot <- p_plot +
-            geom_vline(aes(xintercept = chosen_para), color = color_vline, size = 1, linetype = "dotted")
+            geom_vline(
+                xintercept = highlight_values,
+                colour = highlight_colors,
+                linetype = highlight_linetype,
+                size = 2
+            )
     }
-
     return(p_plot)
 }
 

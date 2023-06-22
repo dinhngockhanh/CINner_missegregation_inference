@@ -132,22 +132,22 @@ N_data <- 3
 ####
 ####
 ####
-cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
-tmp <- simulator_full_program(
-    model = model_name,
-    n_simulations = N_data,
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
+# cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = model_name,
+#     n_simulations = N_data,
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
 colnames(list_parameters) <- c("Variable", "Type", "Lower_bound", "Upper_bound")
