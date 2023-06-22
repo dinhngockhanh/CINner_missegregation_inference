@@ -201,26 +201,11 @@ get_statistics <- function(simulations,
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get colless index
                 list_statistics_simulations[[stat_ID]][i] <- colless.phylo(tree, normalise = TRUE)
-            } else if (stat_variable == "sackin") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get sackin index
-                list_statistics_simulations[[stat_ID]][i] <- sackin.phylo(tree, normalise = TRUE)
-            } else if (stat_variable == "avg_ladder") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get avg_ladder
-                list_statistics_simulations[[stat_ID]][i] <- avgLadder(tree, normalise = TRUE)
             } else if (stat_variable == "IL_number") {
                 #   Get cell phylogeny tree
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get IL_number
                 list_statistics_simulations[[stat_ID]][i] <- ILnumber(tree, normalise = TRUE)
-            } else if (stat_variable == "node_depth") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get depth of a node by branch lengths
-                list_statistics_simulations[[stat_ID]][i] <- mean(node.depth.edgelength(tree))
             } else if (stat_variable == "clonal_CN") {
                 #   Get clonal CN profiles and their populations
                 list_statistics_simulations[["variable=clonal_CN_profiles"]][[i]] <- clonal_CN_profiles_all_simulations[["variable=clonal_CN_profiles"]][[i]]

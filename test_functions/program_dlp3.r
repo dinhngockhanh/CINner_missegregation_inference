@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/zx2406/R/"
+R_workplace <- getwd()
+R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+R_libPaths_extra <- "/burg/iicd/users/zx2406/R/"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
 # R_libPaths <- ""
@@ -11,9 +11,9 @@
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+# R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -87,8 +87,12 @@ arm_s <- rep(1, length(arm_id))
 
 selected_chromosomes <- c("1", "2", "3", "4", "5")
 arm_s[which(arm_chromosome %in% selected_chromosomes)] <-
-    runif(length(which(arm_chromosome %in% selected_chromosomes)), 1 / 1.2, 1.2)
-
+    runif(length(which(arm_chromosome %in% selected_chromosomes)), 1, 1.5)
+for (i in 1:length(which(arm_chromosome %in% selected_chromosomes))){
+    if(runif(1)<0.5){
+        arms[i] <- runif(1, 1/1.5, 1)
+    }
+}
 
 
 table_arm_selection_rates <- data.frame(
@@ -125,29 +129,29 @@ SAVE_model_variables(
 ####
 ####
 ####
-N_data <- 3
-# N_data <- 10
+# N_data <- 3
+N_data <- 10
 ####
 ####
 ####
 ####
 ####
-# cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
-# tmp <- simulator_full_program(
-#     model = model_name,
-#     n_simulations = N_data,
-#     stage_final = 3,
-#     compute_parallel = TRUE,
-#     output_variables = c(
-#         "evolution_origin",
-#         "evolution_genotype_changes",
-#         "sample_clone_ID",
-#         "sample_genotype_unique",
-#         "sample_genotype_unique_profile",
-#         "phylogeny_clustering_truth"
-#     ),
-#     R_libPaths = R_libPaths
-# )
+cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
+tmp <- simulator_full_program(
+    model = model_name,
+    n_simulations = N_data,
+    stage_final = 3,
+    compute_parallel = TRUE,
+    output_variables = c(
+        "evolution_origin",
+        "evolution_genotype_changes",
+        "sample_clone_ID",
+        "sample_genotype_unique",
+        "sample_genotype_unique_profile",
+        "phylogeny_clustering_truth"
+    ),
+    R_libPaths = R_libPaths
+)
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
 colnames(list_parameters) <- c("Variable", "Type", "Lower_bound", "Upper_bound")
@@ -166,7 +170,7 @@ for (i in 1:nrow(model_variables$chromosome_arm_library)) {
         list_parameters[nrow(list_parameters) + 1, ] <- c(
             model_variables$chromosome_arm_library$Arm_ID[i],
             "Arm_selection_rate",
-            0.5, 1.5
+            1 / 1.5, 1.5
         )
     }
 }
@@ -197,17 +201,11 @@ list_targets <- c(
     "statistic=mean;variable=cherries",
     "statistic=mean;variable=pitchforks",
     "statistic=mean;variable=colless",
-    "statistic=mean;variable=sackin",
-    "statistic=mean;variable=avg_ladder",
     "statistic=mean;variable=IL_number",
-    "statistic=mean;variable=node_depth",
     "statistic=var;variable=cherries",
     "statistic=var;variable=pitchforks",
     "statistic=var;variable=colless",
-    "statistic=var;variable=sackin",
-    "statistic=var;variable=avg_ladder",
     "statistic=var;variable=IL_number",
-    "statistic=var;variable=node_depth",
     "statistic=dist;variable=clonal_CN;metric=euclidean"
 )
 # ===================================INPUT GROUND TRUTH DATA FOR FITTING
@@ -230,28 +228,28 @@ data_clonal_CN_profiles <- get_clonal_CN_profiles(cn_ground_truth)
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #   Produce library of simulations for fitting
 n_simulations <- N_data
-# library_sc_CN(
-#     model_name = model_name,
-#     model_variables = model_variables,
-#     list_parameters = list_parameters,
-#     list_targets = list_targets,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     ABC_simcount = 8,
-#     # ABC_simcount = 1000,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     n_simulations = n_simulations,
-#     library_name = model_name,
-#     cn_data = data_clonal_CN_profiles
-# )
-#   Import ground truth parameters
+library_sc_CN(
+    model_name = model_name,
+    model_variables = model_variables,
+    list_parameters = list_parameters,
+    list_targets = list_targets,
+    ####
+    ####
+    ####
+    ####
+    ####
+    # ABC_simcount = 8,
+    ABC_simcount = 10000,
+    ####
+    ####
+    ####
+    ####
+    ####
+    n_simulations = n_simulations,
+    library_name = model_name,
+    cn_data = data_clonal_CN_profiles
+)
+  Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #   Get statistics from ground truth
 DLP_stats <- get_statistics(
