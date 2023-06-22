@@ -12,6 +12,8 @@ library(ape)
 # Need same number of tips
 ta <- rtree(30, rooted = FALSE)
 tb <- rtree(30, rooted = FALSE)
+plot(ta)
+plot(tb)
 dist.topo(ta, ta) # 0
 dist.topo(ta, tb) # unlikely to be
 
@@ -62,6 +64,8 @@ plot(tree)
 ILnumber(tree)
 
 # Colless Number (Measurement of balance)
+# Inspect the internal nodes, partitioning the tips that descend from them into groups of sizes r and s,
+# and computes the sum of absolute values ∣r − s∣ for all nodes.
 # colless.phylo: https://rdrr.io/cran/phyloTop/man/colless.phylo.html
 colless.phylo(tree, normalise = TRUE)
 
@@ -80,6 +84,7 @@ sackin.phylo(rtree(10), normalise = TRUE)
 #        2: the average of all the min(l,r)/max(l,r) values of each subtree, where l and r are the number of tips in the left and right children of a subtree.
 # https://rdrr.io/cran/phyloTop/man/stairs.html
 stairs(rtree(20))
+stairs(ta)
 
 # Width: number of nodes at each depth of the tree
 # https://rdrr.io/cran/phyloTop/man/widths.html
