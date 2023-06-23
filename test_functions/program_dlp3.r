@@ -85,12 +85,12 @@ arm_s <- rep(1, length(arm_id))
 
 
 
-selected_chromosomes <- c("1", "2", "3", "4", "5")
+selected_chromosomes <- c("1", "2")
 arm_s[which(arm_chromosome %in% selected_chromosomes)] <-
     runif(length(which(arm_chromosome %in% selected_chromosomes)), 1, 1.5)
-for (i in 1:length(which(arm_chromosome %in% selected_chromosomes))){
-    if(runif(1)<0.5){
-        arms[i] <- runif(1, 1/1.5, 1)
+for (i in 1:length(which(arm_chromosome %in% selected_chromosomes))) {
+    if (runif(1) < 0.5) {
+        arm_s[i] <- runif(1, 1 / 1.5, 1)
     }
 }
 
@@ -117,7 +117,7 @@ model_variables <- BUILD_initial_population(
     drivers = drivers
 )
 #---Save model variables
-model_name <- "Simpler_DLP_5chr"
+model_name <- "Simpler_DLP_2chr"
 model_variables <- CHECK_model_variables(model_variables)
 SAVE_model_variables(
     model_name = model_name,
@@ -228,28 +228,28 @@ data_clonal_CN_profiles <- get_clonal_CN_profiles(cn_ground_truth)
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #   Produce library of simulations for fitting
 n_simulations <- N_data
-library_sc_CN(
-    model_name = model_name,
-    model_variables = model_variables,
-    list_parameters = list_parameters,
-    list_targets = list_targets,
-    ####
-    ####
-    ####
-    ####
-    ####
-    # ABC_simcount = 8,
-    ABC_simcount = 10000,
-    ####
-    ####
-    ####
-    ####
-    ####
-    n_simulations = n_simulations,
-    library_name = model_name,
-    cn_data = data_clonal_CN_profiles
-)
-  Import ground truth parameters
+# library_sc_CN(
+#     model_name = model_name,
+#     model_variables = model_variables,
+#     list_parameters = list_parameters,
+#     list_targets = list_targets,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     # ABC_simcount = 8,
+#     ABC_simcount = 10000,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     n_simulations = n_simulations,
+#     library_name = model_name,
+#     cn_data = data_clonal_CN_profiles
+# )
+#   Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #   Get statistics from ground truth
 DLP_stats <- get_statistics(
