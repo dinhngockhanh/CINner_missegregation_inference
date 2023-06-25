@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-R_workplace <- getwd()
-R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-R_libPaths_extra <- "/burg/iicd/users/zx2406/R/"
+# R_workplace <- getwd()
+# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+# R_libPaths_extra <- "/burg/iicd/users/zx2406/R/"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
 # R_libPaths <- ""
@@ -11,9 +11,9 @@ R_libPaths_extra <- "/burg/iicd/users/zx2406/R/"
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -85,14 +85,15 @@ arm_s <- rep(1, length(arm_id))
 
 
 
-selected_chromosomes <- c("1", "2")
+selected_chromosomes <- c("1", "2", "3", "4", "5")
 arm_s[which(arm_chromosome %in% selected_chromosomes)] <-
-    runif(length(which(arm_chromosome %in% selected_chromosomes)), 1, 1.5)
-for (i in 1:length(which(arm_chromosome %in% selected_chromosomes))) {
-    if (runif(1) < 0.5) {
-        arm_s[i] <- runif(1, 1 / 1.5, 1)
-    }
-}
+    runif(length(which(arm_chromosome %in% selected_chromosomes)), 1 / 1.5, 1.5)
+# arm_s[which(arm_chromosome %in% selected_chromosomes)] <-
+#     runif(length(which(arm_chromosome %in% selected_chromosomes)), 1, 1.5)
+# for (i in 1:length(arm_s)){
+#     if (runif(1)<0.5) arm_s[i] <- 1/arm_s[i]
+# }
+
 
 
 table_arm_selection_rates <- data.frame(
@@ -117,7 +118,7 @@ model_variables <- BUILD_initial_population(
     drivers = drivers
 )
 #---Save model variables
-model_name <- "Simpler_DLP_2chr"
+model_name <- "Simpler_DLP_5chr"
 model_variables <- CHECK_model_variables(model_variables)
 SAVE_model_variables(
     model_name = model_name,
@@ -129,29 +130,29 @@ SAVE_model_variables(
 ####
 ####
 ####
-# N_data <- 3
-N_data <- 10
+N_data <- 1
+# N_data <- 10
 ####
 ####
 ####
 ####
 ####
-cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
-tmp <- simulator_full_program(
-    model = model_name,
-    n_simulations = N_data,
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
+# cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = model_name,
+#     n_simulations = N_data,
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
 colnames(list_parameters) <- c("Variable", "Type", "Lower_bound", "Upper_bound")
@@ -201,21 +202,17 @@ list_targets <- c(
     "statistic=mean;variable=cherries",
     "statistic=mean;variable=pitchforks",
     "statistic=mean;variable=colless",
-    "statistic=mean;variable=IL_number",
     "statistic=mean;variable=sackin",
-    "statistic=mean;variable=avgLadder",
-    "statistic=mean;variable=maxDepth",
-    # "statistic=mean;variable=ColPla",
-    "statistic=mean;variable=stairs",
-    # "statistic=var;variable=ColPla",
-    # "statistic=var;variable=stairs",
+    "statistic=mean;variable=avg_ladder",
+    "statistic=mean;variable=IL_number",
+    "statistic=mean;variable=node_depth",
+    "statistic=var;variable=cherries",
     "statistic=var;variable=pitchforks",
-    # "statistic=var;variable=colless",
-    # "statistic=var;variable=cherries",
-    # "statistic=var;variable=IL_number",
-    # "statistic=var;variable=sackin",
-    # "statistic=var;variable=avgLadder",
-    "statistic=var;variable=maxDepth",
+    "statistic=var;variable=colless",
+    "statistic=var;variable=sackin",
+    "statistic=var;variable=avg_ladder",
+    "statistic=var;variable=IL_number",
+    "statistic=var;variable=node_depth",
     "statistic=dist;variable=clonal_CN;metric=euclidean"
 )
 # ===================================INPUT GROUND TRUTH DATA FOR FITTING
@@ -234,7 +231,11 @@ cn_ground_truth <- pblapply(cl = cl, X = 1:N_data, FUN = function(i) {
 })
 stopCluster(cl)
 
-data_clonal_CN_profiles <- get_clonal_CN_profiles(cn_ground_truth)
+data_clonal_CN_profiles <- get_clonal_CN_profiles(
+    cn_ground_truth,
+    arm_level = TRUE,
+    cn_table =
+    )
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #   Produce library of simulations for fitting
 n_simulations <- N_data
@@ -248,8 +249,8 @@ library_sc_CN(
     ####
     ####
     ####
-    # ABC_simcount = 8,
-    ABC_simcount = 10000,
+    ABC_simcount = 8,
+    # ABC_simcount = 1000,
     ####
     ####
     ####
@@ -265,14 +266,15 @@ parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 DLP_stats <- get_statistics(
     simulations = cn_ground_truth,
     list_targets = list_targets,
-    cn_data = data_clonal_CN_profiles
+    cn_data = data_clonal_CN_profiles,
+    arm_level = TRUE,
 )
 #   Fit parameters and compare with ground truth
-fitting_sc_CN(
-    library_name = model_name,
-    model_name = model_name,
-    copynumber_DATA = DLP_stats,
-    parameters_truth = parameters_truth,
-    list_parameters = list_parameters,
-    list_targets = list_targets
-)
+# fitting_sc_CN(
+#     library_name = model_name,
+#     model_name = model_name,
+#     copynumber_DATA = DLP_stats,
+#     parameters_truth = parameters_truth,
+#     list_parameters = list_parameters,
+#     list_targets = list_targets
+# )

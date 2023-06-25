@@ -1,5 +1,49 @@
 #' @export
-get_clonal_CN_profiles <- function(simulations) {
+get_clonal_CN_profiles <- function(simulations,
+                                   arm_level = FALSE,
+                                   cn_table = NULL) {
+    #---Function to get arm-level CN profiles
+    #---from bin-level CN profiles
+    get_arm_CN_profiles <- function(clonal_CN_profiles) {
+        clonal_CN_profiles_arm <- vector("list", length(clonal_CN_profiles))
+        for (sample in 1:length(clonal_CN_profiles)) {
+            clonal_CN_profiles_arm[[sample]] <- vector("list", length(clonal_CN_profiles[[sample]]))
+            for (clone in 1:length(clonal_CN_profiles[[sample]])) {
+                clone_CN_profile <- clonal_CN_profiles[[sample]][[clone]]
+                clone_CN_profile_arm <- data.frame(matrix(ncol = (ncol(clone_CN_profile) + 1), nrow = 0))
+                colnames(clone_CN_profile_arm) <- c(colnames(clone_CN_profile), "arm")
+                for (chrom in cn_table$Chromosome) {
+                    for (arm in c("p", "q")) {
+                        if (arm == "p") {
+                            start <- 1
+                            end <- cn_table[cn_table$Chromosome == chrom, ]$Centromere
+                        } else if (arm == "q") {
+                            start <- 1 + cn_table[cn_table$Chromosome == chrom, ]$Centromere
+                            end <- cn_table[cn_table$Chromosome == chrom, ]$Length
+                        }
+                        locs <- which(clone_CN_profile$chr == chrom & clone_CN_profile$start >= start & clone_CN_profile$end <= end)
+                        Min <- as.numeric(names(sort(summary(as.factor(clone_CN_profile[locs, ]$Min)), decreasing = T)[1]))
+                        Maj <- as.numeric(names(sort(summary(as.factor(clone_CN_profile[locs, ]$Maj)), decreasing = T)[1]))
+                        tmp <- clone_CN_profile[locs, ]
+                        state <- Min + Maj
+                        copy <- state
+                        clone_CN_profile_arm[nrow(clone_CN_profile_arm) + 1, ] <- 0
+                        clone_CN_profile_arm$chr[nrow(clone_CN_profile_arm)] <- chrom
+                        clone_CN_profile_arm$start[nrow(clone_CN_profile_arm)] <- start
+                        clone_CN_profile_arm$end[nrow(clone_CN_profile_arm)] <- end
+                        clone_CN_profile_arm$Min[nrow(clone_CN_profile_arm)] <- Min
+                        clone_CN_profile_arm$Maj[nrow(clone_CN_profile_arm)] <- Maj
+                        clone_CN_profile_arm$state[nrow(clone_CN_profile_arm)] <- state
+                        clone_CN_profile_arm$copy[nrow(clone_CN_profile_arm)] <- copy
+                        clone_CN_profile_arm$arm[nrow(clone_CN_profile_arm)] <- arm
+                    }
+                }
+                clonal_CN_profiles_arm[[sample]][[clone]] <- clone_CN_profile_arm
+            }
+        }
+        return(clonal_CN_profiles_arm)
+    }
+    #-----------------------------------------Find bin-level CN profiles
     clonal_CN_profiles_all_sims <- list()
     for (i in 1:length(simulations)) {
         simulation <- simulations[[i]]
@@ -11,6 +55,10 @@ get_clonal_CN_profiles <- function(simulations) {
         }
         clonal_CN_profiles_all_sims[["variable=clonal_CN_profiles"]][[i]] <- clonal_CN_profiles
         clonal_CN_profiles_all_sims[["variable=clonal_CN_populations"]][[i]] <- clonal_CN_populations
+    }
+    #----------------------Convert to arm-level CN profiles if requested
+    if (arm_level) {
+        clonal_CN_profiles_all_sims[["variable=clonal_CN_profiles"]] <- get_arm_CN_profiles(clonal_CN_profiles_all_sims[["variable=clonal_CN_profiles"]])
     }
     return(clonal_CN_profiles_all_sims)
 }
@@ -26,7 +74,6 @@ get_statistics <- function(simulations,
     library(transport)
     library(ape)
     library(phyloTop)
-    library(treebalance)
 
 
 
@@ -51,8 +98,8 @@ get_statistics <- function(simulations,
         }
         return(clonal_ancestry)
     }
-    #------------------------------Function to find the number of events
-    #------------------------------given a list of clones and event type
+    #---Function to find the number of events
+    #---given a list of clones and event type
     find_event_count <- function(clone_group, event_type) {
         event_count <- 0
         for (clone in clone_group) {
@@ -66,8 +113,8 @@ get_statistics <- function(simulations,
         }
         return(event_count)
     }
-    #----------------------Function to find distance between two samples
-    #-------------------------based on clonal population and CN profiles
+    #---Function to find distance between two samples
+    #---based on clonal population and CN profiles
     sample_distance <- function(from_clonal_CN_populations,
                                 from_clonal_CN_profiles,
                                 to_clonal_CN_populations,
@@ -106,8 +153,8 @@ get_statistics <- function(simulations,
         )
         return(wasserstein_dist)
     }
-    #---------------Function to find distance between two sample cohorts
-    #-------------------------based on clonal population and CN profiles
+    #---Function to find distance between two sample cohorts
+    #---based on clonal population and CN profiles
     cohort_distance <- function(cohort_from, cohort_to, metric) {
         library(transport)
         #   Compute distance between any pair of samples in the cohorts
@@ -142,7 +189,7 @@ get_statistics <- function(simulations,
     }
     #-------------------------Get clonal CN profiles for all simulations
     if (any(grepl("variable=clonal_CN", list_targets))) {
-        clonal_CN_profiles_all_simulations <- get_clonal_CN_profiles(simulations)
+        clonal_CN_profiles_all_simulations <- get_clonal_CN_profiles(simulations, arm_level)
     }
     #---------------------------------Get statistics for each simulation
     list_statistics_simulations <- list()
@@ -336,8 +383,8 @@ library_sc_CN <- function(model_name,
         )
         #   Get statistics from simulations
         stat <- get_statistics(
-            SIMS_chromosome,
-            list_targets,
+            simulations = SIMS_chromosome,
+            list_targets = list_targets,
             cn_data = cn_data,
             arm_level = TRUE,
             cn_table = cn_table
@@ -359,9 +406,9 @@ library_sc_CN <- function(model_name,
 
 
 
-    # parameters <- sim_param[1, ]
-    # stat <- func_ABC(parameters, parameter_IDs, model_variables, list_targets, cn_data = cn_data)
-    # return()
+    parameters <- sim_param[1, ]
+    stat <- func_ABC(parameters, parameter_IDs, model_variables, list_targets, cn_data = cn_data)
+    return()
 
 
 
@@ -560,6 +607,8 @@ fitting_sc_CN <- function(library_name,
     p <- grid.arrange(grobs = gs, layout_matrix = layout)
     print(p)
     dev.off()
+
+    #
 
 
 
