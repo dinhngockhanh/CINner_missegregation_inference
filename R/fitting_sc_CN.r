@@ -66,136 +66,114 @@ get_clonal_CN_profiles <- function(simulations,
     return(clonal_CN_profiles_all_sims)
 }
 
-#' @export
-get_statistics <- function(simulations,
-                           list_targets,
-                           cn_data = NULL,
-                           arm_level = FALSE,
-                           cn_table = NULL) {
-    library(vegan)
-    library(matrixStats)
+#----------------------------------------------------Local functions
+#---Function to find shared ancestral clones between subclones
+find_clonal_ancestry <- function(list_subclonal_ancestry) {
+    if (length(list_subclonal_ancestry) == 0) {
+        clonal_ancestry <- c()
+    } else if (length(list_subclonal_ancestry) == 1) {
+        clonal_ancestry <- list_subclonal_ancestry[[1]]
+    } else {
+        clonal_ancestry <- list_subclonal_ancestry[[1]]
+        for (i in 2:length(list_subclonal_ancestry)) {
+            clonal_ancestry <- intersect(clonal_ancestry, list_subclonal_ancestry[[i]])
+        }
+    }
+    return(clonal_ancestry)
+}
+#---Function to find the number of events
+#---given a list of clones and event type
+find_event_count <- function(clone_group, event_type, evolution_genotype_changes) {
+    event_count <- 0
+    for (clone in clone_group) {
+        if (clone <= 0) next
+        if (length(evolution_genotype_changes[[clone]]) == 0) next
+        for (j in 1:length(evolution_genotype_changes[[clone]])) {
+            if (evolution_genotype_changes[[clone]][[j]][1] == event_type) {
+                event_count <- event_count + 1
+            }
+        }
+    }
+    return(event_count)
+}
+#---Function to find distance between two samples
+#---based on clonal population and CN profiles
+sample_distance <- function(from_clonal_CN_populations,
+                            from_clonal_CN_profiles,
+                            to_clonal_CN_populations,
+                            to_clonal_CN_profiles,
+                            metric) {
     library(transport)
-    library(ape)
-    library(phyloTop)
-
-
-
-    # print("I am in get_statistics")
-    # print(arm_level)
-    # print(cn_table)
-    # print(simulations[[1]]$sample_phylogeny$phylogeny_clustering_truth$tree)
-
-
-
-    #---------Function to find shared ancestral clones between subclones
-    find_clonal_ancestry <- function(list_subclonal_ancestry) {
-        if (length(list_subclonal_ancestry) == 0) {
-            clonal_ancestry <- c()
-        } else if (length(list_subclonal_ancestry) == 1) {
-            clonal_ancestry <- list_subclonal_ancestry[[1]]
-        } else {
-            clonal_ancestry <- list_subclonal_ancestry[[1]]
-            for (i in 2:length(list_subclonal_ancestry)) {
-                clonal_ancestry <- intersect(clonal_ancestry, list_subclonal_ancestry[[i]])
+    #   Compute distance between any pair of CN profiles in the samples
+    n_sample_from <- length(from_clonal_CN_populations)
+    n_sample_to <- length(to_clonal_CN_populations)
+    cost_matrix <- matrix(nrow = n_sample_from, ncol = n_sample_to)
+    for (i in 1:n_sample_from) {
+        for (j in 1:n_sample_to) {
+            vec1 <- from_clonal_CN_profiles[[i]]$copy
+            vec2 <- to_clonal_CN_profiles[[j]]$copy
+            if (metric == "euclidean") {
+                cost_matrix[i, j] <- sqrt(sum((vec1 - vec2)^2))
+            } else if (metric == "wcnd") {
+                cost_matrix[i, j] <- 0
+            } else if (metric == "correlation") {
+                library(energy)
+                cost_matrix[i, j] <- dcor(vec1, vec2)
+            } else if (metric == "mahalanobis") {
+                library(MASS)
+                cost_matrix[i, j] <- sqrt(t(vec1 - vec2) %*% ginv(cov(vec1 %*% t(vec1))) %*% (vec1 - vec2))
             }
         }
-        return(clonal_ancestry)
     }
-    #---Function to find the number of events
-    #---given a list of clones and event type
-    find_event_count <- function(clone_group, event_type) {
-        event_count <- 0
-        for (clone in clone_group) {
-            if (clone <= 0) next
-            if (length(evolution_genotype_changes[[clone]]) == 0) next
-            for (j in 1:length(evolution_genotype_changes[[clone]])) {
-                if (evolution_genotype_changes[[clone]][[j]][1] == event_type) {
-                    event_count <- event_count + 1
-                }
-            }
+    #   Normalize clonal populations
+    from_clonal_CN_populations <- from_clonal_CN_populations / sum(from_clonal_CN_populations)
+    to_clonal_CN_populations <- to_clonal_CN_populations / sum(to_clonal_CN_populations)
+    #   Compute the Wasserstein distance between the two samples
+    wasserstein_dist <- wasserstein(
+        from_clonal_CN_populations,
+        to_clonal_CN_populations,
+        costm = cost_matrix, p = 1
+    )
+    return(wasserstein_dist)
+}
+#---Function to find distance between two sample cohorts
+#---based on clonal population and CN profiles
+cohort_distance <- function(cohort_from, cohort_to, metric) {
+    library(transport)
+    #   Compute distance between any pair of samples in the cohorts
+    n_cohort_from <- length(cohort_from[["variable=clonal_CN_populations"]])
+    n_cohort_to <- length(cohort_to[["variable=clonal_CN_populations"]])
+    sample_distance_mtx <- matrix(0, nrow = n_cohort_from, ncol = n_cohort_to)
+    for (i in 1:n_cohort_from) {
+        for (j in 1:n_cohort_to) {
+            from_clonal_CN_populations <- cohort_from[["variable=clonal_CN_populations"]][[i]]
+            from_clonal_CN_profiles <- cohort_from[["variable=clonal_CN_profiles"]][[i]]
+            to_clonal_CN_populations <- cohort_to[["variable=clonal_CN_populations"]][[j]]
+            to_clonal_CN_profiles <- cohort_to[["variable=clonal_CN_profiles"]][[j]]
+            sample_distance_mtx[i, j] <- sample_distance(
+                from_clonal_CN_populations = from_clonal_CN_populations,
+                from_clonal_CN_profiles = from_clonal_CN_profiles,
+                to_clonal_CN_populations = to_clonal_CN_populations,
+                to_clonal_CN_profiles = to_clonal_CN_profiles,
+                metric = metric
+            )
         }
-        return(event_count)
     }
-    #---Function to find distance between two samples
-    #---based on clonal population and CN profiles
-    sample_distance <- function(from_clonal_CN_populations,
-                                from_clonal_CN_profiles,
-                                to_clonal_CN_populations,
-                                to_clonal_CN_profiles,
-                                metric) {
-        library(transport)
-        #   Compute distance between any pair of CN profiles in the samples
-        n_sample_from <- length(from_clonal_CN_populations)
-        n_sample_to <- length(to_clonal_CN_populations)
-        cost_matrix <- matrix(nrow = n_sample_from, ncol = n_sample_to)
-        for (i in 1:n_sample_from) {
-            for (j in 1:n_sample_to) {
-                vec1 <- from_clonal_CN_profiles[[i]]$copy
-                vec2 <- to_clonal_CN_profiles[[j]]$copy
-                if (metric == "euclidean") {
-                    cost_matrix[i, j] <- sqrt(sum((vec1 - vec2)^2))
-                } else if (metric == "wcnd") {
-                    cost_matrix[i, j] <- 0
-                } else if (metric == "correlation") {
-                    library(energy)
-                    cost_matrix[i, j] <- dcor(vec1, vec2)
-                } else if (metric == "mahalanobis") {
-                    library(MASS)
-                    cost_matrix[i, j] <- sqrt(t(vec1 - vec2) %*% ginv(cov(vec1 %*% t(vec1))) %*% (vec1 - vec2))
-                }
-            }
-        }
-        #   Normalize clonal populations
-        from_clonal_CN_populations <- from_clonal_CN_populations / sum(from_clonal_CN_populations)
-        to_clonal_CN_populations <- to_clonal_CN_populations / sum(to_clonal_CN_populations)
-        #   Compute the Wasserstein distance between the two samples
-        wasserstein_dist <- wasserstein(
-            from_clonal_CN_populations,
-            to_clonal_CN_populations,
-            costm = cost_matrix, p = 1
-        )
-        return(wasserstein_dist)
-    }
-    #---Function to find distance between two sample cohorts
-    #---based on clonal population and CN profiles
-    cohort_distance <- function(cohort_from, cohort_to, metric) {
-        library(transport)
-        #   Compute distance between any pair of samples in the cohorts
-        n_cohort_from <- length(cohort_from[["variable=clonal_CN_populations"]])
-        n_cohort_to <- length(cohort_to[["variable=clonal_CN_populations"]])
-        sample_distance_mtx <- matrix(0, nrow = n_cohort_from, ncol = n_cohort_to)
-        for (i in 1:n_cohort_from) {
-            for (j in 1:n_cohort_to) {
-                from_clonal_CN_populations <- cohort_from[["variable=clonal_CN_populations"]][[i]]
-                from_clonal_CN_profiles <- cohort_from[["variable=clonal_CN_profiles"]][[i]]
-                to_clonal_CN_populations <- cohort_to[["variable=clonal_CN_populations"]][[j]]
-                to_clonal_CN_profiles <- cohort_to[["variable=clonal_CN_profiles"]][[j]]
-                sample_distance_mtx[i, j] <- sample_distance(
-                    from_clonal_CN_populations = from_clonal_CN_populations,
-                    from_clonal_CN_profiles = from_clonal_CN_profiles,
-                    to_clonal_CN_populations = to_clonal_CN_populations,
-                    to_clonal_CN_profiles = to_clonal_CN_profiles,
-                    metric = metric
-                )
-            }
-        }
-        #   Normalize clonal populations
-        dist_from <- rep(1 / n_cohort_from, n_cohort_from)
-        dist_to <- rep(1 / n_cohort_to, n_cohort_to)
-        #   Compute the Wasserstein distance between the two cohorts
-        wasserstein_dist <- wasserstein(
-            dist_from,
-            dist_to,
-            costm = sample_distance_mtx, p = 1
-        )
-        return(wasserstein_dist)
-    }
-    #-------------------------Get clonal CN profiles for all simulations
-    if (any(grepl("variable=clonal_CN", list_targets))) {
-        clonal_CN_profiles_all_simulations <- get_clonal_CN_profiles(simulations, arm_level)
-    }
-    #---------------------------------Get statistics for each simulation
-    list_statistics_simulations <- list()
+    #   Normalize clonal populations
+    dist_from <- rep(1 / n_cohort_from, n_cohort_from)
+    dist_to <- rep(1 / n_cohort_to, n_cohort_to)
+    #   Compute the Wasserstein distance between the two cohorts
+    wasserstein_dist <- wasserstein(
+        dist_from,
+        dist_to,
+        costm = sample_distance_mtx, p = 1
+    )
+    return(wasserstein_dist)
+}
+
+#---------------------------------Get statistics for each simulation
+get_statistics_simulations <- function(simulations, simulations_clonal_CN, list_targets) {
+    simulations_statistics <- list()
     for (i in 1:length(simulations)) {
         simulation <- simulations[[i]]
         #   Find common clonal ancestors (for event counts)
@@ -257,32 +235,7 @@ get_statistics <- function(simulations,
                 #   Get cell phylogeny tree
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get IL_number
-                list_statistics_simulations[[stat_ID]][i] <- ILnumber(tree, normalise = TRUE)
-            } else if (stat_variable == "avgLadder") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get avgLadder
-                list_statistics_simulations[[stat_ID]][i] <- avgLadder(tree, normalise = TRUE)
-            } else if (stat_variable == "maxDepth") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get maxDepth
-                list_statistics_simulations[[stat_ID]][i] <- maxDepth(tree)
-            } else if (stat_variable == "ColPla") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get ColPla index
-                list_statistics_simulations[[stat_ID]][i] <- colPlaLab(tree, method = "binary")
-            } else if (stat_variable == "stairs") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get stairness
-                list_statistics_simulations[[stat_ID]][i] <- stairs(tree)[1]
-            } else if (stat_variable == "B1") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get B1Index
-                list_statistics_simulations[[stat_ID]][i] <- B1I(tree)
+                simulations_statistics[[stat_ID]][i] <- ILnumber(tree, normalise = TRUE)
             } else if (stat_variable == "clonal_CN") {
                 #   Get clonal CN profiles and their populations
                 simulations_statistics[["variable=clonal_CN_profiles"]][[i]] <-
@@ -663,6 +616,7 @@ fitting_sc_CN <- function(library_name,
             sim_sample_stat_new <- sim_sample_stat
             for (i in 2:length(list_chromosomes)) {
                 list_chromosomes_new <- list_chromosomes[c(i:length(list_chromosomes), 1:i - 1)]
+                print(list_chromosomes_new)
                 sim_param_next <- sim_param
                 sim_stat_next <- sim_stat
                 for (sim in 1:nrow(sim_param)) {
@@ -675,11 +629,9 @@ fitting_sc_CN <- function(library_name,
                         current_chromosomes = list_chromosomes,
                         new_chromosomes = list_chromosomes_new
                     )
-                    new_sim_param <- df_permutate_chromosomes$new_sim_param
-                    new_sim_sample_stat <- df_permutate_chromosomes$new_sim_sample_stat
-                    sim_param_next[sim, ] <- new_sim_param
+                    sim_param_next[sim, ] <- df_permutate_chromosomes$new_sim_param
                     sim_stat_next[sim, ] <- get_statistics(
-                        simulations_statistics = new_sim_sample_stat,
+                        simulations_statistics = df_permutate_chromosomes$new_sim_sample_stat,
                         list_targets = list_targets,
                         cn_data = cn_data,
                         arm_level = arm_level,
