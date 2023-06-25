@@ -202,10 +202,20 @@ list_targets <- c(
     "statistic=mean;variable=pitchforks",
     "statistic=mean;variable=colless",
     "statistic=mean;variable=IL_number",
-    "statistic=var;variable=cherries",
+    "statistic=mean;variable=sackin",
+    "statistic=mean;variable=avgLadder",
+    "statistic=mean;variable=maxDepth",
+    # "statistic=mean;variable=ColPla",
+    "statistic=mean;variable=stairs",
+    # "statistic=var;variable=ColPla",
+    # "statistic=var;variable=stairs",
     "statistic=var;variable=pitchforks",
-    "statistic=var;variable=colless",
-    "statistic=var;variable=IL_number",
+    # "statistic=var;variable=colless",
+    # "statistic=var;variable=cherries",
+    # "statistic=var;variable=IL_number",
+    # "statistic=var;variable=sackin",
+    # "statistic=var;variable=avgLadder",
+    "statistic=var;variable=maxDepth",
     "statistic=dist;variable=clonal_CN;metric=euclidean"
 )
 # ===================================INPUT GROUND TRUTH DATA FOR FITTING
@@ -228,27 +238,27 @@ data_clonal_CN_profiles <- get_clonal_CN_profiles(cn_ground_truth)
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #   Produce library of simulations for fitting
 n_simulations <- N_data
-# library_sc_CN(
-#     model_name = model_name,
-#     model_variables = model_variables,
-#     list_parameters = list_parameters,
-#     list_targets = list_targets,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     # ABC_simcount = 8,
-#     ABC_simcount = 10000,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     n_simulations = n_simulations,
-#     library_name = model_name,
-#     cn_data = data_clonal_CN_profiles
-# )
+library_sc_CN(
+    model_name = model_name,
+    model_variables = model_variables,
+    list_parameters = list_parameters,
+    list_targets = list_targets,
+    ####
+    ####
+    ####
+    ####
+    ####
+    # ABC_simcount = 8,
+    ABC_simcount = 10000,
+    ####
+    ####
+    ####
+    ####
+    ####
+    n_simulations = n_simulations,
+    library_name = model_name,
+    cn_data = data_clonal_CN_profiles
+)
 #   Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #   Get statistics from ground truth

@@ -26,6 +26,7 @@ get_statistics <- function(simulations,
     library(transport)
     library(ape)
     library(phyloTop)
+    library(treebalance)
 
 
 
@@ -201,11 +202,41 @@ get_statistics <- function(simulations,
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get colless index
                 list_statistics_simulations[[stat_ID]][i] <- colless.phylo(tree, normalise = TRUE)
+            } else if (stat_variable == "sackin") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get sackin index
+                list_statistics_simulations[[stat_ID]][i] <- sackin.phylo(tree, normalise = TRUE)
             } else if (stat_variable == "IL_number") {
                 #   Get cell phylogeny tree
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get IL_number
                 list_statistics_simulations[[stat_ID]][i] <- ILnumber(tree, normalise = TRUE)
+            } else if (stat_variable == "avgLadder") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get avgLadder
+                list_statistics_simulations[[stat_ID]][i] <- avgLadder(tree, normalise = TRUE)
+            } else if (stat_variable == "maxDepth") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get maxDepth
+                list_statistics_simulations[[stat_ID]][i] <- maxDepth(tree)
+            } else if (stat_variable == "ColPla") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get ColPla index
+                list_statistics_simulations[[stat_ID]][i] <- colPlaLab(tree, method = "binary")
+            } else if (stat_variable == "stairs") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get stairness
+                list_statistics_simulations[[stat_ID]][i] <- stairs(tree)[1]
+            } else if (stat_variable == "B1") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get B1Index
+                list_statistics_simulations[[stat_ID]][i] <- B1I(tree)
             } else if (stat_variable == "clonal_CN") {
                 #   Get clonal CN profiles and their populations
                 list_statistics_simulations[["variable=clonal_CN_profiles"]][[i]] <- clonal_CN_profiles_all_simulations[["variable=clonal_CN_profiles"]][[i]]
