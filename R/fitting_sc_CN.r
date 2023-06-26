@@ -256,11 +256,11 @@ get_statistics_simulations <- function(simulations, simulations_clonal_CN, list_
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get stairness
                 list_statistics_simulations[[stat_ID]][i] <- stairs(tree)[1]
-            } else if (stat_variable == "B1") {
+            } else if (stat_variable == "B2") {
                 #   Get cell phylogeny tree
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get B1Index
-                list_statistics_simulations[[stat_ID]][i] <- B1I(tree)
+                #   Get B2Index
+                list_statistics_simulations[[stat_ID]][i] <- B2I(tree, logbase = 2)
             } else if (stat_variable == "clonal_CN") {
                 #   Get clonal CN profiles and their populations
                 simulations_statistics[["variable=clonal_CN_profiles"]][[i]] <-
