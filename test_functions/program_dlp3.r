@@ -188,36 +188,22 @@ write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 # =========================================DEFINE STATISTICS FOR FITTING
 list_targets <- c(
     "statistic=mean;variable=shannon",
-    "statistic=var;variable=shannon",
     "statistic=mean;variable=event_count;type=clonal;event=missegregation",
-    "statistic=var;variable=event_count;type=clonal;event=missegregation",
     "statistic=mean;variable=event_count;type=subclonal;event=missegregation",
-    "statistic=var;variable=event_count;type=subclonal;event=missegregation",
     "statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
-    "statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
     "statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    "statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    "statistic=mean;variable=cherries",
-    "statistic=mean;variable=pitchforks",
-    "statistic=mean;variable=colless",
-    "statistic=mean;variable=IL_number",
-    "statistic=mean;variable=sackin",
-    "statistic=mean;variable=avgLadder",
-    "statistic=mean;variable=maxDepth",
-    # "statistic=mean;variable=ColPla",
-    "statistic=mean;variable=stairs",
-    "statistic=mean;variable=B2",
-    # "statistic=var;variable=ColPla",
-    # "statistic=var;variable=stairs",
-    "statistic=var;variable=pitchforks",
-    # "statistic=var;variable=colless",
-    # "statistic=var;variable=cherries",
-    # "statistic=var;variable=IL_number",
-    # "statistic=var;variable=sackin",
-    # "statistic=var;variable=avgLadder",
-    "statistic=var;variable=maxDepth",
-    "statistic=var;variable=B2",
     "statistic=dist;variable=clonal_CN;metric=euclidean"
+    #---phylo stats with tips
+    "statistic=mean;variable=cherries", # number of internal nodes with 2 tips
+    "statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
+    "statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
+    "statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
+    #---phylo stats for balance
+    "statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
+    "statistic=mean;variable=colless", # balance index of phylogeny tree
+    "statistic=mean;variable=sackin", # balance index of phylogeny tree
+    "statistic=mean;variable=B2", # balance index of phylogeny tree
+    "statistic=mean;variable=maxDepth", # height of phylogeny tree
 )
 # ==============GET TABLE OF CHROMOSOME LENGTHS AND CENTROMERE LOCATIONS
 cn_table <- model_variables$cn_info
