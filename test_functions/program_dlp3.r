@@ -135,22 +135,22 @@ N_data <- 3
 ####
 ####
 ####
-# cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
-# tmp <- simulator_full_program(
-#     model = model_name,
-#     n_simulations = N_data,
-#     stage_final = 3,
-#     compute_parallel = TRUE,
-#     output_variables = c(
-#         "evolution_origin",
-#         "evolution_genotype_changes",
-#         "sample_clone_ID",
-#         "sample_genotype_unique",
-#         "sample_genotype_unique_profile",
-#         "phylogeny_clustering_truth"
-#     ),
-#     R_libPaths = R_libPaths
-# )
+cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
+tmp <- simulator_full_program(
+    model = model_name,
+    n_simulations = N_data,
+    stage_final = 3,
+    compute_parallel = TRUE,
+    output_variables = c(
+        "evolution_origin",
+        "evolution_genotype_changes",
+        "sample_clone_ID",
+        "sample_genotype_unique",
+        "sample_genotype_unique_profile",
+        "phylogeny_clustering_truth"
+    ),
+    R_libPaths = R_libPaths
+)
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
 colnames(list_parameters) <- c("Variable", "Type", "Lower_bound", "Upper_bound")
@@ -246,30 +246,30 @@ data_clonal_CN_profiles <- get_clonal_CN_profiles(
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #---Produce library of simulations for fitting
 n_simulations <- N_data
-# library_sc_CN(
-#     model_name = model_name,
-#     model_variables = model_variables,
-#     list_parameters = list_parameters,
-#     list_targets = list_targets,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     cn_table = cn_table,
-#     ABC_simcount = 8,
-#     arm_level = TRUE,
-#     # ABC_simcount = 1000,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     n_simulations = n_simulations,
-#     library_name = model_name,
-#     cn_data = data_clonal_CN_profiles,
-#     save_sample_statistics = TRUE
-# )
+library_sc_CN(
+    model_name = model_name,
+    model_variables = model_variables,
+    list_parameters = list_parameters,
+    list_targets = list_targets,
+    ####
+    ####
+    ####
+    ####
+    ####
+    cn_table = cn_table,
+    ABC_simcount = 8,
+    arm_level = TRUE,
+    # ABC_simcount = 1000,
+    ####
+    ####
+    ####
+    ####
+    ####
+    n_simulations = n_simulations,
+    library_name = model_name,
+    cn_data = data_clonal_CN_profiles,
+    save_sample_statistics = TRUE
+)
 #---Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #---Get statistics from ground truth

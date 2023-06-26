@@ -641,7 +641,6 @@ fitting_sc_CN <- function(library_name,
             sim_sample_stat_new <- sim_sample_stat
             for (i in 2:length(list_chromosomes)) {
                 list_chromosomes_new <- list_chromosomes[c(i:length(list_chromosomes), 1:i - 1)]
-                print(list_chromosomes_new)
                 sim_param_next <- sim_param
                 sim_stat_next <- sim_stat
                 for (sim in 1:nrow(sim_param)) {
