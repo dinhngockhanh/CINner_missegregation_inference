@@ -205,6 +205,7 @@ list_targets <- c(
     "statistic=mean;variable=sackin",
     "statistic=mean;variable=avgLadder",
     "statistic=mean;variable=maxDepth",
+    "statistic=mean;variable=B2",
     # "statistic=mean;variable=ColPla",
     "statistic=mean;variable=stairs",
     # "statistic=var;variable=ColPla",
@@ -216,6 +217,7 @@ list_targets <- c(
     # "statistic=var;variable=sackin",
     # "statistic=var;variable=avgLadder",
     "statistic=var;variable=maxDepth",
+    "statistic=mean;variable=B2",
     "statistic=dist;variable=clonal_CN;metric=euclidean"
 )
 # ===================================INPUT GROUND TRUTH DATA FOR FITTING
