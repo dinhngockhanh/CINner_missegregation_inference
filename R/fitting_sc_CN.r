@@ -231,36 +231,36 @@ get_statistics_simulations <- function(simulations, simulations_clonal_CN, list_
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get colless index
                 simulations_statistics[[stat_ID]][i] <- colless.phylo(tree, normalise = TRUE)
+            } else if (stat_variable == "sackin") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get sackin index
+                simulations_statistics[[stat_ID]][i] <- sackin.phylo(tree, normalise = TRUE)
             } else if (stat_variable == "IL_number") {
                 #   Get cell phylogeny tree
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get IL_number
-                list_statistics_simulations[[stat_ID]][i] <- ILnumber(tree, normalise = TRUE)
+                simulations_statistics[[stat_ID]][i] <- ILnumber(tree, normalise = TRUE)
             } else if (stat_variable == "avgLadder") {
                 #   Get cell phylogeny tree
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get avgLadder
-                list_statistics_simulations[[stat_ID]][i] <- avgLadder(tree, normalise = TRUE)
+                simulations_statistics[[stat_ID]][i] <- avgLadder(tree, normalise = TRUE)
             } else if (stat_variable == "maxDepth") {
                 #   Get cell phylogeny tree
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get maxDepth
-                list_statistics_simulations[[stat_ID]][i] <- maxDepth(tree)
-            } else if (stat_variable == "ColPla") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get ColPla index
-                list_statistics_simulations[[stat_ID]][i] <- colPlaLab(tree, method = "binary")
+                simulations_statistics[[stat_ID]][i] <- maxDepth(tree)
             } else if (stat_variable == "stairs") {
                 #   Get cell phylogeny tree
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get stairness
-                list_statistics_simulations[[stat_ID]][i] <- stairs(tree)[1]
+                simulations_statistics[[stat_ID]][i] <- stairs(tree)[1]
             } else if (stat_variable == "B2") {
                 #   Get cell phylogeny tree
                 tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
                 #   Get B2Index
-                list_statistics_simulations[[stat_ID]][i] <- B2I(tree, logbase = 2)
+                simulations_statistics[[stat_ID]][i] <- B2I(tree, logbase = 2)
             } else if (stat_variable == "clonal_CN") {
                 #   Get clonal CN profiles and their populations
                 simulations_statistics[["variable=clonal_CN_profiles"]][[i]] <-
@@ -288,6 +288,7 @@ get_statistics <- function(simulations = NULL,
     library(transport)
     library(ape)
     library(phyloTop)
+    library(treebalance)
     #-------------------------Get clonal CN profiles for all simulations
     if (is.null(simulations_statistics)) {
         if (any(grepl("variable=clonal_CN", list_targets))) {
@@ -382,7 +383,7 @@ func_ABC <- function(parameters,
 library_sc_CN <- function(model_name,
                           model_variables,
                           list_parameters,
-                          list_targets,
+                          list_targets_library,
                           ABC_simcount = 10000,
                           n_simulations = 10,
                           n_cores = NULL,
@@ -423,7 +424,7 @@ library_sc_CN <- function(model_name,
     model_variables <<- model_variables
     func_ABC <<- func_ABC
     assign_paras <<- assign_paras
-    list_targets <<- list_targets
+    list_targets_library <<- list_targets_library
     cn_data <<- cn_data
     ####
     ####
@@ -436,7 +437,7 @@ library_sc_CN <- function(model_name,
     ####
     n_simulations <<- n_simulations
     clusterExport(cl, varlist = c(
-        "n_simulations", "list_targets", "sim_param", "parameter_IDs", "model_variables", "cn_data", "cn_table", "arm_level",
+        "n_simulations", "list_targets", "list_targets_library", "sim_param", "parameter_IDs", "model_variables", "cn_data", "cn_table", "arm_level",
         "func_ABC", "assign_paras", "get_statistics", "get_clonal_CN_profiles", "save_sample_statistics", "get_cn_profile", "get_arm_CN_profiles",
         "find_clonal_ancestry", "find_event_count", "cohort_distance", "sample_distance", "get_statistics_simulations",
         "vec_CN_block_no", "vec_centromeres",
@@ -457,7 +458,7 @@ library_sc_CN <- function(model_name,
     pbo <- pboptions(type = "txt")
     sim_results_list <- pblapply(cl = cl, X = 1:ABC_simcount, FUN = function(iteration) {
         parameters <- sim_param[iteration, ]
-        stat <- func_ABC(parameters, parameter_IDs, model_variables, list_targets, cn_data = cn_data, arm_level = arm_level)
+        stat <- func_ABC(parameters, parameter_IDs, model_variables, list_targets_library, cn_data = cn_data, arm_level = arm_level)
         return(stat)
     })
     stopCluster(cl)
@@ -556,6 +557,7 @@ fitting_sc_CN <- function(library_name,
                           copynumber_DATA,
                           parameters_truth = NULL,
                           list_parameters,
+                          list_targets_library,
                           list_targets,
                           n_cores = NULL,
                           cn_data = NULL,
@@ -586,6 +588,23 @@ fitting_sc_CN <- function(library_name,
     sim_sample_stat <- ABC_input$sim_sample_stat
     #--------------------------------Find statistics for each CN heatmap
     DATA_target <- copynumber_DATA$statistics
+    new_DATA_target <- c()
+    for (i in 1:length(DATA_target)) {
+        if (list_targets_library[i] %in% list_targets) {
+            new_DATA_target <- cbind(new_DATA_target, DATA_target[i])
+        }
+    }
+    DATA_target <- new_DATA_target
+    #-------------Make new simulated stats corresponding to list_targets
+    new_sim_stat <- c()
+    for (i in 1:ncol(sim_stat)) {
+        if (list_targets_library[i] %in% list_targets) {
+            new_sim_stat <- cbind(new_sim_stat, sim_stat[, i])
+        }
+    }
+    sim_stat <- new_sim_stat
+    print("SIMST")
+    print("sim_stat")
     # ========================INCREASE SIMULATED LIBRARY VIA PERMUTATION
     if ((shuffle_chromosome_arms | shuffle_chromosomes) & (any(grepl("variable=clonal_CN_profiles", names(sim_sample_stat[[1]]))))) {
         #---Find chromosome and arm for each parameter

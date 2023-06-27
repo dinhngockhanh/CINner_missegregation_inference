@@ -3,17 +3,17 @@
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R/"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+# R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -197,7 +197,7 @@ list_targets_library <- c(
     "statistic=var;variable=event_count;type=subclonal;event=missegregation",
     "statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
     "statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    "statistic=dist;variable=clonal_CN;metric=euclidean"
+    "statistic=dist;variable=clonal_CN;metric=euclidean",
     #---phylo stats with tips
     "statistic=mean;variable=cherries", # number of internal nodes with 2 tips
     "statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
@@ -205,8 +205,8 @@ list_targets_library <- c(
     "statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
     "statistic=var;variable=cherries",
     "statistic=var;variable=pitchforks",
-    "statistic=var;variable=IL_number", 
-    "statistic=var;variable=avgLadder", 
+    "statistic=var;variable=IL_number",
+    "statistic=var;variable=avgLadder",
     #---phylo stats for balance
     "statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
     "statistic=mean;variable=colless", # balance index of phylogeny tree
@@ -215,9 +215,9 @@ list_targets_library <- c(
     "statistic=mean;variable=maxDepth", # height of phylogeny tree
     "statistic=var;variable=stairs",
     "statistic=var;variable=colless",
-    "statistic=var;variable=sackin", 
+    "statistic=var;variable=sackin",
     "statistic=var;variable=B2",
-    "statistic=var;variable=maxDepth", 
+    "statistic=var;variable=maxDepth"
 )
 # ==============GET TABLE OF CHROMOSOME LENGTHS AND CENTROMERE LOCATIONS
 cn_table <- model_variables$cn_info
@@ -260,7 +260,7 @@ library_sc_CN(
     ####
     ####
     cn_table = cn_table,
-    ABC_simcount = 8,
+    ABC_simcount = 2,
     arm_level = TRUE,
     # ABC_simcount = 1000,
     ####
@@ -291,7 +291,7 @@ list_targets <- c(
     "statistic=mean;variable=event_count;type=subclonal;event=missegregation",
     "statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
     "statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    "statistic=dist;variable=clonal_CN;metric=euclidean"
+    "statistic=dist;variable=clonal_CN;metric=euclidean",
     #---phylo stats with tips
     "statistic=mean;variable=cherries", # number of internal nodes with 2 tips
     "statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
@@ -302,7 +302,7 @@ list_targets <- c(
     "statistic=mean;variable=colless", # balance index of phylogeny tree
     "statistic=mean;variable=sackin", # balance index of phylogeny tree
     "statistic=mean;variable=B2", # balance index of phylogeny tree
-    "statistic=mean;variable=maxDepth", # height of phylogeny tree
+    "statistic=mean;variable=maxDepth" # height of phylogeny tree
 )
 fitting_sc_CN(
     library_name = model_name,
