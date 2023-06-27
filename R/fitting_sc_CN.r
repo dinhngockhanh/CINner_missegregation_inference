@@ -437,7 +437,7 @@ library_sc_CN <- function(model_name,
     ####
     n_simulations <<- n_simulations
     clusterExport(cl, varlist = c(
-        "n_simulations", "list_targets", "list_targets_library", "sim_param", "parameter_IDs", "model_variables", "cn_data", "cn_table", "arm_level",
+        "n_simulations", "list_targets_library", "sim_param", "parameter_IDs", "model_variables", "cn_data", "cn_table", "arm_level",
         "func_ABC", "assign_paras", "get_statistics", "get_clonal_CN_profiles", "save_sample_statistics", "get_cn_profile", "get_arm_CN_profiles",
         "find_clonal_ancestry", "find_event_count", "cohort_distance", "sample_distance", "get_statistics_simulations",
         "vec_CN_block_no", "vec_centromeres",
@@ -559,6 +559,7 @@ fitting_sc_CN <- function(library_name,
                           list_parameters,
                           list_targets_library,
                           list_targets,
+                          shuffle_num,
                           n_cores = NULL,
                           cn_data = NULL,
                           cn_table = NULL,
@@ -574,6 +575,7 @@ fitting_sc_CN <- function(library_name,
     library(signals)
     library(data.table)
     library(matrixStats)
+    library(combinat)
     if (is.null(n_cores)) {
         n_cores <- max(detectCores() - 1, 1)
     }
@@ -603,8 +605,6 @@ fitting_sc_CN <- function(library_name,
         }
     }
     sim_stat <- new_sim_stat
-    print("SIMST")
-    print("sim_stat")
     # ========================INCREASE SIMULATED LIBRARY VIA PERMUTATION
     if ((shuffle_chromosome_arms | shuffle_chromosomes) & (any(grepl("variable=clonal_CN_profiles", names(sim_sample_stat[[1]]))))) {
         #---Find chromosome and arm for each parameter
@@ -658,8 +658,9 @@ fitting_sc_CN <- function(library_name,
             sim_param_new <- sim_param
             sim_stat_new <- sim_stat
             sim_sample_stat_new <- sim_sample_stat
-            for (i in 2:length(list_chromosomes)) {
-                list_chromosomes_new <- list_chromosomes[c(i:length(list_chromosomes), 1:i - 1)]
+            shuffle_index <- sample(2:length(permn(list_chromosomes)), shuffle_num, replace = FALSE)
+            for (i in shuffle_index) {
+                list_chromosomes_new <- permn(list_chromosomes)[[i]]
                 sim_param_next <- sim_param
                 sim_stat_next <- sim_stat
                 for (sim in 1:nrow(sim_param)) {

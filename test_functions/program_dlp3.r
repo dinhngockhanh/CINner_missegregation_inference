@@ -1,11 +1,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/zx2406/R/"
+R_workplace <- getwd()
+R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+R_libPaths_extra <- "/burg/iicd/users/zx2406/R_2"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
@@ -20,6 +20,7 @@ R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
 setwd(R_libPaths_extra)
+getwd()
 files_sources <- list.files(pattern = "*.r$")
 sapply(files_sources, source)
 setwd(R_workplace)
@@ -128,8 +129,8 @@ SAVE_model_variables(
 ####
 ####
 ####
-N_data <- 3
-# N_data <- 10
+# N_data <- 3
+N_data <- 10
 ####
 ####
 ####
@@ -242,7 +243,7 @@ stopCluster(cl)
 # ======================================GET CLONAL CN PROFILES FROM DATA
 data_clonal_CN_profiles <- get_clonal_CN_profiles(
     cn_ground_truth,
-    arm_level = TRUE,
+    arm_level = FALSE,
     cn_table = cn_table
 )
 # =======================================FIT PARAMETERS USING "DLP" DATA
@@ -260,9 +261,9 @@ library_sc_CN(
     ####
     ####
     cn_table = cn_table,
-    ABC_simcount = 2,
-    arm_level = TRUE,
-    # ABC_simcount = 1000,
+    # ABC_simcount = 2,
+    arm_level = FALSE,
+    ABC_simcount = 10000,
     ####
     ####
     ####
@@ -271,7 +272,7 @@ library_sc_CN(
     n_simulations = n_simulations,
     library_name = model_name,
     cn_data = data_clonal_CN_profiles,
-    save_sample_statistics = TRUE
+    save_sample_statistics = FALSE
 )
 #---Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
@@ -280,9 +281,9 @@ DLP_stats <- get_statistics(
     simulations = cn_ground_truth,
     list_targets = list_targets_library,
     cn_data = data_clonal_CN_profiles,
-    arm_level = TRUE,
+    arm_level = FALSE,
     cn_table = cn_table,
-    save_sample_statistics = TRUE
+    save_sample_statistics = FALSE
 )
 #---Fit parameters and compare with ground truth
 list_targets <- c(
@@ -313,8 +314,8 @@ fitting_sc_CN(
     list_targets_library = list_targets_library,
     list_targets = list_targets,
     cn_data = data_clonal_CN_profiles,
-    arm_level = TRUE,
+    arm_level = FALSE,
     cn_table = cn_table,
     shuffle_chromosome_arms = FALSE,
-    shuffle_chromosomes = TRUE
+    shuffle_chromosomes = FALSE
 )
