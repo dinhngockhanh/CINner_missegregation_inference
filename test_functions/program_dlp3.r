@@ -185,25 +185,39 @@ for (row in 1:nrow(list_parameters)) {
     }
 }
 write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
-# =========================================DEFINE STATISTICS FOR FITTING
-list_targets <- c(
+# =====================DEFINE STATISTICS FOR BUILDING SIMULATION LIBRARY
+list_targets_library <- c(
     "statistic=mean;variable=shannon",
     "statistic=mean;variable=event_count;type=clonal;event=missegregation",
     "statistic=mean;variable=event_count;type=subclonal;event=missegregation",
     "statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
     "statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
+    "statistic=var;variable=shannon",
+    "statistic=var;variable=event_count;type=clonal;event=missegregation",
+    "statistic=var;variable=event_count;type=subclonal;event=missegregation",
+    "statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
+    "statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
     "statistic=dist;variable=clonal_CN;metric=euclidean"
     #---phylo stats with tips
     "statistic=mean;variable=cherries", # number of internal nodes with 2 tips
     "statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
     "statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
     "statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
+    "statistic=var;variable=cherries",
+    "statistic=var;variable=pitchforks",
+    "statistic=var;variable=IL_number", 
+    "statistic=var;variable=avgLadder", 
     #---phylo stats for balance
     "statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
     "statistic=mean;variable=colless", # balance index of phylogeny tree
     "statistic=mean;variable=sackin", # balance index of phylogeny tree
     "statistic=mean;variable=B2", # balance index of phylogeny tree
     "statistic=mean;variable=maxDepth", # height of phylogeny tree
+    "statistic=var;variable=stairs",
+    "statistic=var;variable=colless",
+    "statistic=var;variable=sackin", 
+    "statistic=var;variable=B2",
+    "statistic=var;variable=maxDepth", 
 )
 # ==============GET TABLE OF CHROMOSOME LENGTHS AND CENTROMERE LOCATIONS
 cn_table <- model_variables$cn_info
@@ -238,7 +252,8 @@ library_sc_CN(
     model_name = model_name,
     model_variables = model_variables,
     list_parameters = list_parameters,
-    list_targets = list_targets,
+    list_targets_library = list_targets_library,
+    # list_targets = list_targets,
     ####
     ####
     ####
@@ -263,19 +278,39 @@ parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #---Get statistics from ground truth
 DLP_stats <- get_statistics(
     simulations = cn_ground_truth,
-    list_targets = list_targets,
+    list_targets = list_targets_library,
     cn_data = data_clonal_CN_profiles,
     arm_level = TRUE,
     cn_table = cn_table,
     save_sample_statistics = TRUE
 )
 #---Fit parameters and compare with ground truth
+list_targets <- c(
+    "statistic=mean;variable=shannon",
+    "statistic=mean;variable=event_count;type=clonal;event=missegregation",
+    "statistic=mean;variable=event_count;type=subclonal;event=missegregation",
+    "statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
+    "statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
+    "statistic=dist;variable=clonal_CN;metric=euclidean"
+    #---phylo stats with tips
+    "statistic=mean;variable=cherries", # number of internal nodes with 2 tips
+    "statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
+    "statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
+    "statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
+    #---phylo stats for balance
+    "statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
+    "statistic=mean;variable=colless", # balance index of phylogeny tree
+    "statistic=mean;variable=sackin", # balance index of phylogeny tree
+    "statistic=mean;variable=B2", # balance index of phylogeny tree
+    "statistic=mean;variable=maxDepth", # height of phylogeny tree
+)
 fitting_sc_CN(
     library_name = model_name,
     model_name = model_name,
     copynumber_DATA = DLP_stats,
     parameters_truth = parameters_truth,
     list_parameters = list_parameters,
+    list_targets_library = list_targets_library,
     list_targets = list_targets,
     cn_data = data_clonal_CN_profiles,
     arm_level = TRUE,
