@@ -605,6 +605,7 @@ fitting_sc_CN <- function(library_name,
         }
     }
     sim_stat <- new_sim_stat
+    print("1")
     # ========================INCREASE SIMULATED LIBRARY VIA PERMUTATION
     if ((shuffle_chromosome_arms | shuffle_chromosomes) & (any(grepl("variable=clonal_CN_profiles", names(sim_sample_stat[[1]]))))) {
         #---Find chromosome and arm for each parameter
@@ -655,28 +656,32 @@ fitting_sc_CN <- function(library_name,
         }
         #---Boost simulated data by permutating chromosomes
         if (shuffle_chromosomes) {
+            print("shuffling")
             #   Initialize new library
             sim_param_new <- sim_param
             sim_stat_new <- sim_stat
             sim_sample_stat_new <- sim_sample_stat
             #   Find maximum number of possible permutations
-            max_shuffle_count <- factorial(length(list_chromosomes)))
+            max_shuffle_count <- factorial(length(list_chromosomes))
             shuffle_num <- min(shuffle_num, max_shuffle_count)
             list_tried_shuffles <- list()
             list_tried_shuffles[[1]] <- list_chromosomes
             for (i in shuffle_num) {
+                print("-----------------------------------------")
+                print(i)
                 #   Find a new permutation of chromosomes
                 list_chromosomes_new <- list_chromosomes
                 while (list_chromosomes_new %in% list_tried_shuffles) {
                     list_chromosomes_new <- sample(list_chromosomes, length(list_chromosomes), replace = FALSE)
                 }
-                list_tried_shuffles[[length(list_tried_shuffles)+1]] <- list_chromosomes_new
+                list_tried_shuffles[[length(list_tried_shuffles) + 1]] <- list_chromosomes_new
                 #   Permutate chromosomes
                 sim_param_next <- sim_param
                 sim_stat_next <- sim_stat
                 for (sim in 1:nrow(sim_param)) {
                     current_sim_param <- sim_param[sim, ]
                     current_sim_sample_stat <- sim_sample_stat_new[[sim]]
+                    print("permutate")
                     df_permutate_chromosomes <- permutate_chromosomes(
                         current_sim_param = current_sim_param,
                         current_sim_sample_stat = current_sim_sample_stat,
@@ -685,6 +690,7 @@ fitting_sc_CN <- function(library_name,
                         new_chromosomes = list_chromosomes_new
                     )
                     sim_param_next[sim, ] <- df_permutate_chromosomes$new_sim_param
+                    print("stats")
                     sim_stat_next[sim, ] <- get_statistics(
                         simulations_statistics = df_permutate_chromosomes$new_sim_sample_stat,
                         list_targets = list_targets,
@@ -700,6 +706,7 @@ fitting_sc_CN <- function(library_name,
             sim_stat <- sim_stat_new
         }
     }
+    print("done")
     # ================================PREPARE SIMULATION LIBRARY FOR ABC
     #   Find ID for each parameter in the prepared library
     sim_param_ID <- list_parameters$Variable

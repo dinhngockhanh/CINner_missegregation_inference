@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
 R_workplace <- getwd()
 R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-R_libPaths_extra <- "/burg/iicd/users/zx2406/R_2"
+R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
 # R_libPaths <- ""
@@ -66,7 +66,7 @@ model_variables <- BUILD_general_variables(
     bound_driver = bound_driver,
     bound_average_ploidy = bound_average_ploidy,
     bound_homozygosity = bound_homozygosity,
-    table_population_dynamics = table_population_dynamics,
+    table_population_dynamics = table_population_dynamics
 )
 #---Set up (randomized) chromosome arm selection rates
 arm_id <- c(
@@ -243,37 +243,37 @@ stopCluster(cl)
 # ======================================GET CLONAL CN PROFILES FROM DATA
 data_clonal_CN_profiles <- get_clonal_CN_profiles(
     cn_ground_truth,
-    arm_level = FALSE,
+    arm_level = TRUE,
     cn_table = cn_table
 )
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #---Produce library of simulations for fitting
 n_simulations <- N_data
-library_sc_CN(
-    model_name = model_name,
-    model_variables = model_variables,
-    list_parameters = list_parameters,
-    list_targets_library = list_targets_library,
-    # list_targets = list_targets,
-    ####
-    ####
-    ####
-    ####
-    ####
-    cn_table = cn_table,
-    # ABC_simcount = 2,
-    arm_level = FALSE,
-    ABC_simcount = 10000,
-    ####
-    ####
-    ####
-    ####
-    ####
-    n_simulations = n_simulations,
-    library_name = model_name,
-    cn_data = data_clonal_CN_profiles,
-    save_sample_statistics = FALSE
-)
+# library_sc_CN(
+#     model_name = model_name,
+#     model_variables = model_variables,
+#     list_parameters = list_parameters,
+#     list_targets_library = list_targets_library,
+#     # list_targets = list_targets,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     cn_table = cn_table,
+#     # ABC_simcount = 2,
+#     arm_level = FALSE,
+#     ABC_simcount = 10000,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     n_simulations = n_simulations,
+#     library_name = model_name,
+#     cn_data = data_clonal_CN_profiles,
+#     save_sample_statistics = FALSE
+# )
 #---Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #---Get statistics from ground truth
@@ -281,9 +281,9 @@ DLP_stats <- get_statistics(
     simulations = cn_ground_truth,
     list_targets = list_targets_library,
     cn_data = data_clonal_CN_profiles,
-    arm_level = FALSE,
+    arm_level = TRUE,
     cn_table = cn_table,
-    save_sample_statistics = FALSE
+    save_sample_statistics = TRUE
 )
 #---Fit parameters and compare with ground truth
 list_targets <- c(
@@ -299,11 +299,11 @@ list_targets <- c(
     "statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
     "statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
     #---phylo stats for balance
-    "statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
-    "statistic=mean;variable=colless", # balance index of phylogeny tree
-    "statistic=mean;variable=sackin", # balance index of phylogeny tree
-    "statistic=mean;variable=B2", # balance index of phylogeny tree
-    "statistic=mean;variable=maxDepth" # height of phylogeny tree
+    # "statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
+    "statistic=mean;variable=colless" # balance index of phylogeny tree
+    # "statistic=mean;variable=sackin", # balance index of phylogeny tree
+    # "statistic=mean;variable=B2", # balance index of phylogeny tree
+    # "statistic=mean;variable=maxDepth" # height of phylogeny tree
 )
 fitting_sc_CN(
     library_name = model_name,
@@ -313,9 +313,10 @@ fitting_sc_CN(
     list_parameters = list_parameters,
     list_targets_library = list_targets_library,
     list_targets = list_targets,
+    shuffle_num = 200,
     cn_data = data_clonal_CN_profiles,
-    arm_level = FALSE,
+    arm_level = TRUE,
     cn_table = cn_table,
     shuffle_chromosome_arms = FALSE,
-    shuffle_chromosomes = FALSE
+    shuffle_chromosomes = TRUE
 )
