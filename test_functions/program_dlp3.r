@@ -249,31 +249,31 @@ data_clonal_CN_profiles <- get_clonal_CN_profiles(
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #---Produce library of simulations for fitting
 n_simulations <- N_data
-# library_sc_CN(
-#     model_name = model_name,
-#     model_variables = model_variables,
-#     list_parameters = list_parameters,
-#     list_targets_library = list_targets_library,
-#     # list_targets = list_targets,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     cn_table = cn_table,
-#     # ABC_simcount = 2,
-#     arm_level = FALSE,
-#     ABC_simcount = 10000,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     n_simulations = n_simulations,
-#     library_name = model_name,
-#     cn_data = data_clonal_CN_profiles,
-#     save_sample_statistics = FALSE
-# )
+library_sc_CN(
+    model_name = model_name,
+    model_variables = model_variables,
+    list_parameters = list_parameters,
+    list_targets_library = list_targets_library,
+    # list_targets = list_targets,
+    ####
+    ####
+    ####
+    ####
+    ####
+    cn_table = cn_table,
+    # ABC_simcount = 2,
+    arm_level = TRUE,
+    ABC_simcount = 10000,
+    ####
+    ####
+    ####
+    ####
+    ####
+    n_simulations = n_simulations,
+    library_name = model_name,
+    cn_data = data_clonal_CN_profiles,
+    save_sample_statistics = TRUE
+)
 #---Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #---Get statistics from ground truth
@@ -300,10 +300,10 @@ list_targets <- c(
     "statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
     #---phylo stats for balance
     # "statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
-    "statistic=mean;variable=colless" # balance index of phylogeny tree
-    # "statistic=mean;variable=sackin", # balance index of phylogeny tree
+    # "statistic=mean;variable=colless" # balance index of phylogeny tree
+    # "statistic=mean;variable=sackin" # balance index of phylogeny tree
     # "statistic=mean;variable=B2", # balance index of phylogeny tree
-    # "statistic=mean;variable=maxDepth" # height of phylogeny tree
+    "statistic=mean;variable=maxDepth" # height of phylogeny tree
 )
 fitting_sc_CN(
     library_name = model_name,
