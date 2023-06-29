@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-R_workplace <- getwd()
-R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+# R_workplace <- getwd()
+# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
 # R_libPaths <- ""
@@ -11,9 +11,9 @@ R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -136,44 +136,54 @@ N_data <- 10
 ####
 ####
 ####
-cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
-tmp <- simulator_full_program(
-    model = model_name,
-    n_simulations = N_data,
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
+# cat(paste0("\n\n\nMaking ", N_data, " simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = model_name,
+#     n_simulations = N_data,
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
 colnames(list_parameters) <- c("Variable", "Type", "Lower_bound", "Upper_bound")
+# list_parameters[nrow(list_parameters) + 1, ] <- c(
+#     "prob_CN_missegregation",
+#     "CNA_probability",
+#     1e-4, 5e-4
+# )
+# list_parameters[nrow(list_parameters) + 1, ] <- c(
+#     "prob_CN_chrom_arm_missegregation",
+#     "CNA_probability",
+#     1e-4, 5e-4
+# )
 list_parameters[nrow(list_parameters) + 1, ] <- c(
-    "prob_CN_missegregation",
+    "10^:prob_CN_missegregation",
     "CNA_probability",
-    1e-4, 5e-4
+    -5, -3
 )
 list_parameters[nrow(list_parameters) + 1, ] <- c(
-    "prob_CN_chrom_arm_missegregation",
+    "10^:prob_CN_chrom_arm_missegregation",
     "CNA_probability",
-    1e-4, 5e-4
+    -5, -3
 )
-for (i in 1:nrow(model_variables$chromosome_arm_library)) {
-    if (model_variables$chromosome_arm_library$Chromosome[i] %in% selected_chromosomes) {
-        list_parameters[nrow(list_parameters) + 1, ] <- c(
-            model_variables$chromosome_arm_library$Arm_ID[i],
-            "Arm_selection_rate",
-            1 / 1.5, 1.5
-        )
-    }
-}
+# for (i in 1:nrow(model_variables$chromosome_arm_library)) {
+#     if (model_variables$chromosome_arm_library$Chromosome[i] %in% selected_chromosomes) {
+#         list_parameters[nrow(list_parameters) + 1, ] <- c(
+#             model_variables$chromosome_arm_library$Arm_ID[i],
+#             "Arm_selection_rate",
+#             1 / 1.5, 1.5
+#         )
+#     }
+# }
 # =====================================PRINT OUT GROUND TRUTH PARAMETERS
 list_parameters_ground_truth <- list_parameters
 list_parameters_ground_truth$Value <- 0
@@ -249,42 +259,42 @@ data_clonal_CN_profiles <- get_clonal_CN_profiles(
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #---Produce library of simulations for fitting
 n_simulations <- N_data
-# library_sc_CN(
-#     model_name = model_name,
-#     model_variables = model_variables,
-#     list_parameters = list_parameters,
-#     list_targets_library = list_targets_library,
-#     # list_targets = list_targets,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     cn_table = cn_table,
-#     # ABC_simcount = 2,
-#     arm_level = TRUE,
-#     ABC_simcount = 10000,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     n_simulations = n_simulations,
-#     library_name = model_name,
-#     cn_data = data_clonal_CN_profiles,
-#     save_sample_statistics = TRUE
-# )
+library_sc_CN(
+    model_name = model_name,
+    model_variables = model_variables,
+    list_parameters = list_parameters,
+    list_targets_library = list_targets_library,
+    # list_targets = list_targets,
+    ####
+    ####
+    ####
+    ####
+    ####
+    cn_table = cn_table,
+    # ABC_simcount = 2,
+    arm_level = TRUE,
+    ABC_simcount = 10000,
+    ####
+    ####
+    ####
+    ####
+    ####
+    n_simulations = n_simulations,
+    library_name = model_name,
+    cn_data = data_clonal_CN_profiles,
+    save_sample_statistics = TRUE
+)
 #---Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #---Get statistics from ground truth
-DLP_stats <- get_statistics(
-    simulations = cn_ground_truth,
-    list_targets = list_targets_library,
-    cn_data = data_clonal_CN_profiles,
-    arm_level = TRUE,
-    cn_table = cn_table,
-    save_sample_statistics = TRUE
-)
+# DLP_stats <- get_statistics(
+#     simulations = cn_ground_truth,
+#     list_targets = list_targets_library,
+#     cn_data = data_clonal_CN_profiles,
+#     arm_level = TRUE,
+#     cn_table = cn_table,
+#     save_sample_statistics = TRUE
+# )
 #---Fit parameters and compare with ground truth
 list_targets <- c(
     "statistic=mean;variable=shannon",
@@ -305,18 +315,18 @@ list_targets <- c(
     # "statistic=mean;variable=B2", # balance index of phylogeny tree
     # "statistic=mean;variable=maxDepth" # height of phylogeny tree
 )
-fitting_sc_CN(
-    library_name = model_name,
-    model_name = model_name,
-    copynumber_DATA = DLP_stats,
-    parameters_truth = parameters_truth,
-    list_parameters = list_parameters,
-    list_targets_library = list_targets_library,
-    list_targets = list_targets,
-    shuffle_num = 200,
-    cn_data = data_clonal_CN_profiles,
-    arm_level = TRUE,
-    cn_table = cn_table,
-    shuffle_chromosome_arms = FALSE,
-    shuffle_chromosomes = TRUE
-)
+# fitting_sc_CN(
+#     library_name = model_name,
+#     model_name = model_name,
+#     copynumber_DATA = DLP_stats,
+#     parameters_truth = parameters_truth,
+#     list_parameters = list_parameters,
+#     list_targets_library = list_targets_library,
+#     list_targets = list_targets,
+#     shuffle_num = 200,
+#     cn_data = data_clonal_CN_profiles,
+#     arm_level = TRUE,
+#     cn_table = cn_table,
+#     shuffle_chromosome_arms = FALSE,
+#     shuffle_chromosomes = TRUE
+# )

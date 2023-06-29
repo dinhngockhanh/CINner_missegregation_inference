@@ -173,6 +173,12 @@ cohort_distance <- function(cohort_from, cohort_to, metric) {
 
 #---------------------------------Get statistics for each simulation
 get_statistics_simulations <- function(simulations, simulations_clonal_CN, list_targets) {
+    library(vegan)
+    library(matrixStats)
+    library(transport)
+    library(ape)
+    library(phyloTop)
+    library(treebalance)
     simulations_statistics <- list()
     for (i in 1:length(simulations)) {
         simulation <- simulations[[i]]
@@ -283,12 +289,6 @@ get_statistics <- function(simulations = NULL,
                            arm_level = FALSE,
                            cn_table = NULL,
                            save_sample_statistics = FALSE) {
-    library(vegan)
-    library(matrixStats)
-    library(transport)
-    library(ape)
-    library(phyloTop)
-    library(treebalance)
     #-------------------------Get clonal CN profiles for all simulations
     if (is.null(simulations_statistics)) {
         if (any(grepl("variable=clonal_CN", list_targets))) {
@@ -334,11 +334,23 @@ get_statistics <- function(simulations = NULL,
 #---Function to assign parameters to proper positions
 assign_paras <- function(model_variables, parameter_IDs, parameters) {
     for (i in 1:length(parameter_IDs)) {
-        parameter_ID <- parameter_IDs[i]
+        parameter_ID_input <- parameter_IDs[i]
+        parameter_value_input <- parameters[i]
+        #   Prepare values for operation on parameter
+        if (grepl(":", parameter_ID_input)) {
+            parameter_ID <- sub(".*:", "", parameter_ID_input)
+            parameter_operator <- sub(":.*", "", parameter_ID_input)
+            parameter_operator <- paste0(parameter_operator, "(parameter_value_input)")
+        } else {
+            parameter_ID <- parameter_ID_input
+            parameter_operator <- "parameter_value_input"
+        }
+        parameter_value <- eval(parse(text = parameter_operator))
+        #   Input parameter
         if (parameter_ID %in% model_variables$general_variables$Variable) {
-            model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)] <- parameters[i]
+            model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)] <- parameter_value
         } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
-            model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)] <- parameters[i]
+            model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)] <- parameter_value
         }
     }
     return(model_variables)
@@ -414,6 +426,19 @@ library_sc_CN <- function(model_name,
             max = as.numeric(list_parameters$Upper_bound[col])
         )
     }
+
+
+    parameters <- sim_param[1, ]
+    print(parameters)
+    print("HERE")
+    stat <- func_ABC(
+        parameters, parameter_IDs, model_variables, list_targets_library,
+        cn_data = cn_data, arm_level = arm_level
+    )
+    return()
+
+
+
     #-----------------------------------------------Make reference table
     start_time <- Sys.time()
     #   Configure parallel pool
