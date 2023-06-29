@@ -665,16 +665,17 @@ fitting_sc_CN <- function(library_name,
             max_shuffle_count <- factorial(length(list_chromosomes))
             shuffle_num <- min(shuffle_num, max_shuffle_count)
             list_tried_shuffles <- list()
+            list_chromosomes_new <- list()
             list_tried_shuffles[[1]] <- list_chromosomes
-            for (i in shuffle_num) {
+            for (i in 1:(shuffle_num - 1)) {
                 print("-----------------------------------------")
                 print(i)
                 #   Find a new permutation of chromosomes
-                list_chromosomes_new <- list_chromosomes
-                while (list_chromosomes_new %in% list_tried_shuffles) {
-                    list_chromosomes_new <- sample(list_chromosomes, length(list_chromosomes), replace = FALSE)
+                list_chromosomes_new[[length(list_chromosomes_new) + 1]] <- list_tried_shuffles[[length(list_tried_shuffles)]]
+                while ((list_chromosomes_new %in% list_tried_shuffles)[length(list_chromosomes_new)]) {
+                    list_chromosomes_new[[length(list_chromosomes_new)]] <- sample(list_chromosomes, length(list_chromosomes), replace = FALSE)
                 }
-                list_tried_shuffles[[length(list_tried_shuffles) + 1]] <- list_chromosomes_new
+                list_tried_shuffles[[length(list_tried_shuffles) + 1]] <- list_chromosomes_new[[length(list_chromosomes_new)]]
                 #   Permutate chromosomes
                 sim_param_next <- sim_param
                 sim_stat_next <- sim_stat
@@ -687,7 +688,7 @@ fitting_sc_CN <- function(library_name,
                         current_sim_sample_stat = current_sim_sample_stat,
                         list_parameters = list_parameters,
                         current_chromosomes = list_chromosomes,
-                        new_chromosomes = list_chromosomes_new
+                        new_chromosomes = list_chromosomes_new[[length(list_chromosomes_new)]]
                     )
                     sim_param_next[sim, ] <- df_permutate_chromosomes$new_sim_param
                     print("stats")
