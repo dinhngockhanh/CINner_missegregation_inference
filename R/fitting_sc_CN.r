@@ -453,7 +453,7 @@ library_sc_CN <- function(model_name,
     ####
     n_simulations <<- n_simulations
     clusterExport(cl, varlist = c(
-        "n_simulations", "save_sample_statistics", "list_targets_library", "sim_param", "parameter_IDs", "model_variables", "cn_data", "cn_table", "arm_level",
+        "n_simulations", "list_targets_library", "sim_param", "parameter_IDs", "model_variables", "cn_data", "cn_table", "arm_level",
         "func_ABC", "assign_paras", "get_statistics", "get_clonal_CN_profiles", "save_sample_statistics", "get_cn_profile", "get_arm_CN_profiles",
         "find_clonal_ancestry", "find_event_count", "cohort_distance", "sample_distance", "get_statistics_simulations",
         "vec_CN_block_no", "vec_centromeres",
