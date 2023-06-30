@@ -1,8 +1,8 @@
 #----------------------------------------------------Load the rda
-Paths <- "/Users/xiangzijin/Downloads/"
-setwd(Paths)
-rda_name <- "Simpler_DLP_CNA_ABC_input.rda"
-load(file = rda_name)
+# Paths <- "/Users/xiangzijin/Downloads/"
+# setwd(Paths)
+# rda_name <- "Simpler_DLP_CNA_ABC_input.rda"
+# load(file = rda_name)
 #---------------------------------------------------Get statistics
 statistics <- ABC_input$sim_stat
 stat_names <- c(
