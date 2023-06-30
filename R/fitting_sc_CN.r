@@ -361,7 +361,8 @@ func_ABC <- function(parameters,
                      model_variables,
                      list_targets,
                      cn_data = NULL,
-                     arm_level = FALSE) {
+                     arm_level = FALSE,
+                     save_sample_statistics = FALSE) {
     #   Assign parameters in model variables
     model_variables <- assign_paras(model_variables, parameter_IDs, parameters)
     #   Make simulations
@@ -428,16 +429,6 @@ library_sc_CN <- function(model_name,
     }
 
 
-    parameters <- sim_param[1, ]
-    print(parameters)
-    print("HERE")
-    stat <- func_ABC(
-        parameters, parameter_IDs, model_variables, list_targets_library,
-        cn_data = cn_data, arm_level = arm_level
-    )
-    return()
-
-
 
     #-----------------------------------------------Make reference table
     start_time <- Sys.time()
@@ -462,7 +453,7 @@ library_sc_CN <- function(model_name,
     ####
     n_simulations <<- n_simulations
     clusterExport(cl, varlist = c(
-        "n_simulations", "list_targets_library", "sim_param", "parameter_IDs", "model_variables", "cn_data", "cn_table", "arm_level",
+        "n_simulations", "save_sample_statistics", "list_targets_library", "sim_param", "parameter_IDs", "model_variables", "cn_data", "cn_table", "arm_level",
         "func_ABC", "assign_paras", "get_statistics", "get_clonal_CN_profiles", "save_sample_statistics", "get_cn_profile", "get_arm_CN_profiles",
         "find_clonal_ancestry", "find_event_count", "cohort_distance", "sample_distance", "get_statistics_simulations",
         "vec_CN_block_no", "vec_centromeres",
@@ -483,8 +474,10 @@ library_sc_CN <- function(model_name,
     pbo <- pboptions(type = "txt")
     sim_results_list <- pblapply(cl = cl, X = 1:ABC_simcount, FUN = function(iteration) {
         parameters <- sim_param[iteration, ]
-        stat <- func_ABC(parameters, parameter_IDs, model_variables, list_targets_library, cn_data = cn_data, arm_level = arm_level)
+        stat <- func_ABC(parameters, parameter_IDs, model_variables, list_targets_library, cn_data = cn_data, arm_level = arm_level, save_sample_statistics = save_sample_statistics)
         return(stat)
+        print("========================stat")
+        print(stat)
     })
     stopCluster(cl)
     #   Group simulated statistics into one table
@@ -504,6 +497,7 @@ library_sc_CN <- function(model_name,
     #---------------------------Save the parameters and their statistics
     print(sim_param)
     print(sim_stat)
+    print("========================simstat")
 
 
 
