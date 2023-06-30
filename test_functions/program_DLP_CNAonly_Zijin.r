@@ -273,7 +273,7 @@ library_sc_CN(
     cn_table = cn_table,
     # ABC_simcount = 2,
     arm_level = FALSE,
-    ABC_simcount = 10000,
+    ABC_simcount = 10,
     ####
     ####
     ####
