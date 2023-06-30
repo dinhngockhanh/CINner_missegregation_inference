@@ -1,8 +1,8 @@
 #----------------------------------------------------Load the rda
-# Paths <- "/Users/xiangzijin/Downloads/"
-# setwd(Paths)
-# rda_name <- "Simpler_DLP_CNA_ABC_input.rda"
-# load(file = rda_name)
+Paths <- "/Users/xiangzijin/Downloads/"
+setwd(Paths)
+rda_name <- "Simpler_DLP_CNA_ABC_input.rda"
+load(file = rda_name)
 #---------------------------------------------------Get statistics
 statistics <- ABC_input$sim_stat
 stat_names <- c(
@@ -53,6 +53,7 @@ corr_plot(corr_mtx)
 # =================================================================
 p_value_plot <- function(parameter, statistics) {
   #--------------------------------------Set different types of stats
+  library(ggplot2)
   CN_stats <- c(
     "Shannon",
     "Clonal_misseg_count",
@@ -102,7 +103,7 @@ p_value_plot <- function(parameter, statistics) {
   )) +
     geom_point(size = 8) +
     geom_line(linewidth = 1, y = log10(1e-2), color = "#a2a0a0") +
-    ggtitle("P_values for Prob_misseg") +
+    ggtitle(paste0("P_values for prob_armmisseg")) +
     scale_x_discrete(guide = guide_axis(angle = 90)) +
     # theme(axis.text.x = element_text(angle = 90)) +
     scale_y_continuous(
@@ -114,10 +115,15 @@ p_value_plot <- function(parameter, statistics) {
     theme(legend.position = "none") +
     theme(axis.title.x = element_blank()) +
     theme(aspect.ratio = 1) +
-    theme(text = element_text(size = 16), plot.title = element_text(size = 20), axis.title.y = element_text(size = 20))
+    theme(text = element_text(size = 16), plot.title = element_text(size = 20), axis.title.y = element_text(size = 20)) +
+    theme(axis.text.x = element_text(colour = c(
+      "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+      "#619CFF", "#619CFF", "#619CFF",
+      "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
+    )))
 
-  ggsave(file = "p_value.png", plot = plot, width = 10, height = 10, dpi = 300)
+  ggsave(file = paste0("P_values for ", "prob_armmisseg", ".png"), plot = plot, width = 10, height = 10, dpi = 300)
   return(plot)
 }
 
-p_value_plot(prob_armmisseg, statistics)
+p_value_plot(prob_misseg, statistics)
