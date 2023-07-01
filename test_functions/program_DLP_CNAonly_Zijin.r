@@ -187,10 +187,32 @@ list_parameters[nrow(list_parameters) + 1, ] <- c(
 # =====================================PRINT OUT GROUND TRUTH PARAMETERS
 list_parameters_ground_truth <- list_parameters
 list_parameters_ground_truth$Value <- 0
+# for (row in 1:nrow(list_parameters)) {
+#     parameter_ID <- list_parameters$Variable[row]
+#     if (parameter_ID %in% model_variables$general_variables$Variable) {
+#         list_parameters_ground_truth$Value[row] <- model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)]
+#     } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
+#         list_parameters_ground_truth$Value[row] <- model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)]
+#     }
+# }
+
 for (row in 1:nrow(list_parameters)) {
-    parameter_ID <- list_parameters$Variable[row]
+    parameter_ID_input <- list_parameters$Variable[row]
+    #   Prepare values for operation on parameter
+    if (grepl(":", parameter_ID_input)) {
+        parameter_ID <- sub(".*:", "", parameter_ID_input)
+        parameter_value_input <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)])
+        parameter_operator <- "log10"
+        parameter_operator <- paste0(parameter_operator, "(parameter_value_input)")
+    } else {
+        parameter_ID <- parameter_ID_input
+        parameter_operator <- "parameter_value_input"
+    }
+    parameter_value <- eval(parse(text = parameter_operator))
+    # parameter_ID <- list_parameters$Variable[row]
     if (parameter_ID %in% model_variables$general_variables$Variable) {
-        list_parameters_ground_truth$Value[row] <- model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)]
+        list_parameters_ground_truth$Value[row] <- parameter_value
+        # list_parameters_ground_truth$Value[row] <- model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)]
     } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
         list_parameters_ground_truth$Value[row] <- model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)]
     }
@@ -273,7 +295,7 @@ library_sc_CN(
     cn_table = cn_table,
     # ABC_simcount = 2,
     arm_level = FALSE,
-    ABC_simcount = 10,
+    ABC_simcount = 10000,
     ####
     ####
     ####
