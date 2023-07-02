@@ -1,28 +1,62 @@
 #----------------------------------------------------Load the rda
 Paths <- "/Users/xiangzijin/Downloads/"
 setwd(Paths)
-rda_name <- "Simpler_DLP_CNA_ABC_input.rda"
+rda_name <- "Simpler_DLP_CNA_with_log_ABC_input.rda"
 load(file = rda_name)
 #---------------------------------------------------Get statistics
 statistics <- ABC_input$sim_stat
 stat_names <- c(
-  "Shannon",
-  "Clonal_misseg_count",
-  "Subclonal_misseg_count",
-  "Clonal_armmisseg_count",
-  "Subclonal_armmisseg_count",
+  "Mean_Shannon",
+  "Mean_Clonal_misseg_count",
+  "Mean_Subclonal_misseg_count",
+  "Mean_Clonal_armmisseg_count",
+  "Mean_Subclonal_armmisseg_count",
   "Wasserstein_dist",
-  "Cherries",
-  "Pitchforks",
-  "IL_number",
-  "AvgLadder",
-  "Stairs",
-  "Colless",
-  "Sackin",
-  "B2",
-  "MaxDepth"
+  "Mean_Cherries",
+  "Mean_Pitchforks",
+  "Mean_IL_number",
+  "Mean_AvgLadder",
+  "Mean_Stairs",
+  "Mean_Colless",
+  "Mean_Sackin",
+  "Mean_B2",
+  "Mean_MaxDepth"
 )
-colnames(statistics) <- stat_names
+total_stat_names <- c(
+  "Mean_Shannon",
+  "Mean_Clonal_misseg_count",
+  "Mean_Subclonal_misseg_count",
+  "Mean_Clonal_armmisseg_count",
+  "Mean_Subclonal_armmisseg_count",
+  "Var_Shannon",
+  "Var_Clonal_misseg_count",
+  "Var_Subclonal_misseg_count",
+  "Var_Clonal_armmisseg_count",
+  "Var_Subclonal_armmisseg_count",
+  "Wasserstein_dist",
+  "Mean_Cherries",
+  "Mean_Pitchforks",
+  "Mean_IL_number",
+  "Mean_AvgLadder",
+  "Var_Cherries",
+  "Var_Pitchforks",
+  "Var_IL_number",
+  "Var_AvgLadder",
+  "Mean_Stairs",
+  "Mean_Colless",
+  "Mean_Sackin",
+  "Mean_B2",
+  "Mean_MaxDepth",
+  "Var_Stairs",
+  "Var_Colless",
+  "Var_Sackin",
+  "Var_B2",
+  "Var_MaxDepth"
+)
+colnames(statistics) <- total_stat_names
+locs_chosen_stat <- which(total_stat_names %in% stat_names)
+chosen_statistics <- data.frame(statistics[, locs_chosen_stat])
+chosen_statistics <- data.matrix(chosen_statistics)
 #---------------------------------------------------Get parameters
 parameters <- ABC_input$sim_param
 param_names <- c(
@@ -35,15 +69,26 @@ prob_misseg <- parameters[, "prob_misseg"]
 # Correlation Plot=================================================
 # =================================================================
 #-------------------------------------------Get correlation matrix
-corr_mtx <- cor(y = parameters, x = statistics)
+corr_mtx <- cor(y = parameters, x = chosen_statistics)
 #--------------------------------------------Plot correlation plot
 corr_plot <- function(corr_mtx) {
   library("ggcorrplot")
   plot <- ggcorrplot(corr_mtx, ggtheme = ggplot2::theme_gray) +
+    # theme(axis.text.x = element_text(colour = c(
+    #   "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+    #   "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+    #   "#619CFF", "#619CFF", "#619CFF", "#619CFF",
+    #   "#619CFF", "#619CFF", "#619CFF", "#619CFF",
+    #   "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
+    #   "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
+    # ))) +
     theme(axis.text.x = element_text(colour = c(
       "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+      # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
       "#619CFF", "#619CFF", "#619CFF", "#619CFF",
+      # "#619CFF", "#619CFF", "#619CFF", "#619CFF",
       "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
+      # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
     )))
   ggsave(file = "correlation_plot.png", plot = plot, width = 10, height = 10, dpi = 300)
   return(plot)
@@ -55,27 +100,41 @@ p_value_plot <- function(parameter, statistics) {
   #--------------------------------------Set different types of stats
   library(ggplot2)
   CN_stats <- c(
-    "Shannon",
-    "Clonal_misseg_count",
-    "Subclonal_misseg_count",
-    "Clonal_armmisseg_count",
-    "Subclonal_armmisseg_count",
+    "Mean_Shannon",
+    "Mean_Clonal_misseg_count",
+    "Mean_Subclonal_misseg_count",
+    "Mean_Clonal_armmisseg_count",
+    "Mean_Subclonal_armmisseg_count",
+    "Var_Shannon",
+    "Var_Clonal_misseg_count",
+    "Var_Subclonal_misseg_count",
+    "Var_Clonal_armmisseg_count",
+    "Var_Subclonal_armmisseg_count",
     "Wasserstein_dist"
   )
 
   Phylo_tip <- c(
-    "Cherries",
-    "Pitchforks",
-    "IL_number",
-    "AvgLadder"
+    "Mean_Cherries",
+    "Mean_Pitchforks",
+    "Mean_IL_number",
+    "Mean_AvgLadder",
+    "Var_Cherries",
+    "Var_Pitchforks",
+    "Var_IL_number",
+    "Var_AvgLadder"
   )
 
   Phylo_balance <- c(
-    "Stairs",
-    "Colless",
-    "Sackin",
-    "B2",
-    "MaxDepth"
+    "Mean_Stairs",
+    "Mean_Colless",
+    "Mean_Sackin",
+    "Mean_B2",
+    "Mean_MaxDepth",
+    "Var_Stairs",
+    "Var_Colless",
+    "Var_Sackin",
+    "Var_B2",
+    "Var_MaxDepth"
   )
   #-------------------------------------Get linear regression model
   model <- lm(parameter ~ statistics)
@@ -116,9 +175,16 @@ p_value_plot <- function(parameter, statistics) {
     theme(axis.title.x = element_blank()) +
     theme(aspect.ratio = 1) +
     theme(text = element_text(size = 16), plot.title = element_text(size = 20), axis.title.y = element_text(size = 20)) +
+    # theme(axis.text.x = element_text(colour = c(
+    #   "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+    #   "#619CFF", "#619CFF", "#619CFF",
+    #   "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
+    # ))) +
     theme(axis.text.x = element_text(colour = c(
       "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
-      "#619CFF", "#619CFF", "#619CFF",
+      "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+      "#619CFF", "#619CFF", "#619CFF", "#619CFF", "#619CFF", "#619CFF",
+      "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
       "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
     )))
 
@@ -126,4 +192,6 @@ p_value_plot <- function(parameter, statistics) {
   return(plot)
 }
 
-p_value_plot(prob_misseg, statistics)
+p_value_plot(prob_armmisseg, statistics)
+lm(prob_misseg ~ chosen_statistics)
+summary(lm(prob_misseg ~ statistics))
