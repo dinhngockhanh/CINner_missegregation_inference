@@ -154,16 +154,6 @@ N_data_bulk <- 10
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
 colnames(list_parameters) <- c("Variable", "Type", "Lower_bound", "Upper_bound")
-# list_parameters[nrow(list_parameters) + 1, ] <- c(
-#     "prob_CN_missegregation",
-#     "CNA_probability",
-#     1e-4, 5e-4
-# )
-# list_parameters[nrow(list_parameters) + 1, ] <- c(
-#     "prob_CN_chrom_arm_missegregation",
-#     "CNA_probability",
-#     1e-4, 5e-4
-# )
 list_parameters[nrow(list_parameters) + 1, ] <- c(
     "10^:prob_CN_missegregation",
     "CNA_probability",
@@ -187,12 +177,29 @@ for (i in 1:nrow(model_variables$chromosome_arm_library)) {
 list_parameters_ground_truth <- list_parameters
 list_parameters_ground_truth$Value <- 0
 for (row in 1:nrow(list_parameters)) {
-    parameter_ID <- list_parameters$Variable[row]
-    if (parameter_ID %in% model_variables$general_variables$Variable) {
-        list_parameters_ground_truth$Value[row] <- model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)]
-    } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
-        list_parameters_ground_truth$Value[row] <- model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)]
+    parameter_ID_input <- list_parameters$Variable[row]
+    #   Convert parameter operator if necessary
+    if (grepl(":", parameter_ID_input)) {
+        parameter_ID <- sub(".*:", "", parameter_ID_input)
+        parameter_operator <- sub(":.*", "", parameter_ID_input)
+    } else {
+        parameter_ID <- parameter_ID_input
+        parameter_operator <- ""
     }
+    if (parameter_ID %in% model_variables$general_variables$Variable) {
+        parameter_value_input <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)])
+    } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
+        parameter_value_input <- as.numeric(model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)])
+    }
+    if (parameter_operator == "") {
+        parameter_value <- parameter_value_input
+    } else if (parameter_operator == "10^") {
+        parameter_value <- log10(parameter_value_input)
+    } else {
+        simpleError("Parameter operator not recognized")
+    }
+    #   Assign parameter value
+    list_parameters_ground_truth$Value[row] <- parameter_value
 }
 write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 # =====================DEFINE STATISTICS FOR BUILDING SIMULATION LIBRARY
@@ -259,7 +266,7 @@ vec_centromeres <<- model_variables$cn_info$Centromere_location
 # model_name <<- model_name
 # clusterExport(cl, varlist = c("model_name", "N_data_dlp"))
 # pbo <- pboptions(type = "txt")
-# cn_sc_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i) {
+# cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i) {
 #     load(paste0(model_name, "_simulation_", i + N_data_dlp, ".rda"))
 #     return(simulation)
 # })
@@ -270,77 +277,105 @@ data_sc_clonal_CN_profiles <- get_clonal_CN_profiles(
     arm_level = TRUE,
     cn_table = cn_table
 )
+# =========================GET CLONAL CN PROFILES FROM BULK DNA-SEQ DATA
+data_bulk_clonal_CN_profiles <- get_clonal_CN_profiles(
+    cn_bulk_ground_truth,
+    arm_level = TRUE,
+    cn_table = cn_table,
+    bulk = TRUE
+)
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #---Produce library of simulations for fitting
-# n_simulations <- N_data_dlp
 # library_sc_CN(
 #     model_name = model_name,
 #     model_variables = model_variables,
 #     list_parameters = list_parameters,
 #     list_targets_library = list_targets_library,
-#     # list_targets = list_targets,
 #     ####
 #     ####
 #     ####
 #     ####
 #     ####
-#     cn_table = cn_table,
-#     # ABC_simcount = 2,
+#     ABC_simcount = 8,
+#     # ABC_simcount = 10000,
 #     arm_level = TRUE,
-#     ABC_simcount = 10000,
+#     cn_table = cn_table,
+#     cn_data_sc = data_sc_clonal_CN_profiles,
+#     cn_data_bulk = data_bulk_clonal_CN_profiles,
+#     n_simulations_sc = N_data_dlp,
+#     n_simulations_bulk = N_data_bulk,
 #     ####
 #     ####
 #     ####
 #     ####
 #     ####
-#     n_simulations = n_simulations,
 #     library_name = model_name,
-#     cn_data = data_sc_clonal_CN_profiles,
 #     save_sample_statistics = TRUE
 # )
 #---Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #---Get statistics from ground truth
 DLP_stats <- get_statistics(
-    simulations = cn_sc_ground_truth,
+    simulations_sc = cn_sc_ground_truth,
+    simulations_bulk = cn_bulk_ground_truth,
     list_targets = list_targets_library,
-    cN_data_dlp = data_sc_clonal_CN_profiles,
+    cn_data_sc = data_sc_clonal_CN_profiles,
+    cn_data_bulk = data_bulk_clonal_CN_profiles,
     arm_level = TRUE,
     cn_table = cn_table,
     save_sample_statistics = TRUE
 )
 #---Fit parameters and compare with ground truth
 list_targets <- c(
-    "statistic=mean;variable=shannon",
-    "statistic=mean;variable=event_count;type=clonal;event=missegregation",
-    "statistic=mean;variable=event_count;type=subclonal;event=missegregation",
-    "statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
-    "statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    "statistic=dist;variable=clonal_CN;metric=euclidean",
-    #---phylo stats with tips
-    "statistic=mean;variable=cherries", # number of internal nodes with 2 tips
-    "statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
-    "statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
-    "statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
-    #---phylo stats for balance
-    # "statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
-    "statistic=mean;variable=colless" # balance index of phylogeny tree
-    # "statistic=mean;variable=sackin" # balance index of phylogeny tree
-    # "statistic=mean;variable=B2", # balance index of phylogeny tree
-    # "statistic=mean;variable=maxDepth" # height of phylogeny tree
+    #---Bulk DNA: CN
+    "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
+    # "data=bulk;statistic=dist;variable=maximal_CN;metric=euclidean",
+    #---Single-cell DNA: subclonal CN
+    "data=sc;statistic=mean;variable=shannon",
+    "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
+    "data=sc;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
+    "data=sc;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
+    "data=sc;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
+    "data=sc;statistic=var;variable=shannon",
+    "data=sc;statistic=var;variable=event_count;type=clonal;event=missegregation",
+    "data=sc;statistic=var;variable=event_count;type=subclonal;event=missegregation",
+    "data=sc;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
+    "data=sc;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
+    "data=sc;statistic=dist;variable=clonal_CN;metric=euclidean",
+    #---Single-cell DNA: phylo stats for tips
+    "data=sc;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
+    "data=sc;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
+    "data=sc;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
+    "data=sc;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
+    "data=sc;statistic=var;variable=cherries",
+    "data=sc;statistic=var;variable=pitchforks",
+    "data=sc;statistic=var;variable=IL_number",
+    "data=sc;statistic=var;variable=avgLadder",
+    #---Single-cell DNA: phylo stats for balance
+    "data=sc;statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
+    "data=sc;statistic=mean;variable=colless", # balance index of phylogeny tree
+    "data=sc;statistic=mean;variable=sackin", # balance index of phylogeny tree
+    "data=sc;statistic=mean;variable=B2", # balance index of phylogeny tree
+    "data=sc;statistic=mean;variable=maxDepth", # height of phylogeny tree
+    "data=sc;statistic=var;variable=stairs",
+    "data=sc;statistic=var;variable=colless",
+    "data=sc;statistic=var;variable=sackin",
+    "data=sc;statistic=var;variable=B2",
+    "data=sc;statistic=var;variable=maxDepth"
 )
-# fitting_sc_CN(
-#     library_name = model_name,
-#     model_name = model_name,
-#     copynumber_DATA = DLP_stats,
-#     parameters_truth = parameters_truth,
-#     list_parameters = list_parameters,
-#     list_targets_library = list_targets_library,
-#     list_targets = list_targets,
-#     shuffle_num = 200,
-#     cN_data_dlp = data_sc_clonal_CN_profiles,
-#     arm_level = TRUE,
-#     cn_table = cn_table,
-#     shuffle_chromosome_arms = FALSE,
-#     shuffle_chromosomes = TRUE
-# )
+fitting_sc_CN(
+    library_name = model_name,
+    model_name = model_name,
+    copynumber_DATA = DLP_stats,
+    parameters_truth = parameters_truth,
+    list_parameters = list_parameters,
+    list_targets_library = list_targets_library,
+    list_targets = list_targets,
+    shuffle_num = 200,
+    cn_data_sc = data_sc_clonal_CN_profiles,
+    cn_data_bulk = data_bulk_clonal_CN_profiles,
+    arm_level = TRUE,
+    cn_table = cn_table,
+    shuffle_chromosome_arms = FALSE,
+    shuffle_chromosomes = TRUE
+)

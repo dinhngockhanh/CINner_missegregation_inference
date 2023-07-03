@@ -187,35 +187,30 @@ list_parameters[nrow(list_parameters) + 1, ] <- c(
 # =====================================PRINT OUT GROUND TRUTH PARAMETERS
 list_parameters_ground_truth <- list_parameters
 list_parameters_ground_truth$Value <- 0
-# for (row in 1:nrow(list_parameters)) {
-#     parameter_ID <- list_parameters$Variable[row]
-#     if (parameter_ID %in% model_variables$general_variables$Variable) {
-#         list_parameters_ground_truth$Value[row] <- model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)]
-#     } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
-#         list_parameters_ground_truth$Value[row] <- model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)]
-#     }
-# }
-
 for (row in 1:nrow(list_parameters)) {
     parameter_ID_input <- list_parameters$Variable[row]
-    #   Prepare values for operation on parameter
+    #   Convert parameter operator if necessary
     if (grepl(":", parameter_ID_input)) {
         parameter_ID <- sub(".*:", "", parameter_ID_input)
-        parameter_value_input <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)])
-        parameter_operator <- "log10"
-        parameter_operator <- paste0(parameter_operator, "(parameter_value_input)")
+        parameter_operator <- sub(":.*", "", parameter_ID_input)
     } else {
         parameter_ID <- parameter_ID_input
-        parameter_operator <- "parameter_value_input"
+        parameter_operator <- ""
     }
-    parameter_value <- eval(parse(text = parameter_operator))
-    # parameter_ID <- list_parameters$Variable[row]
     if (parameter_ID %in% model_variables$general_variables$Variable) {
-        list_parameters_ground_truth$Value[row] <- parameter_value
-        # list_parameters_ground_truth$Value[row] <- model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)]
+        parameter_value_input <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)])
     } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
-        list_parameters_ground_truth$Value[row] <- model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)]
+        parameter_value_input <- as.numeric(model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)])
     }
+    if (parameter_operator == "") {
+        parameter_value <- parameter_value_input
+    } else if (parameter_operator == "10^") {
+        parameter_value <- log10(parameter_value_input)
+    } else {
+        simpleError("Parameter operator not recognized")
+    }
+    #   Assign parameter value
+    list_parameters_ground_truth$Value[row] <- parameter_value
 }
 write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 # =====================DEFINE STATISTICS FOR BUILDING SIMULATION LIBRARY
