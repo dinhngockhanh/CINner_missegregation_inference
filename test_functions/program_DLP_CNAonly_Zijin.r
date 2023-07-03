@@ -41,7 +41,7 @@ selection_model <- "chrom-arm-selection"
 CN_bin_length <- 500000
 #---Probabilities of CNA
 prob_CN_missegregation <- 2e-4
-prob_CN_chrom_arm_missegregation <- 2e-4
+prob_CN_chrom_arm_missegregation <- 1e-4
 #---Viability thresholds
 bound_driver <- 3
 bound_maximum_CN <- 8
