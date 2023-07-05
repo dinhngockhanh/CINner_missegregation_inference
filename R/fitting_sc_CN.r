@@ -960,7 +960,6 @@ fitting_sc_CN <- function(library_name,
         ABC_output$post_mean <- post_mean
         ABC_output$post_median <- post_median
         filename <- paste0(model_name, "_ABC_output_", para_ID, ".rda")
-        # filename <- paste0(folder_workplace_tmp, model_name, "_ABC_output_", para_ID, ".rda")
         save(ABC_output, file = filename)
         #   Plot the prior, posterior and chosen best parameter for all variables
         true_para <- NULL
