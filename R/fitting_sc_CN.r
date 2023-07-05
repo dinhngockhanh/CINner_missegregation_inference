@@ -702,20 +702,20 @@ permutate_chromosomes <- function(current_sim_param, current_sim_sample_stat, li
             }
         }
     }
-    if ("bulk" %in% names(current_sim_sample_stat)) {
-        data_sim_sample_stat <- current_sim_sample_stat$bulk
-        print(names(data_sim_sample_stat))
-    }
-    return()
+    # if ("bulk" %in% names(current_sim_sample_stat)) {
+    #     data_sim_sample_stat <- current_sim_sample_stat$bulk
+    #     print(names(data_sim_sample_stat))
+    # }
+    # return()
 
 
 
-    print(names(current_sim_sample_stat))
-    print(length(current_sim_sample_stat))
+    # print(names(current_sim_sample_stat))
+    # print(length(current_sim_sample_stat))
 
 
-    print("+++")
-
+    # print("+++")
+    # ================================================
 
     for (sim in 1:length(data_sim_sample_stat[["variable=clonal_CN_profiles"]])) {
         for (clone in 1:length(data_sim_sample_stat[["variable=clonal_CN_profiles"]][[sim]])) {

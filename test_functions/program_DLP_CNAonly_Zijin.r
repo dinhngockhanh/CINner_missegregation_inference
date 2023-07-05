@@ -1,11 +1,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-R_workplace <- getwd()
-R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+# R_workplace <- getwd()
+# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
