@@ -1,17 +1,19 @@
 #----------------------------------------------------Load the rda
 Paths <- "/Users/xiangzijin/Downloads/"
 setwd(Paths)
-rda_name <- "Simpler_DLP_CNA_with_log_ABC_input.rda"
+rda_name <- "Simpler_DLP&BULK_DNA_ABC_input.rda"
 load(file = rda_name)
 #---------------------------------------------------Get statistics
 statistics <- ABC_input$sim_stat
+ncol(statistics)
 stat_names <- c(
+  "Wasserstein_dist_bulk",
   "Mean_Shannon",
   "Mean_Clonal_misseg_count",
   "Mean_Subclonal_misseg_count",
   "Mean_Clonal_armmisseg_count",
   "Mean_Subclonal_armmisseg_count",
-  "Wasserstein_dist",
+  "Wasserstein_dist_sc",
   "Mean_Cherries",
   "Mean_Pitchforks",
   "Mean_IL_number",
@@ -23,6 +25,7 @@ stat_names <- c(
   "Mean_MaxDepth"
 )
 total_stat_names <- c(
+  "Wasserstein_dist_bulk",
   "Mean_Shannon",
   "Mean_Clonal_misseg_count",
   "Mean_Subclonal_misseg_count",
@@ -33,7 +36,7 @@ total_stat_names <- c(
   "Var_Subclonal_misseg_count",
   "Var_Clonal_armmisseg_count",
   "Var_Subclonal_armmisseg_count",
-  "Wasserstein_dist",
+  "Wasserstein_dist_sc",
   "Mean_Cherries",
   "Mean_Pitchforks",
   "Mean_IL_number",
@@ -54,6 +57,9 @@ total_stat_names <- c(
   "Var_MaxDepth"
 )
 colnames(statistics) <- total_stat_names
+colnames(statistics)
+
+colnames(chosen_statistics)
 locs_chosen_stat <- which(total_stat_names %in% stat_names)
 chosen_statistics <- data.frame(statistics[, locs_chosen_stat])
 chosen_statistics <- data.matrix(chosen_statistics)
@@ -69,23 +75,23 @@ prob_misseg <- parameters[, "prob_misseg"]
 # Correlation Plot=================================================
 # =================================================================
 #-------------------------------------------Get correlation matrix
-corr_mtx <- cor(y = parameters, x = statistics)
+corr_mtx <- cor(y = parameters, x = chosen_statistics)
 #--------------------------------------------Plot correlation plot
 corr_plot <- function(corr_mtx) {
   library("ggcorrplot")
   plot <- ggcorrplot(corr_mtx, ggtheme = ggplot2::theme_gray) +
     theme(axis.text.x = element_text(colour = c(
-      "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
-      "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
-      "#619CFF", "#619CFF", "#619CFF", "#619CFF",
-      "#619CFF", "#619CFF", "#619CFF", "#619CFF",
-      "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
-      "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
+      # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38","#00BA38",
+      # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+      # "#619CFF", "#619CFF", "#619CFF", "#619CFF",
+      # "#619CFF", "#619CFF", "#619CFF", "#619CFF",
+      # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
+      # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
       # # ))) +
       # theme(axis.text.x = element_text(colour = c(
-      #   "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
-      #   "#619CFF", "#619CFF", "#619CFF", "#619CFF",
-      #   "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
+      "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+      "#619CFF", "#619CFF", "#619CFF", "#619CFF",
+      "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
     )))
   ggsave(file = "correlation_plot.png", plot = plot, width = 10, height = 10, dpi = 300)
   return(plot)
@@ -107,7 +113,8 @@ p_value_plot <- function(parameter, statistics) {
     "Var_Subclonal_misseg_count",
     "Var_Clonal_armmisseg_count",
     "Var_Subclonal_armmisseg_count",
-    "Wasserstein_dist"
+    "Wasserstein_dist_sc",
+    "Wasserstein_dist_bulk"
   )
 
   Phylo_tip <- c(
@@ -159,7 +166,7 @@ p_value_plot <- function(parameter, statistics) {
   )) +
     geom_point(size = 8) +
     geom_line(linewidth = 1, y = log10(1e-2), color = "#a2a0a0") +
-    ggtitle(paste0("P_values for prob_armmisseg")) +
+    ggtitle(paste0("P_values for prob_misseg")) +
     scale_x_discrete(guide = guide_axis(angle = 90)) +
     # theme(axis.text.x = element_text(angle = 90)) +
     scale_y_continuous(
@@ -172,24 +179,24 @@ p_value_plot <- function(parameter, statistics) {
     theme(axis.title.x = element_blank()) +
     theme(aspect.ratio = 1) +
     theme(text = element_text(size = 16), plot.title = element_text(size = 20), axis.title.y = element_text(size = 20)) +
-    # theme(axis.text.x = element_text(colour = c(
-    # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
-    # "#619CFF", "#619CFF", "#619CFF",
-    # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
-    # ))) +
     theme(axis.text.x = element_text(colour = c(
-      "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+      # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38","#00BA38",
+      # "#619CFF", "#619CFF", "#619CFF",
+      # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
+      # ))) +
+      # theme(axis.text.x = element_text(colour = c(
+      "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
       "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
       "#619CFF", "#619CFF", "#619CFF", "#619CFF", "#619CFF", "#619CFF",
       "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
       "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
     )))
 
-  ggsave(file = paste0("P_values for ", "prob_armmisseg", ".png"), plot = plot, width = 10, height = 10, dpi = 300)
+  ggsave(file = paste0("P_values for ", "prob_misseg", ".png"), plot = plot, width = 10, height = 10, dpi = 300)
   return(plot)
 }
 
-p_value_plot(prob_armmisseg, statistics)
+p_value_plot(prob_misseg, statistics)
 
 # lm(prob_misseg ~ chosen_statistics)
 # summary(lm(prob_misseg ~ statistics))
