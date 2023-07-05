@@ -162,15 +162,15 @@ list_parameters[nrow(list_parameters) + 1, ] <- c(
     "CNA_probability",
     -5, -3
 )
-for (i in 1:nrow(model_variables$chromosome_arm_library)) {
-    if (model_variables$chromosome_arm_library$Chromosome[i] %in% selected_chromosomes) {
-        list_parameters[nrow(list_parameters) + 1, ] <- c(
-            model_variables$chromosome_arm_library$Arm_ID[i],
-            "Arm_selection_rate",
-            1 / 1.5, 1.5
-        )
-    }
-}
+# for (i in 1:nrow(model_variables$chromosome_arm_library)) {
+#     if (model_variables$chromosome_arm_library$Chromosome[i] %in% selected_chromosomes) {
+#         list_parameters[nrow(list_parameters) + 1, ] <- c(
+#             model_variables$chromosome_arm_library$Arm_ID[i],
+#             "Arm_selection_rate",
+#             1 / 1.5, 1.5
+#         )
+#     }
+# }
 # =====================================PRINT OUT GROUND TRUTH PARAMETERS
 list_parameters_ground_truth <- list_parameters
 list_parameters_ground_truth$Value <- 0
@@ -292,7 +292,7 @@ DLP_stats <- get_statistics(
     cn_data_bulk = data_bulk_clonal_CN_profiles,
     arm_level = TRUE,
     cn_table = cn_table,
-    save_sample_statistics = TRUE
+    save_sample_statistics = FALSE
 )
 cn_sc_ground_truth <- c()
 cn_bulk_ground_truth <- c()
@@ -309,7 +309,7 @@ library_sc_CN(
     ####
     ####
     ####
-    ABC_simcount = 600,
+    ABC_simcount = 1000,
     arm_level = TRUE,
     cn_table = cn_table,
     cn_data_sc = data_sc_clonal_CN_profiles,
@@ -322,7 +322,7 @@ library_sc_CN(
     ####
     ####
     library_name = model_name,
-    save_sample_statistics = TRUE
+    save_sample_statistics = FALSE
 )
 #---Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
@@ -378,5 +378,5 @@ fitting_sc_CN(
     arm_level = TRUE,
     cn_table = cn_table,
     shuffle_chromosome_arms = FALSE,
-    shuffle_chromosomes = TRUE
+    shuffle_chromosomes = FALSE
 )
