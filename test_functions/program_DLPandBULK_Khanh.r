@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-R_workplace <- getwd()
-R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+# R_workplace <- getwd()
+# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
 # R_libPaths <- ""
@@ -11,9 +11,9 @@ R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -85,13 +85,10 @@ arm_s <- runif(length(arm_id), 1, 1.5)
 for (i in 1:length(arm_s)) {
     if (runif(1) < 0.5) arm_s[i] <- 1 / arm_s[i]
 }
-# arm_s <- rep(1, length(arm_id))
-# selected_chromosomes <- c("1", "2", "3", "4", "5")
-# arm_s[which(arm_chromosome %in% selected_chromosomes)] <-
-#     runif(length(which(arm_chromosome %in% selected_chromosomes)), 1, 1.5)
-# for (i in 1:length(arm_s)) {
-#     if (runif(1) < 0.5) arm_s[i] <- 1 / arm_s[i]
-# }
+
+
+
+selected_chromosomes <- c("1", "2", "3", "4", "5")
 
 
 
@@ -129,29 +126,29 @@ SAVE_model_variables(
 ####
 ####
 ####
-N_data_dlp <<- 10
-N_data_bulk <<- 100
+N_data_dlp <<- 2
+N_data_bulk <<- 2
 ####
 ####
 ####
 ####
 ####
-cat(paste0("\n\n\nMaking ", N_data_dlp + N_data_bulk, " simulations...\n"))
-tmp <- simulator_full_program(
-    model = model_name,
-    n_simulations = (N_data_dlp + N_data_bulk),
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
+# cat(paste0("\n\n\nMaking ", N_data_dlp + N_data_bulk, " simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = model_name,
+#     n_simulations = (N_data_dlp + N_data_bulk),
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
 colnames(list_parameters) <- c("Variable", "Type", "Lower_bound", "Upper_bound")
@@ -165,15 +162,15 @@ list_parameters[nrow(list_parameters) + 1, ] <- c(
     "CNA_probability",
     -5, -3
 )
-# for (i in 1:nrow(model_variables$chromosome_arm_library)) {
-#     if (model_variables$chromosome_arm_library$Chromosome[i] %in% selected_chromosomes) {
-#         list_parameters[nrow(list_parameters) + 1, ] <- c(
-#             model_variables$chromosome_arm_library$Arm_ID[i],
-#             "Arm_selection_rate",
-#             1 / 1.5, 1.5
-#         )
-#     }
-# }
+for (i in 1:nrow(model_variables$chromosome_arm_library)) {
+    if (model_variables$chromosome_arm_library$Chromosome[i] %in% selected_chromosomes) {
+        list_parameters[nrow(list_parameters) + 1, ] <- c(
+            model_variables$chromosome_arm_library$Arm_ID[i],
+            "Arm_selection_rate",
+            1 / 1.5, 1.5
+        )
+    }
+}
 # =====================================PRINT OUT GROUND TRUTH PARAMETERS
 list_parameters_ground_truth <- list_parameters
 list_parameters_ground_truth$Value <- 0
@@ -249,29 +246,29 @@ cn_table$Centromere <- cn_table$Centromere_location * cn_bin_length
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 
-cat(paste0("Loading ", N_data_dlp, " single-cell DNA-seq data sets...\n"))
-n_cores <- max(detectCores() - 1, 1)
-cl <- makePSOCKcluster(n_cores)
-model_name <<- model_name
-clusterExport(cl, varlist = c("model_name"))
-pbo <- pboptions(type = "txt")
-cn_sc_ground_truth <- pblapply(cl = cl, X = 1:N_data_dlp, FUN = function(i) {
-    load(paste0(model_name, "_simulation_", i, ".rda"))
-    return(simulation)
-})
-stopCluster(cl)
+# cat(paste0("Loading ", N_data_dlp, " single-cell DNA-seq data sets...\n"))
+# n_cores <- max(detectCores() - 1, 1)
+# cl <- makePSOCKcluster(n_cores)
+# model_name <<- model_name
+# clusterExport(cl, varlist = c("model_name"))
+# pbo <- pboptions(type = "txt")
+# cn_sc_ground_truth <- pblapply(cl = cl, X = 1:N_data_dlp, FUN = function(i) {
+#     load(paste0(model_name, "_simulation_", i, ".rda"))
+#     return(simulation)
+# })
+# stopCluster(cl)
 
-cat(paste0("Loading ", N_data_bulk, " bulk DNA-seq data sets...\n"))
-n_cores <- max(detectCores() - 1, 1)
-cl <- makePSOCKcluster(n_cores)
-model_name <<- model_name
-clusterExport(cl, varlist = c("model_name", "N_data_dlp"))
-pbo <- pboptions(type = "txt")
-cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i) {
-    load(paste0(model_name, "_simulation_", i + N_data_dlp, ".rda"))
-    return(simulation)
-})
-stopCluster(cl)
+# cat(paste0("Loading ", N_data_bulk, " bulk DNA-seq data sets...\n"))
+# n_cores <- max(detectCores() - 1, 1)
+# cl <- makePSOCKcluster(n_cores)
+# model_name <<- model_name
+# clusterExport(cl, varlist = c("model_name", "N_data_dlp"))
+# pbo <- pboptions(type = "txt")
+# cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i) {
+#     load(paste0(model_name, "_simulation_", i + N_data_dlp, ".rda"))
+#     return(simulation)
+# })
+# stopCluster(cl)
 # ==================GET CLONAL CN PROFILES FROM SINGLE-CELL DNA-SEQ DATA
 data_sc_clonal_CN_profiles <- get_clonal_CN_profiles(
     cn_sc_ground_truth,
@@ -285,37 +282,7 @@ data_bulk_clonal_CN_profiles <- get_clonal_CN_profiles(
     cn_table = cn_table,
     bulk = TRUE
 )
-# =======================================FIT PARAMETERS USING "DLP" DATA
-#---Produce library of simulations for fitting
-library_sc_CN(
-    model_name = model_name,
-    model_variables = model_variables,
-    list_parameters = list_parameters,
-    list_targets_library = list_targets_library,
-    ####
-    ####
-    ####
-    ####
-    ####
-    ABC_simcount = 600,
-    # ABC_simcount = 1000,
-    arm_level = TRUE,
-    cn_table = cn_table,
-    cn_data_sc = data_sc_clonal_CN_profiles,
-    cn_data_bulk = data_bulk_clonal_CN_profiles,
-    n_simulations_sc = N_data_dlp,
-    n_simulations_bulk = N_data_bulk,
-    ####
-    ####
-    ####
-    ####
-    ####
-    library_name = model_name,
-    save_sample_statistics = FALSE
-)
-#---Import ground truth parameters
-parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
-#---Get statistics from ground truth
+# ======================================GET STATISTICS FROM GROUND TRUTH
 DLP_stats <- get_statistics(
     simulations_sc = cn_sc_ground_truth,
     simulations_bulk = cn_bulk_ground_truth,
@@ -324,8 +291,40 @@ DLP_stats <- get_statistics(
     cn_data_bulk = data_bulk_clonal_CN_profiles,
     arm_level = TRUE,
     cn_table = cn_table,
-    save_sample_statistics = FALSE
+    save_sample_statistics = TRUE
 )
+cn_sc_ground_truth <- c()
+cn_bulk_ground_truth <- c()
+# =======================================FIT PARAMETERS USING "DLP" DATA
+#---Produce library of simulations for fitting
+
+# library_sc_CN(
+#     model_name = model_name,
+#     model_variables = model_variables,
+#     list_parameters = list_parameters,
+#     list_targets_library = list_targets_library,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     ABC_simcount = 8,
+#     arm_level = TRUE,
+#     cn_table = cn_table,
+#     cn_data_sc = data_sc_clonal_CN_profiles,
+#     cn_data_bulk = data_bulk_clonal_CN_profiles,
+#     n_simulations_sc = N_data_dlp,
+#     n_simulations_bulk = N_data_bulk,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     library_name = model_name,
+#     save_sample_statistics = TRUE
+# )
+#---Import ground truth parameters
+parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #---Fit parameters and compare with ground truth
 list_targets <- c(
     #---Bulk DNA: CN
@@ -378,5 +377,5 @@ fitting_sc_CN(
     arm_level = TRUE,
     cn_table = cn_table,
     shuffle_chromosome_arms = FALSE,
-    shuffle_chromosomes = FALSE
+    shuffle_chromosomes = TRUE
 )
