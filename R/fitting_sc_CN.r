@@ -608,10 +608,6 @@ library_sc_CN <- function(model_name,
             cn_data_sc = cn_data_sc, cn_data_bulk = cn_data_bulk,
             save_sample_statistics = save_sample_statistics
         )
-
-
-
-
         return(stat)
     })
     stopCluster(cl)

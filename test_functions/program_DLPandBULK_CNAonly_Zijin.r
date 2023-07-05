@@ -294,11 +294,11 @@ DLP_stats <- get_statistics(
     cn_table = cn_table,
     save_sample_statistics = FALSE
 )
-cn_sc_ground_truth <- c()
-cn_bulk_ground_truth <- c()
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #---Produce library of simulations for fitting
-
+tmp <- c()
+cn_sc_ground_truth <- c()
+cn_bulk_ground_truth <- c()
 library_sc_CN(
     model_name = model_name,
     model_variables = model_variables,
