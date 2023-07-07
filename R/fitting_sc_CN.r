@@ -42,10 +42,10 @@ get_arm_CN_profiles <- function(clonal_CN_profiles) {
     return(clonal_CN_profiles_arm)
 }
 
-get_clonal_CN_profiles <- function(simulations,
-                                   arm_level = FALSE,
-                                   cn_table = NULL,
-                                   bulk = FALSE) {
+get_each_clonal_CN_profiles <- function(simulations,
+                                        arm_level = FALSE,
+                                        cn_table = NULL,
+                                        bulk = FALSE) {
     #-----------------------------------------Find bin-level CN profiles
     clonal_CN_profiles_all_sims <- list()
     for (i in 1:length(simulations)) {
@@ -93,6 +93,124 @@ get_clonal_CN_profiles <- function(simulations,
     }
     #-----------------------------------Return the clonal CN information
     return(clonal_CN_profiles_all_sims)
+}
+
+#---------------------------------Get statistics for each simulation
+get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets) {
+    library(vegan)
+    library(matrixStats)
+    library(transport)
+    library(ape)
+    library(phyloTop)
+    library(treebalance)
+    simulations_statistics <- list()
+    for (i in 1:length(simulations)) {
+        simulation <- simulations[[i]]
+        #   Find common clonal ancestors (for event counts)
+        if (any(grepl("variable=event_count", list_targets))) {
+            evolution_origin <- simulation$clonal_evolution$evolution_origin
+            sample_genotype_unique <- simulation$sample$sample_genotype_unique
+            evolution_genotype_changes <- simulation$clonal_evolution$evolution_genotype_changes
+            subclonal_ancestry <- vector("list", length(sample_genotype_unique))
+            for (j in 1:length(sample_genotype_unique)) {
+                ancestry <- sample_genotype_unique[j]
+                while (ancestry[1] != 0) ancestry <- c(evolution_origin[ancestry[1]], ancestry)
+                subclonal_ancestry[[j]] <- ancestry
+            }
+            clonal_ancestry <- find_clonal_ancestry(subclonal_ancestry)
+        }
+        #   Get requested statistics for this simulation
+        for (stat in list_targets) {
+            stat_details <- strsplit(stat, ";")[[1]]
+            stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
+            stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
+            if (stat_variable == "shannon") {
+                #   Get Shannon index
+                frequencies <- table(simulation$sample$sample_clone_ID)
+                simulations_statistics[[stat_ID]][i] <- diversity(frequencies, index = "shannon")
+            } else if (stat_variable == "event_count") {
+                #   Get count of clonal/subclonal events of a given type
+                clonal_type <- strsplit(stat_details[grep("type=", stat_details)], "=")[[1]][2]
+                event_type <- strsplit(stat_details[grep("event=", stat_details)], "=")[[1]][2]
+                if (clonal_type == "clonal") {
+                    simulations_statistics[[stat_ID]][i] <- find_event_count(clonal_ancestry, event_type, evolution_genotype_changes)
+                } else if (clonal_type == "subclonal") {
+                    sample_genotype_event_counts <- rep(0, length(sample_genotype_unique))
+                    for (j in 1:length(sample_genotype_unique)) {
+                        sample_genotype_event_counts[j] <- find_event_count(subclonal_ancestry[[j]], event_type, evolution_genotype_changes)
+                    }
+                    simulations_statistics[[stat_ID]][i] <-
+                        sum(sample_genotype_event_counts * table(simulation$sample$sample_clone_ID)) /
+                        length(simulation$sample$sample_clone_ID) -
+                        find_event_count(clonal_ancestry, event_type, evolution_genotype_changes)
+                } else {
+                    stop(paste0("Error: Unknown clonal type: ", stat))
+                }
+            } else if (stat_variable == "cherries") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get number of cherries
+                simulations_statistics[[stat_ID]][i] <- cherries(tree, normalise = TRUE)
+            } else if (stat_variable == "pitchforks") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get number of pitchforks
+                simulations_statistics[[stat_ID]][i] <- pitchforks(tree, normalise = TRUE)
+            } else if (stat_variable == "colless") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get colless index
+                simulations_statistics[[stat_ID]][i] <- colless.phylo(tree, normalise = TRUE)
+            } else if (stat_variable == "sackin") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get sackin index
+                simulations_statistics[[stat_ID]][i] <- sackin.phylo(tree, normalise = TRUE)
+            } else if (stat_variable == "IL_number") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get IL_number
+                simulations_statistics[[stat_ID]][i] <- ILnumber(tree, normalise = TRUE)
+            } else if (stat_variable == "avgLadder") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get avgLadder
+                simulations_statistics[[stat_ID]][i] <- avgLadder(tree, normalise = TRUE)
+            } else if (stat_variable == "maxDepth") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get maxDepth
+                simulations_statistics[[stat_ID]][i] <- maxDepth(tree)
+            } else if (stat_variable == "stairs") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get stairness
+                simulations_statistics[[stat_ID]][i] <- stairs(tree)[1]
+            } else if (stat_variable == "B2") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get B2Index
+                simulations_statistics[[stat_ID]][i] <- B2I(tree, logbase = 2)
+            } else if (stat_variable == "clonal_CN") {
+                #   Get clonal CN profiles and their populations
+                simulations_statistics[["variable=clonal_CN_profiles"]][[i]] <-
+                    simulations_clonal_CN[["variable=clonal_CN_profiles"]][[i]]
+                simulations_statistics[["variable=clonal_CN_populations"]][[i]] <-
+                    simulations_clonal_CN[["variable=clonal_CN_populations"]][[i]]
+            } else if (stat_variable == "maximal_CN") {
+                #   Get maximal CN profile
+                simulations_statistics[["variable=maximal_CN_profile"]][[i]] <-
+                    simulations_clonal_CN[["variable=maximal_CN_profile"]][[i]]
+            } else if (stat_variable == "average_CN") {
+                #   Get average CN profile
+                simulations_statistics[["variable=average_CN_profile"]][[i]] <-
+                    simulations_clonal_CN[["variable=average_CN_profile"]][[i]]
+            } else {
+                stop(paste0("Error: Unknown statistic: ", stat))
+            }
+        }
+    }
+    return(simulations_statistics)
 }
 
 #----------------------------------------------------Local functions
@@ -232,124 +350,6 @@ cohort_distance <- function(cohort_from, cohort_to, metric, bulk_CN_input = "", 
     return(wasserstein_dist)
 }
 
-#---------------------------------Get statistics for each simulation
-get_statistics_simulations_sc <- function(simulations, simulations_clonal_CN, list_targets) {
-    library(vegan)
-    library(matrixStats)
-    library(transport)
-    library(ape)
-    library(phyloTop)
-    library(treebalance)
-    simulations_statistics <- list()
-    for (i in 1:length(simulations)) {
-        simulation <- simulations[[i]]
-        #   Find common clonal ancestors (for event counts)
-        if (any(grepl("variable=event_count", list_targets))) {
-            evolution_origin <- simulation$clonal_evolution$evolution_origin
-            sample_genotype_unique <- simulation$sample$sample_genotype_unique
-            evolution_genotype_changes <- simulation$clonal_evolution$evolution_genotype_changes
-            subclonal_ancestry <- vector("list", length(sample_genotype_unique))
-            for (j in 1:length(sample_genotype_unique)) {
-                ancestry <- sample_genotype_unique[j]
-                while (ancestry[1] != 0) ancestry <- c(evolution_origin[ancestry[1]], ancestry)
-                subclonal_ancestry[[j]] <- ancestry
-            }
-            clonal_ancestry <- find_clonal_ancestry(subclonal_ancestry)
-        }
-        #   Get requested statistics for this simulation
-        for (stat in list_targets) {
-            stat_details <- strsplit(stat, ";")[[1]]
-            stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
-            stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
-            if (stat_variable == "shannon") {
-                #   Get Shannon index
-                frequencies <- table(simulation$sample$sample_clone_ID)
-                simulations_statistics[[stat_ID]][i] <- diversity(frequencies, index = "shannon")
-            } else if (stat_variable == "event_count") {
-                #   Get count of clonal/subclonal events of a given type
-                clonal_type <- strsplit(stat_details[grep("type=", stat_details)], "=")[[1]][2]
-                event_type <- strsplit(stat_details[grep("event=", stat_details)], "=")[[1]][2]
-                if (clonal_type == "clonal") {
-                    simulations_statistics[[stat_ID]][i] <- find_event_count(clonal_ancestry, event_type, evolution_genotype_changes)
-                } else if (clonal_type == "subclonal") {
-                    sample_genotype_event_counts <- rep(0, length(sample_genotype_unique))
-                    for (j in 1:length(sample_genotype_unique)) {
-                        sample_genotype_event_counts[j] <- find_event_count(subclonal_ancestry[[j]], event_type, evolution_genotype_changes)
-                    }
-                    simulations_statistics[[stat_ID]][i] <-
-                        sum(sample_genotype_event_counts * table(simulation$sample$sample_clone_ID)) /
-                        length(simulation$sample$sample_clone_ID) -
-                        find_event_count(clonal_ancestry, event_type, evolution_genotype_changes)
-                } else {
-                    stop(paste0("Error: Unknown clonal type: ", stat))
-                }
-            } else if (stat_variable == "cherries") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get number of cherries
-                simulations_statistics[[stat_ID]][i] <- cherries(tree, normalise = TRUE)
-            } else if (stat_variable == "pitchforks") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get number of pitchforks
-                simulations_statistics[[stat_ID]][i] <- pitchforks(tree, normalise = TRUE)
-            } else if (stat_variable == "colless") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get colless index
-                simulations_statistics[[stat_ID]][i] <- colless.phylo(tree, normalise = TRUE)
-            } else if (stat_variable == "sackin") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get sackin index
-                simulations_statistics[[stat_ID]][i] <- sackin.phylo(tree, normalise = TRUE)
-            } else if (stat_variable == "IL_number") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get IL_number
-                simulations_statistics[[stat_ID]][i] <- ILnumber(tree, normalise = TRUE)
-            } else if (stat_variable == "avgLadder") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get avgLadder
-                simulations_statistics[[stat_ID]][i] <- avgLadder(tree, normalise = TRUE)
-            } else if (stat_variable == "maxDepth") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get maxDepth
-                simulations_statistics[[stat_ID]][i] <- maxDepth(tree)
-            } else if (stat_variable == "stairs") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get stairness
-                simulations_statistics[[stat_ID]][i] <- stairs(tree)[1]
-            } else if (stat_variable == "B2") {
-                #   Get cell phylogeny tree
-                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                #   Get B2Index
-                simulations_statistics[[stat_ID]][i] <- B2I(tree, logbase = 2)
-            } else if (stat_variable == "clonal_CN") {
-                #   Get clonal CN profiles and their populations
-                simulations_statistics[["variable=clonal_CN_profiles"]][[i]] <-
-                    simulations_clonal_CN[["variable=clonal_CN_profiles"]][[i]]
-                simulations_statistics[["variable=clonal_CN_populations"]][[i]] <-
-                    simulations_clonal_CN[["variable=clonal_CN_populations"]][[i]]
-            } else if (stat_variable == "maximal_CN") {
-                #   Get maximal CN profile
-                simulations_statistics[["variable=maximal_CN_profile"]][[i]] <-
-                    simulations_clonal_CN[["variable=maximal_CN_profile"]][[i]]
-            } else if (stat_variable == "average_CN") {
-                #   Get average CN profile
-                simulations_statistics[["variable=average_CN_profile"]][[i]] <-
-                    simulations_clonal_CN[["variable=average_CN_profile"]][[i]]
-            } else {
-                stop(paste0("Error: Unknown statistic: ", stat))
-            }
-        }
-    }
-    return(simulations_statistics)
-}
-
 #' @export
 get_statistics <- function(list_targets,
                            simulations_sc = NULL,
@@ -364,18 +364,18 @@ get_statistics <- function(list_targets,
     #-------------Get clonal CN profiles for all single-cell simulations
     if (is.null(simulations_statistics_sc)) {
         if (any(grepl("variable=clonal_CN", list_targets))) {
-            simulations_clonal_CN_sc <- get_clonal_CN_profiles(simulations_sc, arm_level, cn_table)
+            simulations_clonal_CN_sc <- get_each_clonal_CN_profiles(simulations_sc, arm_level, cn_table)
         }
         list_targets_sc <- list_targets[grepl("data=sc", list_targets)]
-        simulations_statistics_sc <- get_statistics_simulations_sc(simulations_sc, simulations_clonal_CN_sc, list_targets_sc)
+        simulations_statistics_sc <- get_each_statistics(simulations_sc, simulations_clonal_CN_sc, list_targets_sc)
     }
     #------------Get representative CN profiles for all bulk simulations
     if (is.null(simulations_statistics_bulk)) {
         if ((any(grepl("variable=average_CN", list_targets))) | (any(grepl("variable=maximal_CN", list_targets)))) {
-            simulations_clonal_CN_bulk <- get_clonal_CN_profiles(simulations_bulk, arm_level, cn_table, bulk = TRUE)
+            simulations_clonal_CN_bulk <- get_each_clonal_CN_profiles(simulations_bulk, arm_level, cn_table, bulk = TRUE)
         }
         list_targets_bulk <- list_targets[grepl("data=bulk", list_targets)]
-        simulations_statistics_bulk <- get_statistics_simulations_sc(simulations_bulk, simulations_clonal_CN_bulk, list_targets_bulk)
+        simulations_statistics_bulk <- get_each_statistics(simulations_bulk, simulations_clonal_CN_bulk, list_targets_bulk)
     }
     #-----------------------------------------Get statistics for fitting
     statistics <- rep(0, length(list_targets))
@@ -583,8 +583,8 @@ library_sc_CN <- function(model_name,
     ####
     clusterExport(cl, varlist = c(
         "n_simulations_sc", "n_simulations_bulk", "save_sample_statistics", "list_targets_library", "sim_param", "parameter_IDs", "model_variables", "cn_data_sc", "cn_data_sc", "cn_table", "arm_level",
-        "func_ABC", "assign_paras", "get_statistics", "get_clonal_CN_profiles", "save_sample_statistics", "get_cn_profile", "get_arm_CN_profiles",
-        "find_clonal_ancestry", "find_event_count", "cn_distance", "sample_distance", "cohort_distance", "get_statistics_simulations_sc",
+        "func_ABC", "assign_paras", "get_statistics", "get_each_clonal_CN_profiles", "save_sample_statistics", "get_cn_profile", "get_arm_CN_profiles",
+        "find_clonal_ancestry", "find_event_count", "cn_distance", "sample_distance", "cohort_distance", "get_each_statistics",
         "vec_CN_block_no", "vec_centromeres",
         "BUILD_driver_library", "simulator_full_program", "one_simulation",
         "SIMULATOR_VARIABLES_for_simulation",
