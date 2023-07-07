@@ -293,13 +293,13 @@ cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i) {
 })
 stopCluster(cl)
 # ==================GET CLONAL CN PROFILES FROM SINGLE-CELL DNA-SEQ DATA
-data_sc_clonal_CN_profiles <- get_clonal_CN_profiles(
+data_sc_clonal_CN_profiles <- get_each_clonal_CN_profiles(
     cn_sc_ground_truth,
     arm_level = TRUE,
     cn_table = cn_table
 )
 # =========================GET CLONAL CN PROFILES FROM BULK DNA-SEQ DATA
-data_bulk_clonal_CN_profiles <- get_clonal_CN_profiles(
+data_bulk_clonal_CN_profiles <- get_each_clonal_CN_profiles(
     cn_bulk_ground_truth,
     arm_level = TRUE,
     cn_table = cn_table,
