@@ -7,13 +7,13 @@
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
+R_workplace <- getwd()
+R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
+R_libPaths_extra <- "/burg/iicd/users/knd2127/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+# R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -126,8 +126,8 @@ SAVE_model_variables(
 ####
 ####
 ####
-N_data_dlp <<- 2
-N_data_bulk <<- 2
+N_data_dlp <<- 10
+N_data_bulk <<- 100
 ####
 ####
 ####
@@ -246,29 +246,29 @@ cn_table$Centromere <- cn_table$Centromere_location * cn_bin_length
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 
-# cat(paste0("Loading ", N_data_dlp, " single-cell DNA-seq data sets...\n"))
-# n_cores <- max(detectCores() - 1, 1)
-# cl <- makePSOCKcluster(n_cores)
-# model_name <<- model_name
-# clusterExport(cl, varlist = c("model_name"))
-# pbo <- pboptions(type = "txt")
-# cn_sc_ground_truth <- pblapply(cl = cl, X = 1:N_data_dlp, FUN = function(i) {
-#     load(paste0(model_name, "_simulation_", i, ".rda"))
-#     return(simulation)
-# })
-# stopCluster(cl)
+cat(paste0("Loading ", N_data_dlp, " single-cell DNA-seq data sets...\n"))
+n_cores <- max(detectCores() - 1, 1)
+cl <- makePSOCKcluster(n_cores)
+model_name <<- model_name
+clusterExport(cl, varlist = c("model_name"))
+pbo <- pboptions(type = "txt")
+cn_sc_ground_truth <- pblapply(cl = cl, X = 1:N_data_dlp, FUN = function(i) {
+    load(paste0(model_name, "_simulation_", i, ".rda"))
+    return(simulation)
+})
+stopCluster(cl)
 
-# cat(paste0("Loading ", N_data_bulk, " bulk DNA-seq data sets...\n"))
-# n_cores <- max(detectCores() - 1, 1)
-# cl <- makePSOCKcluster(n_cores)
-# model_name <<- model_name
-# clusterExport(cl, varlist = c("model_name", "N_data_dlp"))
-# pbo <- pboptions(type = "txt")
-# cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i) {
-#     load(paste0(model_name, "_simulation_", i + N_data_dlp, ".rda"))
-#     return(simulation)
-# })
-# stopCluster(cl)
+cat(paste0("Loading ", N_data_bulk, " bulk DNA-seq data sets...\n"))
+n_cores <- max(detectCores() - 1, 1)
+cl <- makePSOCKcluster(n_cores)
+model_name <<- model_name
+clusterExport(cl, varlist = c("model_name", "N_data_dlp"))
+pbo <- pboptions(type = "txt")
+cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i) {
+    load(paste0(model_name, "_simulation_", i + N_data_dlp, ".rda"))
+    return(simulation)
+})
+stopCluster(cl)
 # ==================GET CLONAL CN PROFILES FROM SINGLE-CELL DNA-SEQ DATA
 data_sc_clonal_CN_profiles <- get_clonal_CN_profiles(
     cn_sc_ground_truth,
@@ -297,32 +297,31 @@ cn_sc_ground_truth <- c()
 cn_bulk_ground_truth <- c()
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #---Produce library of simulations for fitting
-
-# library_sc_CN(
-#     model_name = model_name,
-#     model_variables = model_variables,
-#     list_parameters = list_parameters,
-#     list_targets_library = list_targets_library,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     ABC_simcount = 8,
-#     arm_level = TRUE,
-#     cn_table = cn_table,
-#     cn_data_sc = data_sc_clonal_CN_profiles,
-#     cn_data_bulk = data_bulk_clonal_CN_profiles,
-#     n_simulations_sc = N_data_dlp,
-#     n_simulations_bulk = N_data_bulk,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     library_name = model_name,
-#     save_sample_statistics = TRUE
-# )
+library_sc_CN(
+    model_name = model_name,
+    model_variables = model_variables,
+    list_parameters = list_parameters,
+    list_targets_library = list_targets_library,
+    ####
+    ####
+    ####
+    ####
+    ####
+    ABC_simcount = 1000,
+    arm_level = TRUE,
+    cn_table = cn_table,
+    cn_data_sc = data_sc_clonal_CN_profiles,
+    cn_data_bulk = data_bulk_clonal_CN_profiles,
+    n_simulations_sc = N_data_dlp,
+    n_simulations_bulk = N_data_bulk,
+    ####
+    ####
+    ####
+    ####
+    ####
+    library_name = model_name,
+    save_sample_statistics = TRUE
+)
 #---Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 #---Fit parameters and compare with ground truth
