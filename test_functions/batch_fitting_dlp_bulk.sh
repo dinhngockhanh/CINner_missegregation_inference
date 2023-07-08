@@ -18,4 +18,4 @@ pwd
 echo "Launching an R run"
 date
 
-R CMD BATCH --no-save --vanilla program_DLPandBULK_Zijin.r routput
+R CMD BATCH --no-save --vanilla program_DLPandBULK_Misseg_and_chrs_Zijin.r routput
