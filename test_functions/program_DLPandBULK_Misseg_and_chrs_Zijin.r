@@ -170,22 +170,22 @@ N_data_bulk <- 100
 #     R_libPaths = R_libPaths
 # )
 # tmp <- c()
-cat(paste0("\n\n\nMaking ", N_data_dlp + N_data_bulk, " simulations...\n"))
-tmp <- simulator_full_program(
-    model = model_name,
-    n_simulations = (N_data_dlp + N_data_bulk),
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
+# cat(paste0("\n\n\nMaking ", N_data_dlp + N_data_bulk, " simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = model_name,
+#     n_simulations = (N_data_dlp + N_data_bulk),
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
 
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 4, nrow = 0))
@@ -368,7 +368,7 @@ library_sc_CN(
     ####
     ####
     ####
-    ABC_simcount = 4000,
+    ABC_simcount = 2000,
     arm_level = TRUE,
     cn_table = cn_table,
     cn_data_sc = data_sc_clonal_CN_profiles,
