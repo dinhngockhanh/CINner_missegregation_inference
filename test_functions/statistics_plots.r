@@ -97,23 +97,23 @@ prob_misseg <- parameters[, "prob_misseg"]
 # Correlation Plot=================================================
 # =================================================================
 #-------------------------------------------Get correlation matrix
-corr_mtx <- cor(y = parameters, x = statistics)
+corr_mtx <- cor(y = parameters, x = chosen_statistics)
 #--------------------------------------------Plot correlation plot
 corr_plot <- function(corr_mtx) {
   library("ggcorrplot")
   plot <- ggcorrplot(corr_mtx, ggtheme = ggplot2::theme_gray) +
     theme(axis.text.x = element_text(colour = c(
-      "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+      # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+      # "#00BA38",
+      # "#619CFF", "#619CFF", "#619CFF", "#619CFF",
+      # "#619CFF", "#619CFF","#619CFF", "#619CFF",
+      # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
+      # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
+      # ))) +
+      # theme(axis.text.x = element_text(colour = c(
       "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
       "#619CFF", "#619CFF", "#619CFF", "#619CFF",
-      "#619CFF", "#619CFF", "#619CFF", "#619CFF",
-      "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
       "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
-      # # ))) +
-      # theme(axis.text.x = element_text(colour = c(
-      # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
-      # "#619CFF", "#619CFF", "#619CFF", "#619CFF",
-      # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
     )))
   ggsave(file = "correlation_plot.png", plot = plot, width = 10, height = 10, dpi = 300)
   return(plot)
