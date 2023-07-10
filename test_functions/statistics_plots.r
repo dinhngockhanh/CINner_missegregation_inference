@@ -67,7 +67,29 @@ chosen_statistics <- data.matrix(chosen_statistics)
 parameters <- ABC_input$sim_param
 param_names <- c(
   "prob_misseg",
-  "prob_armmisseg"
+  "1p",
+  "2p",
+  "3p",
+  "4p",
+  "5p",
+  "6p",
+  "7p",
+  "8p",
+  "9p",
+  "10p",
+  "11p",
+  "12p",
+  "13p",
+  "14p",
+  "15p",
+  "16p",
+  "17p",
+  "18p",
+  "19p",
+  "20p",
+  "21p",
+  "22p",
+  "Xp"
 )
 colnames(parameters) <- param_names
 prob_armmisseg <- parameters[, "prob_armmisseg"]
@@ -75,23 +97,23 @@ prob_misseg <- parameters[, "prob_misseg"]
 # Correlation Plot=================================================
 # =================================================================
 #-------------------------------------------Get correlation matrix
-corr_mtx <- cor(y = parameters, x = chosen_statistics)
+corr_mtx <- cor(y = parameters, x = statistics)
 #--------------------------------------------Plot correlation plot
 corr_plot <- function(corr_mtx) {
   library("ggcorrplot")
   plot <- ggcorrplot(corr_mtx, ggtheme = ggplot2::theme_gray) +
     theme(axis.text.x = element_text(colour = c(
-      # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38","#00BA38",
-      # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
-      # "#619CFF", "#619CFF", "#619CFF", "#619CFF",
-      # "#619CFF", "#619CFF", "#619CFF", "#619CFF",
-      # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
-      # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
+      "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+      "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+      "#619CFF", "#619CFF", "#619CFF", "#619CFF",
+      "#619CFF", "#619CFF", "#619CFF", "#619CFF",
+      "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
+      "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
       # # ))) +
       # theme(axis.text.x = element_text(colour = c(
-      "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
-      "#619CFF", "#619CFF", "#619CFF", "#619CFF",
-      "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
+      # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
+      # "#619CFF", "#619CFF", "#619CFF", "#619CFF",
+      # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
     )))
   ggsave(file = "correlation_plot.png", plot = plot, width = 10, height = 10, dpi = 300)
   return(plot)
