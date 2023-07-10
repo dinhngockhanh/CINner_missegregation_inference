@@ -304,6 +304,11 @@ clusterExport(cl, varlist = c(
     "model_name", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
     "cn_table", "get_each_statistics", "list_targets_library_sc", "find_clonal_ancestry", "find_event_count"
 ))
+e <- new.env()
+e$libs <- .libPaths()
+clusterExport(cl, "libs", envir = e)
+clusterEvalQ(cl, .libPaths(libs))
+# clusterEvalQ(cl = cl, library(vegan))
 pbo <- pboptions(type = "txt")
 # ===============================INPUT GROUND TRUTH BULK DATA FOR FITTING
 ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:N_data_dlp, FUN = function(i) {
