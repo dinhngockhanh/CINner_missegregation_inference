@@ -749,6 +749,9 @@ fitting_sc_CN <- function(library_name,
                           list_parameters,
                           list_targets_library,
                           list_targets,
+                          list_targets_chr_misseg = NULL,
+                          list_targets_arm_misseg = NULL,
+                          list_targets_sel = NULL,
                           shuffle_num,
                           n_cores = NULL,
                           cn_data_sc = NULL,
@@ -901,6 +904,26 @@ fitting_sc_CN <- function(library_name,
         }
     }
     # ================================PREPARE SIMULATION LIBRARY FOR ABC
+    # ===============
+    # ===============
+    # ===============
+    # ***
+    #---Prepare the names of statistics for params
+    # stat_details <- strsplit(list_targets, ";")
+    # stat_names <- c()
+    # for (i in 1:length(list_targets)) {
+    #     tmp_name <- strsplit(stat_details[[i]], "=")
+    #     sub_stat_names <- ""
+    #     for (j in 1:length(tmp_name)) {
+    #         sub_stat_names <- paste0(sub_stat_names, tmp_name[[j]][2], " ")
+    #     }
+    #     stat_names[i] <- sub_stat_names
+    # }
+    #---Prepare the names of statistics for prob_CN_missegregation
+    # stat_names_misseg <- stat_names[c(1:7)]
+    # stat_names_arm_misseg <- stat_names[c(3:5,10)]
+    # ===============
+    # ===============
     #   Find ID for each parameter in the prepared library
     sim_param_ID <- list_parameters$Variable
     sim_stat_ID <- list_targets
@@ -908,8 +931,11 @@ fitting_sc_CN <- function(library_name,
     df_sim_param <- data.frame(sim_param)
     colnames(df_sim_param) <- sim_param_ID
     df_sim_stat <- data.frame(sim_stat)
+    # ***
+    # colnames(df_sim_stat) <- stat_names
     colnames(df_sim_stat) <- paste0("stat_", 1:ncol(sim_stat))
     # ====================================FITTING WITH ABC RANDOM FOREST
+
     #---Dataframe for prepared library of parameters
     all_paras <- df_sim_param
     #---Dataframe for prepared library of statistics
@@ -917,6 +943,7 @@ fitting_sc_CN <- function(library_name,
     #---Dataframe for data observation
     all_obs <- data.frame(matrix(DATA_target, nrow = 1))
     colnames(all_obs) <- paste0("stat_", 1:ncol(sim_stat))
+    # colnames(all_obs) <- stat_names
     #---Fit each parameter with ABC-rf
     layout <- matrix(NA, nrow = 7, ncol = ceiling(length(parameter_IDs) / 7))
     gs <- list()
@@ -926,12 +953,44 @@ fitting_sc_CN <- function(library_name,
         para_ID <- list_parameters$Variable[para]
         para_type <- list_parameters$Type[para]
         cat(paste("\nABC for parameter ", para_ID, " [", para, "/", nrow(list_parameters), "]", "\n", sep = ""))
-        #   Prepare observations for this parameter
-        mini_obs <- all_obs
-        #   Prepare library of statistics for this parameter
-        mini_data <- all_data
-        #   Prepare library of parameters for this parameter
-        data_rf <- cbind(all_paras[para_ID], all_data)
+        # ***
+        if (grepl("prob_CN_missegregation", para_ID)) {
+            if (!is.null(list_targets_chr_misseg)) {
+                #   Prepare observations for chromosome missegregation
+                mini_obs <- all_obs[, match(list_targets_chr_misseg, list_targets)]
+                #   Prepare library of statistics for chromosome missegregation
+                mini_data <- all_data[, match(list_targets_chr_misseg, list_targets)]
+                #   Prepare library of parameters for chromosome missegregation
+                # ***: Should here be mini_Data or all_Data?
+                data_rf <- cbind(all_paras[para_ID], mini_data)
+            }
+        } else if (grepl("prob_CN_chrom_arm_missegregation", para_ID)) {
+            if (!is.null(list_targets_arm_misseg)) {
+                #   Prepare observations for chromosome arm missegregation
+                mini_obs <- all_obs[, match(list_targets_arm_misseg, list_targets)]
+                #   Prepare library of statistics for chromosome arm missegregation
+                mini_data <- all_data[, match(list_targets_arm_misseg, list_targets)]
+                #   Prepare library of parameters for chromosome arm missegregation
+                # ***: Should here be mini_Data or all_Data?
+                data_rf <- cbind(all_paras[para_ID], mini_data)
+            }
+        } else {
+            if (!is.null(list_targets_sel)) {
+                #   Prepare observations for chromosome selection rates
+                mini_obs <- all_obs[, match(list_targets_sel, list_targets)]
+                #   Prepare library of statistics for chromosome selection rates
+                mini_data <- all_data[, match(list_targets_sel, list_targets)]
+                #   Prepare library of parameters for chromosome selection rates
+                # ***: Should here be mini_Data or all_Data?
+                data_rf <- cbind(all_paras[para_ID], mini_data)
+            }
+        }
+        # #   Prepare observations for this parameter
+        # mini_obs <- all_obs
+        # #   Prepare library of statistics for this parameter
+        # mini_data <- all_data
+        # #   Prepare library of parameters for this parameter
+        # data_rf <- cbind(all_paras[para_ID], all_data)
         #   Train the random forest
         colnames(data_rf)[1] <- "para"
         f <- as.formula("para ~.")
