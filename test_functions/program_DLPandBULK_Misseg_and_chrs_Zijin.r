@@ -143,37 +143,37 @@ N_data_bulk <- 100
 ####
 ####
 ####
-cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
-tmp <- simulator_full_program(
-    model = paste0(model_name, "_sc"),
-    n_simulations = N_data_dlp,
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
-tmp <- c()
-cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
-tmp <- simulator_full_program(
-    model = paste0(model_name, "_bulk"),
-    n_simulations = N_data_bulk,
-    stage_final = 2,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "sample_genotype_unique_profile",
-        "sample_genotype_unique",
-        "sample_clone_ID"
-    ),
-    R_libPaths = R_libPaths
-)
-tmp <- c()
+# cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = paste0(model_name, "_sc"),
+#     n_simulations = N_data_dlp,
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# tmp <- c()
+# cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = paste0(model_name, "_bulk"),
+#     n_simulations = N_data_bulk,
+#     stage_final = 2,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "sample_genotype_unique_profile",
+#         "sample_genotype_unique",
+#         "sample_clone_ID"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# tmp <- c()
 # ========================================OLD ONE
 # cat(paste0("\n\n\nMaking ", N_data_dlp + N_data_bulk, " simulations...\n"))
 # tmp <- simulator_full_program(
@@ -471,7 +471,7 @@ library_sc_CN(
     ####
     ####
     library_name = model_name,
-    save_sample_statistics = TRUE，
+    save_sample_statistics = TRUE,
     n_cores = 30
 )
 #---Import ground truth parameters
