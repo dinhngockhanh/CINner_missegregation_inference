@@ -1,11 +1,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+R_workplace <- getwd()
+R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
@@ -136,8 +136,8 @@ SAVE_model_variables(
 ####
 ####
 ####
-N_data_dlp <- 3
-N_data_bulk <- 3
+N_data_dlp <- 10
+N_data_bulk <- 100
 ####
 ####
 ####
@@ -446,9 +446,6 @@ DLP_stats <- get_statistics(
     cn_table = cn_table,
     save_sample_statistics = TRUE
 )
-
-# DLP_stats$statistics
-
 # =======================================FIT PARAMETERS USING "DLP" DATA
 #---Produce library of simulations for fitting
 library_sc_CN(
@@ -461,11 +458,11 @@ library_sc_CN(
     ####
     ####
     ####
-    ABC_simcount = 3,
+    ABC_simcount = 10000,
     arm_level = TRUE,
     cn_table = cn_table,
-    cn_data_sc = ls_cn_sc_ground_truth_clone,
-    cn_data_bulk = ls_cn_bulk_ground_truth_clone,
+    cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
+    cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
     n_simulations_sc = N_data_dlp,
     n_simulations_bulk = N_data_bulk,
     ####
@@ -474,7 +471,8 @@ library_sc_CN(
     ####
     ####
     library_name = model_name,
-    save_sample_statistics = TRUE
+    save_sample_statistics = TRUE，
+    n_cores = 30
 )
 #---Import ground truth parameters
 parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
@@ -537,8 +535,8 @@ fitting_sc_CN(
     # list_targets = list_targets,
     list_targets_param = list_targets_param,
     shuffle_num = 3,
-    cn_data_sc = ls_cn_sc_ground_truth_clone,
-    cn_data_bulk = ls_cn_bulk_ground_truth_clone,
+    cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
+    cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
     arm_level = TRUE,
     cn_table = cn_table,
     shuffle_chromosome_arms = FALSE,

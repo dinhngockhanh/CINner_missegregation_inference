@@ -386,8 +386,6 @@ get_statistics <- function(list_targets,
         stat_data <- strsplit(stat_details[grep("data=", stat_details)], "=")[[1]][2]
         stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
         stat_type <- strsplit(stat_details[grepl("statistic=", stat_details)], "=")[[1]][2]
-        print("test statistics")
-        print(simulations_statistics_sc[[stat_ID]])
         if (stat_type == "mean") {
             if (stat_data == "sc") {
                 statistics[i] <- mean(simulations_statistics_sc[[stat_ID]])
@@ -397,7 +395,6 @@ get_statistics <- function(list_targets,
         } else if (stat_type == "var") {
             if (stat_data == "sc") {
                 statistics[i] <- var(simulations_statistics_sc[[stat_ID]])
-                print(simulations_statistics_sc[[stat_ID]])
             } else if (stat_data == "bulk") {
                 simpleError("Error: bulk data not implemented yet")
             }
@@ -925,8 +922,6 @@ fitting_sc_CN <- function(library_name,
     #---Dataframe for data observation
     all_obs <- data.frame(matrix(DATA_target, nrow = 1))
     colnames(all_obs) <- paste0("stat_", 1:ncol(sim_stat))
-    print("all_obs")
-    print(all_obs)
     #---Fit each parameter with ABC-rf
     layout <- matrix(NA, nrow = 7, ncol = ceiling(length(parameter_IDs) / 7))
     gs <- list()
