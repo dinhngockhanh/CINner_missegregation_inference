@@ -742,13 +742,12 @@ permutate_chromosomes <- function(current_sim_param, current_sim_sample_stat, li
 }
 
 #' @export
-
 fitting_sc_CN <- function(library_name,
                           model_name,
                           copynumber_DATA,
                           parameters_truth = NULL,
                           list_parameters,
-                          list_targets_param,
+                          list_targets,
                           shuffle_num,
                           n_cores = NULL,
                           cn_data_sc = NULL,
@@ -781,21 +780,6 @@ fitting_sc_CN <- function(library_name,
     sim_sample_stat <- ABC_input$sim_sample_stat
     #--------------------------------Find statistics for each CN heatmap
     DATA_target <- copynumber_DATA$statistics
-    # new_DATA_target <- c()
-    # for (i in 1:length(DATA_target)) {
-    #     if (list_targets_library[i] %in% list_targets) {
-    #         new_DATA_target <- cbind(new_DATA_target, DATA_target[i])
-    #     }
-    # }
-    # DATA_target <- new_DATA_target
-    #-------------Make new simulated stats corresponding to list_targets
-    # new_sim_stat <- c()
-    # for (i in 1:ncol(sim_stat)) {
-    #     if (list_targets_library[i] %in% list_targets) {
-    #         new_sim_stat <- cbind(new_sim_stat, sim_stat[, i])
-    #     }
-    # }
-    # sim_stat <- new_sim_stat
     # ========================INCREASE SIMULATED LIBRARY VIA PERMUTATION
     if ((shuffle_chromosome_arms | shuffle_chromosomes) &
         ((any(grepl("sc", names(sim_sample_stat[[1]])))) |
@@ -901,14 +885,9 @@ fitting_sc_CN <- function(library_name,
         }
     }
     # ================================PREPARE SIMULATION LIBRARY FOR ABC
-    # ===============
-    # ===============
-    # ===============
-    # ===============
-    # ===============
     #   Find ID for each parameter in the prepared library
     sim_param_ID <- list_parameters$Variable
-    sim_stat_ID <- colnames(list_targets_param)[-1]
+    sim_stat_ID <- colnames(list_targets)[-1]
     #   Prepare the simulation library
     df_sim_param <- data.frame(sim_param)
     colnames(df_sim_param) <- sim_param_ID
@@ -931,17 +910,14 @@ fitting_sc_CN <- function(library_name,
         para_ID <- list_parameters$Variable[para]
         para_type <- list_parameters$Type[para]
         cat(paste("\nABC for parameter ", para_ID, " [", para, "/", nrow(list_parameters), "]", "\n", sep = ""))
-        # ***
         #   Prepare observations for this parameter
-        mini_obs <- all_obs[, which(list_targets_param[para, -1] == 1)]
-        print(mini_obs)
+        mini_obs <- all_obs[, which(list_targets[para, -1] == 1)]
         #   Prepare library of statistics for this parameter
-        mini_data <- all_data[, which(list_targets_param[para, -1] == 1)]
+        mini_data <- all_data[, which(list_targets[para, -1] == 1)]
         #   Prepare library of parameters for this parameter
         data_rf <- cbind(all_paras[para_ID], mini_data)
         #   Train the random forest
         colnames(data_rf)[1] <- "para"
-        print(data_rf)
         f <- as.formula("para ~.")
         model_rf <- regAbcrf(
             formula = f, data_rf,
@@ -1006,11 +982,7 @@ fitting_sc_CN <- function(library_name,
     print(p)
     dev.off()
 
-
-
-
-
-    print(df_sim_param)
-    print(df_sim_stat)
-    print(all_obs)
+    # print(df_sim_param)
+    # print(df_sim_stat)
+    # print(all_obs)
 }
