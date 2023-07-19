@@ -112,7 +112,7 @@ prob_misseg <- parameters[, "prob_misseg"]
 # Correlation Plot=================================================
 # =================================================================
 #-------------------------------------------Get correlation matrix
-corr_mtx <- cor(y = parameters[, -1], x = chosen_statistics)
+corr_mtx <- cor(y = parameters, x = chosen_statistics)
 #--------------------------------------------Plot correlation plot
 
 
@@ -132,11 +132,14 @@ corr_plot <- function(corr_mtx) {
       # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
       # "#619CFF", "#619CFF", "#619CFF", "#619CFF",
       # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
-    )))
+    ))) +
+    scale_fill_gradient2(limit = c(-0.2, 0.2), low = "blue", high = "red", )
   ggsave(file = "correlation_plot.png", plot = plot, width = 12, height = 10, units = "in", dpi = 300, limitsize = FALSE)
   return(plot)
 }
 corr_plot(corr_mtx)
+min(corr_mtx)
+max(corr_mtx)
 # P-value Plot=====================================================
 # =================================================================
 p_value_plot <- function(parameter, statistic, title) {
