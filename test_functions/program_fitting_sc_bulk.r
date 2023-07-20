@@ -387,14 +387,15 @@ list_targets_misseg <- c(
     "data=sc;statistic=mean;variable=shannon",
     "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
     "data=sc;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
-    # "data=sc;statistic=var;variable=shannon",
+    "data=sc;statistic=var;variable=shannon",
     # "data=sc;statistic=var;variable=event_count;type=clonal;event=missegregation",
     # "data=sc;statistic=var;variable=event_count;type=subclonal;event=missegregation",
     "data=sc;statistic=dist;variable=clonal_CN;metric=euclidean",
-    # "data=sc;statistic=mean;variable=colless",
-    # "data=sc;statistic=mean;variable=sackin",
-    "data=sc;statistic=mean;variable=B2"
-    # "data=sc;statistic=mean;variable=maxDepth"
+    "data=sc;statistic=mean;variable=colless",
+    "data=sc;statistic=mean;variable=sackin",
+    "data=sc;statistic=mean;variable=B2",
+    "data=sc;statistic=mean;variable=maxDepth"
+    # "data=sc;statistic=var;variable=B2"
 )
 list_targets[1, which(colnames(list_targets) %in% list_targets_misseg)] <- 1
 #---Statistics for fitting selection rate
@@ -403,8 +404,12 @@ list_targets_selection <- c(
     "data=sc;statistic=dist;variable=clonal_CN;metric=euclidean",
     "data=sc;statistic=mean;variable=shannon",
     "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
+    "data=sc;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
     "data=sc;statistic=mean;variable=colless",
-    "data=sc;statistic=mean;variable=sackin"
+    "data=sc;statistic=mean;variable=sackin",
+    "data=sc;statistic=mean;variable=B2",
+    "data=sc;statistic=var;variable=B2",
+    "data=sc;statistic=var;variable=event_count;type=clonal;event=missegregation"
 )
 for (row in 2:nrow(list_targets)) {
     list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
