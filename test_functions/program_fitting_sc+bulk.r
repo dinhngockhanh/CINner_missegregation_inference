@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+R_workplace <- getwd()
+R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
 # R_libPaths <- ""
@@ -11,9 +11,9 @@
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+# R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -228,38 +228,38 @@ vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 # # ================================================MAKE GROUND-TRUTH DATA
 #---Make single-cell ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
-tmp <- simulator_full_program(
-    model = paste0(model_name, "_sc"),
-    n_simulations = N_data_dlp,
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
-tmp <- c()
-#---Make bulk ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
-tmp <- simulator_full_program(
-    model = paste0(model_name, "_bulk"),
-    n_simulations = N_data_bulk,
-    stage_final = 2,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "sample_genotype_unique_profile",
-        "sample_genotype_unique",
-        "sample_clone_ID"
-    ),
-    R_libPaths = R_libPaths
-)
-tmp <- c()
+# cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = paste0(model_name, "_sc"),
+#     n_simulations = N_data_dlp,
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# tmp <- c()
+# #---Make bulk ground-truth simulations
+# cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = paste0(model_name, "_bulk"),
+#     n_simulations = N_data_bulk,
+#     stage_final = 2,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "sample_genotype_unique_profile",
+#         "sample_genotype_unique",
+#         "sample_clone_ID"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# tmp <- c()
 # ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
 #---Get single-cell statistics & CN profiles
 #   Get statistics & clonal CN profiles for each single-cell sample
@@ -351,32 +351,32 @@ for (type in 1:2) {
     names(ls_cn_bulk_ground_truth_all[[type]]) <- names(ls_cn_bulk_ground_truth[[1]][[type]])
 }
 # ===============================================MAKE SIMULATION LIBRARY
-library_sc_CN(
-    model_name = model_name,
-    model_variables = model_variables,
-    list_parameters = list_parameters,
-    list_targets_library = list_targets_library,
-    ####
-    ####
-    ####
-    ####
-    ####
-    ABC_simcount = 10000,
-    arm_level = TRUE,
-    cn_table = cn_table,
-    cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
-    cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
-    n_simulations_sc = N_data_dlp,
-    n_simulations_bulk = N_data_bulk,
-    ####
-    ####
-    ####
-    ####
-    ####
-    library_name = model_name,
-    save_sample_statistics = TRUE,
-    n_cores = 30
-)
+# library_sc_CN(
+#     model_name = model_name,
+#     model_variables = model_variables,
+#     list_parameters = list_parameters,
+#     list_targets_library = list_targets_library,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     ABC_simcount = 10000,
+#     arm_level = TRUE,
+#     cn_table = cn_table,
+#     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
+#     cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
+#     n_simulations_sc = N_data_dlp,
+#     n_simulations_bulk = N_data_bulk,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     library_name = model_name,
+#     save_sample_statistics = TRUE,
+#     n_cores = 30
+# )
 # ==================DEFINE LIST OF STATISTICS FOR FITTING EACH PARAMETER
 list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
 colnames(list_targets) <- c("Variable", list_targets_library)
@@ -387,20 +387,24 @@ list_targets_misseg <- c(
     "data=sc;statistic=mean;variable=shannon",
     "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
     "data=sc;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
-    "data=sc;statistic=var;variable=shannon",
-    "data=sc;statistic=var;variable=event_count;type=clonal;event=missegregation",
-    "data=sc;statistic=var;variable=event_count;type=subclonal;event=missegregation",
+    # "data=sc;statistic=var;variable=shannon",
+    # "data=sc;statistic=var;variable=event_count;type=clonal;event=missegregation",
+    # "data=sc;statistic=var;variable=event_count;type=subclonal;event=missegregation",
     "data=sc;statistic=dist;variable=clonal_CN;metric=euclidean",
-    "data=sc;statistic=mean;variable=colless",
-    "data=sc;statistic=mean;variable=sackin",
-    "data=sc;statistic=mean;variable=B2",
-    "data=sc;statistic=mean;variable=maxDepth"
+    # "data=sc;statistic=mean;variable=colless",
+    # "data=sc;statistic=mean;variable=sackin",
+    "data=sc;statistic=mean;variable=B2"
+    # "data=sc;statistic=mean;variable=maxDepth"
 )
 list_targets[1, which(colnames(list_targets) %in% list_targets_misseg)] <- 1
 #---Statistics for fitting selection rate
 list_targets_selection <- c(
     "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
-    "data=sc;statistic=dist;variable=clonal_CN;metric=euclidean"
+    "data=sc;statistic=dist;variable=clonal_CN;metric=euclidean",
+    "data=sc;statistic=mean;variable=shannon",
+    "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
+    "data=sc;statistic=mean;variable=colless",
+    "data=sc;statistic=mean;variable=sackin"
 )
 for (row in 2:nrow(list_targets)) {
     list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
