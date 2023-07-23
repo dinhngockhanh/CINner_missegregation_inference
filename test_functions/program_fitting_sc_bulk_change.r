@@ -5,7 +5,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
 R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+R_libPaths_extra <- "/Users/xiangzijin/DLPfit/testR"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
@@ -150,9 +150,9 @@ for (i in 1:nrow(model_variables$chromosome_arm_library)) {
 # =============DEFINE LIST OF STATISTICS FOR BUILDING SIMULATION LIBRARY
 list_targets_library <- c(
     #---Bulk DNA: CN
-    "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
-    # "data=bulk;statistic=dist;class=average_CN;metric=euclidean",
-    # "data=bulk;statistic=mean;variable=event_count;type=clonal;event=missegregation",
+    # "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
+    "data=bulk;statistic=dist;class=average_CN;metric=euclidean",
+    "data=bulk;statistic=mean;variable=event_count;type=clonal;event=missegregation",
     #---Single-cell DNA: subclonal CN
     "data=sc;statistic=mean;variable=shannon",
     "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
@@ -229,39 +229,39 @@ cn_table$Centromere <- cn_table$Centromere_location * cn_bin_length
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 # # ================================================MAKE GROUND-TRUTH DATA
-#---Make single-cell ground-truth simulations
-# cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
-# tmp <- simulator_full_program(
-#     model = paste0(model_name, "_sc"),
-#     n_simulations = N_data_dlp,
-#     stage_final = 3,
-#     compute_parallel = TRUE,
-#     output_variables = c(
-#         "evolution_origin",
-#         "evolution_genotype_changes",
-#         "sample_clone_ID",
-#         "sample_genotype_unique",
-#         "sample_genotype_unique_profile",
-#         "phylogeny_clustering_truth"
-#     ),
-#     R_libPaths = R_libPaths
-# )
-# tmp <- c()
-# #---Make bulk ground-truth simulations
-# cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
-# tmp <- simulator_full_program(
-#     model = paste0(model_name, "_bulk"),
-#     n_simulations = N_data_bulk,
-#     stage_final = 2,
-#     compute_parallel = TRUE,
-#     output_variables = c(
-#         "sample_genotype_unique_profile",
-#         "sample_genotype_unique",
-#         "sample_clone_ID"
-#     ),
-#     R_libPaths = R_libPaths
-# )
-# tmp <- c()
+# ---Make single-cell ground-truth simulations
+cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
+tmp <- simulator_full_program(
+    model = paste0(model_name, "_sc"),
+    n_simulations = N_data_dlp,
+    stage_final = 3,
+    compute_parallel = TRUE,
+    output_variables = c(
+        "evolution_origin",
+        "evolution_genotype_changes",
+        "sample_clone_ID",
+        "sample_genotype_unique",
+        "sample_genotype_unique_profile",
+        "phylogeny_clustering_truth"
+    ),
+    R_libPaths = R_libPaths
+)
+tmp <- c()
+#---Make bulk ground-truth simulations
+cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
+tmp <- simulator_full_program(
+    model = paste0(model_name, "_bulk"),
+    n_simulations = N_data_bulk,
+    stage_final = 2,
+    compute_parallel = TRUE,
+    output_variables = c(
+        "sample_genotype_unique_profile",
+        "sample_genotype_unique",
+        "sample_clone_ID"
+    ),
+    R_libPaths = R_libPaths
+)
+tmp <- c()
 # ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
 # ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
 #---Get single-cell statistics & CN profiles
