@@ -87,7 +87,7 @@ get_each_clonal_CN_profiles <- function(simulations,
             average_CN_profile$Maj <- round(average_CN_profile$Maj / sum(clonal_populations))
             average_CN_profile$state <- average_CN_profile$Min + average_CN_profile$Maj
             average_CN_profile$copy <- average_CN_profile$state
-            clonal_CN_profiles_all_sims_new[["class=average_CN_profile"]][[i]] <- average_CN_profile
+            clonal_CN_profiles_all_sims_new[["variable=average_CN_profile"]][[i]] <- average_CN_profile
         }
         clonal_CN_profiles_all_sims <- clonal_CN_profiles_all_sims_new
     }
@@ -123,9 +123,19 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
         for (stat in list_targets) {
             stat_details <- strsplit(stat, ";")[[1]]
             stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
-
-            stat_class <- strsplit(stat_details[grep("class=", stat_details)], "=")[[1]][2]
-            if (any(grepl("variable=", stat_details))) {
+            if (any(grep("class=", stat_details))) {
+                stat_class <- strsplit(stat_details[grep("class=", stat_details)], "=")[[1]][2]
+                if (stat_class == "maximal_CN") {
+                    #   Get maximal CN profile
+                    simulations_statistics[["variable=maximal_CN_profile"]][[i]] <-
+                        simulations_clonal_CN[["variable=maximal_CN_profile"]][[i]]
+                } else if (stat_class == "average_CN") {
+                    #   Get average CN profile
+                    simulations_statistics[["variable=average_CN_profile"]][[i]] <-
+                        simulations_clonal_CN[["variable=average_CN_profile"]][[i]]
+                }
+            }
+            if (any(grep("variable=", stat_details))) {
                 stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
                 if (stat_variable == "shannon") {
                     #   Get Shannon index
@@ -200,22 +210,8 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
                         simulations_clonal_CN[["variable=clonal_CN_profiles"]][[i]]
                     simulations_statistics[["variable=clonal_CN_populations"]][[i]] <-
                         simulations_clonal_CN[["variable=clonal_CN_populations"]][[i]]
-                } else if (stat_variable == "maximal_CN") {
-                    #   Get maximal CN profile
-                    simulations_statistics[["variable=maximal_CN_profile"]][[i]] <-
-                        simulations_clonal_CN[["variable=maximal_CN_profile"]][[i]]
-                } else if (stat_class == "average_CN") {
-                    #   Get average CN profile
-                    simulations_statistics[["class=average_CN_profile"]][[i]] <-
-                        simulations_clonal_CN[["class=average_CN_profile"]][[i]]
                 } else {
                     stop(paste0("Error: Unknown statistic: ", stat))
-                }
-            } if (any(grepl("class=", stat_details)))
-                if (stat_class == "average_CN") {
-                    #   Get average CN profile
-                    simulations_statistics[["class=average_CN_profile"]][[i]] <-
-                        simulations_clonal_CN[["class=average_CN_profile"]][[i]]
                 }
             }
         }
@@ -308,8 +304,8 @@ cohort_distance <- function(cohort_from, cohort_to, metric, bulk_CN_input = "", 
     #-----------------------------Define cost matrix between two cohorts
     if (bulk) {
         if (bulk_CN_input == "average") {
-            n_cohort_from <- length(cohort_from[["class=average_CN_profile"]])
-            n_cohort_to <- length(cohort_to[["class=average_CN_profile"]])
+            n_cohort_from <- length(cohort_from[["variable=average_CN_profile"]])
+            n_cohort_to <- length(cohort_to[["variable=average_CN_profile"]])
         } else if (bulk_CN_input == "maximal") {
             n_cohort_from <- length(cohort_from[["variable=maximal_CN_profile"]])
             n_cohort_to <- length(cohort_to[["variable=maximal_CN_profile"]])
@@ -318,8 +314,8 @@ cohort_distance <- function(cohort_from, cohort_to, metric, bulk_CN_input = "", 
         for (i in 1:n_cohort_from) {
             for (j in 1:n_cohort_to) {
                 if (bulk_CN_input == "average") {
-                    from_CN_profile <- cohort_from[["class=average_CN_profile"]][[i]]$copy
-                    to_CN_profile <- cohort_to[["class=average_CN_profile"]][[j]]$copy
+                    from_CN_profile <- cohort_from[["variable=average_CN_profile"]][[i]]$copy
+                    to_CN_profile <- cohort_to[["variable=average_CN_profile"]][[j]]$copy
                 } else if (bulk_CN_input == "maximal") {
                     from_CN_profile <- cohort_from[["variable=maximal_CN_profile"]][[i]]$copy
                     to_CN_profile <- cohort_to[["variable=maximal_CN_profile"]][[j]]$copy
@@ -381,7 +377,7 @@ get_statistics <- function(list_targets,
     }
     #------------Get representative CN profiles for all bulk simulations
     if (is.null(simulations_statistics_bulk)) {
-        if ((any(grepl("class=average_CN", list_targets))) | (any(grepl("variable=maximal_CN", list_targets)))) {
+        if ((any(grepl("class=average_CN", list_targets))) | (any(grepl("class=maximal_CN", list_targets)))) {
             simulations_clonal_CN_bulk <- get_each_clonal_CN_profiles(simulations_bulk, arm_level, cn_table, bulk = TRUE)
         }
         list_targets_bulk <- list_targets[grepl("data=bulk", list_targets)]
@@ -394,52 +390,60 @@ get_statistics <- function(list_targets,
         stat_details <- strsplit(stat, ";")[[1]]
         stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
         stat_data <- strsplit(stat_details[grep("data=", stat_details)], "=")[[1]][2]
-        stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
         stat_type <- strsplit(stat_details[grepl("statistic=", stat_details)], "=")[[1]][2]
-        if (stat_type == "mean") {
-            if (stat_data == "sc") {
-                statistics[i] <- mean(simulations_statistics_sc[[stat_ID]])
-            } else if (stat_data == "bulk") {
-                simpleError("Error: bulk data not implemented yet")
+        if (any(grep("class=", stat_details))) {
+            stat_class <- strsplit(stat_details[grep("class=", stat_details)], "=")[[1]][2]
+            if (stat_type == "dist") {
+                if (stat_class == "average_CN" & stat_data == "bulk") {
+                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                    if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
+                    statistics[i] <- cohort_distance(
+                        cohort_from = simulations_statistics_bulk,
+                        cohort_to = cn_data_bulk,
+                        metric = stat_metric,
+                        bulk_CN_input = "average",
+                        bulk = TRUE
+                    )
+                } else if (stat_class == "maximal_CN" & stat_data == "bulk") {
+                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                    if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
+                    statistics[i] <- cohort_distance(
+                        cohort_from = simulations_statistics_bulk,
+                        cohort_to = cn_data_bulk,
+                        metric = stat_metric,
+                        bulk_CN_input = "maximal",
+                        bulk = TRUE
+                    )
+                }
             }
-        } else if (stat_type == "var") {
-            if (stat_data == "sc") {
-                statistics[i] <- var(simulations_statistics_sc[[stat_ID]])
-            } else if (stat_data == "bulk") {
-                simpleError("Error: bulk data not implemented yet")
+        }
+        if (any(grep("variable=", stat_details))) {
+            stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
+            if (stat_type == "mean") {
+                if (stat_data == "sc") {
+                    statistics[i] <- mean(simulations_statistics_sc[[stat_ID]])
+                } else if (stat_data == "bulk") {
+                    simpleError("Error: bulk data not implemented yet")
+                }
+            } else if (stat_type == "var") {
+                if (stat_data == "sc") {
+                    statistics[i] <- var(simulations_statistics_sc[[stat_ID]])
+                } else if (stat_data == "bulk") {
+                    simpleError("Error: bulk data not implemented yet")
+                }
+            } else if (stat_type == "dist") {
+                if (stat_variable == "clonal_CN" & stat_data == "sc") {
+                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                    if (is.null(cn_data_sc)) cn_data_sc <- simulations_statistics_sc
+                    statistics[i] <- cohort_distance(
+                        cohort_from = simulations_statistics_sc,
+                        cohort_to = cn_data_sc,
+                        metric = stat_metric
+                    )
+                }
+            } else {
+                stop(paste0("Error: Unknown statistic type: ", stat))
             }
-        } else if (stat_type == "dist") {
-            if (stat_variable == "clonal_CN" & stat_data == "sc") {
-                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                if (is.null(cn_data_sc)) cn_data_sc <- simulations_statistics_sc
-                statistics[i] <- cohort_distance(
-                    cohort_from = simulations_statistics_sc,
-                    cohort_to = cn_data_sc,
-                    metric = stat_metric
-                )
-            } else if (stat_variable == "average_CN" & stat_data == "bulk") {
-                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
-                statistics[i] <- cohort_distance(
-                    cohort_from = simulations_statistics_bulk,
-                    cohort_to = cn_data_bulk,
-                    metric = stat_metric,
-                    bulk_CN_input = "average",
-                    bulk = TRUE
-                )
-            } else if (stat_variable == "maximal_CN" & stat_data == "bulk") {
-                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
-                statistics[i] <- cohort_distance(
-                    cohort_from = simulations_statistics_bulk,
-                    cohort_to = cn_data_bulk,
-                    metric = stat_metric,
-                    bulk_CN_input = "maximal",
-                    bulk = TRUE
-                )
-            }
-        } else {
-            stop(paste0("Error: Unknown statistic type: ", stat))
         }
     }
     #-----------------------------------------------------Prepare output
@@ -713,9 +717,9 @@ permutate_chromosomes <- function(current_sim_param, current_sim_sample_stat, li
     if ("bulk" %in% names(current_sim_sample_stat)) {
         current_sim_sample_stat_bulk <- current_sim_sample_stat$bulk
         vec_variable_names <- names(current_sim_sample_stat_bulk)
-        if ("class=average_CN_profile" %in% vec_variable_names) {
-            for (sim in 1:length(current_sim_sample_stat_bulk[["class=average_CN_profile"]])) {
-                current_clonal_CN_profiles <- current_sim_sample_stat_bulk[["class=average_CN_profile"]][[sim]]
+        if ("variable=average_CN_profile" %in% vec_variable_names) {
+            for (sim in 1:length(current_sim_sample_stat_bulk[["variable=average_CN_profile"]])) {
+                current_clonal_CN_profiles <- current_sim_sample_stat_bulk[["variable=average_CN_profile"]][[sim]]
                 new_clonal_CN_profiles <- current_clonal_CN_profiles
                 for (i in 1:length(current_chromosomes)) {
                     locs_old_chrom <- which(current_clonal_CN_profiles$chr == current_chromosomes[i])
@@ -725,7 +729,7 @@ permutate_chromosomes <- function(current_sim_param, current_sim_sample_stat, li
                     new_clonal_CN_profiles$Min[locs_old_chrom] <- current_clonal_CN_profiles$Min[locs_new_chrom]
                     new_clonal_CN_profiles$Maj[locs_old_chrom] <- current_clonal_CN_profiles$Maj[locs_new_chrom]
                 }
-                new_sim_sample_stat$bulk[["class=average_CN_profile"]][[sim]] <- new_clonal_CN_profiles
+                new_sim_sample_stat$bulk[["variable=average_CN_profile"]][[sim]] <- new_clonal_CN_profiles
             }
         }
         if ("variable=maximal_CN_profile" %in% vec_variable_names) {

@@ -112,13 +112,12 @@ prob_misseg <- parameters[, "prob_misseg"]
 # Correlation Plot=================================================
 # =================================================================
 #-------------------------------------------Get correlation matrix
-corr_mtx <- cor(y = parameters, x = chosen_statistics)
+corr_mtx <- cor(y = parameters[, -1], x = chosen_statistics)
 #--------------------------------------------Plot correlation plot
 
 
 corr_plot <- function(corr_mtx) {
   library("ggcorrplot")
-  library("egg")
   plot <- ggcorrplot(corr_mtx, ggtheme = ggplot2::theme_gray) +
     theme(axis.text.x = element_text(colour = c(
       "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
@@ -127,7 +126,7 @@ corr_plot <- function(corr_mtx) {
       "#619CFF", "#619CFF", "#619CFF", "#619CFF",
       "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
       "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
-      # ))) +
+      # )))
       # theme(axis.text.x = element_text(colour = c(
       # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
       # "#619CFF", "#619CFF", "#619CFF", "#619CFF",
@@ -239,7 +238,7 @@ p_value_plot <- function(parameter, statistic, title) {
   return(plot)
 }
 
-p_value_plot(parameters[, 1], statistics, title = "prob_misseg")
+p_value_plot(parameters[, 24], statistics, title = "Xp")
 prob_sel <- parameters[, "prob_misseg"]
 # lm(prob_misseg ~ chosen_statistics)
 # summary(lm(prob_misseg ~ statistics))

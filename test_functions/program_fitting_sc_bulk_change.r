@@ -150,9 +150,9 @@ for (i in 1:nrow(model_variables$chromosome_arm_library)) {
 # =============DEFINE LIST OF STATISTICS FOR BUILDING SIMULATION LIBRARY
 list_targets_library <- c(
     #---Bulk DNA: CN
-    # "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
     "data=bulk;statistic=dist;class=average_CN;metric=euclidean",
-    "data=bulk;statistic=mean;variable=event_count;type=clonal;event=missegregation",
+    # "data=bulk;statistic=mean;class=average_CN;variable=event_count;type=clonal;event=missegregation",
+    # "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
     #---Single-cell DNA: subclonal CN
     "data=sc;statistic=mean;variable=shannon",
     "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
