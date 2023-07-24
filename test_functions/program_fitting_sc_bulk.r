@@ -1,11 +1,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+R_workplace <- getwd()
+R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
@@ -28,8 +28,8 @@ files_sources <- list.files(pattern = "*.r$")
 sapply(files_sources, source)
 setwd(R_workplace)
 # ======================COUNT OF SAMPLES IN BULK AND SINGLE-CELL COHORTS
-N_data_dlp <- 3
-N_data_bulk <- 3
+N_data_dlp <- 10
+N_data_bulk <- 100
 # ===============================================GROUND TRUTH PARAMETERS
 cell_lifespan <- 30
 T_0 <- list(0, "year")
@@ -90,7 +90,7 @@ for (i in 1:length(arm_s)) {
         arm_s[i] <- 1
     }
     if (grepl("p$", arm_id[i])) {
-        arm_s[i] <- runif(1, 1, 1.5)
+        arm_s[i] <- runif(1, 1, 1.2)
         if (runif(1) < 0.5) arm_s[i] <- 1 / arm_s[i]
     }
 }
@@ -143,7 +143,7 @@ for (i in 1:nrow(model_variables$chromosome_arm_library)) {
         list_parameters[nrow(list_parameters) + 1, ] <- c(
             model_variables$chromosome_arm_library$Arm_ID[i],
             "Arm_selection_rate",
-            1 / 1.5, 1.5
+            1 / 1.2, 1.2
         )
     }
 }
@@ -354,32 +354,32 @@ for (type in 1:2) {
     names(ls_cn_bulk_ground_truth_all[[type]]) <- names(ls_cn_bulk_ground_truth[[1]][[type]])
 }
 # ===============================================MAKE SIMULATION LIBRARY
-library_sc_CN(
-    model_name = model_name,
-    model_variables = model_variables,
-    list_parameters = list_parameters,
-    list_targets_library = list_targets_library,
-    ####
-    ####
-    ####
-    ####
-    ####
-    ABC_simcount = 3,
-    arm_level = TRUE,
-    cn_table = cn_table,
-    cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
-    cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
-    n_simulations_sc = N_data_dlp,
-    n_simulations_bulk = N_data_bulk,
-    ####
-    ####
-    ####
-    ####
-    ####
-    library_name = model_name,
-    save_sample_statistics = TRUE
-    # n_cores = 30
-)
+# library_sc_CN(
+#     model_name = model_name,
+#     model_variables = model_variables,
+#     list_parameters = list_parameters,
+#     list_targets_library = list_targets_library,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     ABC_simcount = 3,
+#     arm_level = TRUE,
+#     cn_table = cn_table,
+#     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
+#     cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
+#     n_simulations_sc = N_data_dlp,
+#     n_simulations_bulk = N_data_bulk,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     library_name = model_name,
+#     save_sample_statistics = TRUE
+#     # n_cores = 30
+# )
 # ==================DEFINE LIST OF STATISTICS FOR FITTING EACH PARAMETER
 list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
 colnames(list_targets) <- c("Variable", list_targets_library)
@@ -389,15 +389,15 @@ list_targets_misseg <- c(
     "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
     "data=sc;statistic=mean;variable=shannon",
     "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
-    # "data=sc;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
+    "data=sc;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
     # "data=sc;statistic=var;variable=shannon",
     # "data=sc;statistic=var;variable=event_count;type=clonal;event=missegregation",
     # "data=sc;statistic=var;variable=event_count;type=subclonal;event=missegregation",
-    "data=sc;statistic=dist;variable=clonal_CN;metric=euclidean"
-    # "data=sc;statistic=mean;variable=colless",
-    # "data=sc;statistic=mean;variable=sackin",
-    # "data=sc;statistic=mean;variable=B2",
-    # "data=sc;statistic=mean;variable=maxDepth"
+    "data=sc;statistic=dist;variable=clonal_CN;metric=euclidean",
+    "data=sc;statistic=mean;variable=colless",
+    "data=sc;statistic=mean;variable=sackin",
+    "data=sc;statistic=mean;variable=B2",
+    "data=sc;statistic=mean;variable=maxDepth"
     # "data=sc;statistic=var;variable=B2"
 )
 list_targets[1, which(colnames(list_targets) %in% list_targets_misseg)] <- 1
@@ -407,12 +407,13 @@ list_targets_selection <- c(
     "data=sc;statistic=dist;variable=clonal_CN;metric=euclidean",
     "data=sc;statistic=mean;variable=shannon",
     "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
-    "data=sc;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
+    # "data=sc;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
     "data=sc;statistic=mean;variable=colless",
-    "data=sc;statistic=mean;variable=sackin",
-    "data=sc;statistic=mean;variable=B2",
-    "data=sc;statistic=var;variable=B2",
-    "data=sc;statistic=var;variable=event_count;type=clonal;event=missegregation"
+    "data=sc;statistic=mean;variable=sackin"
+    # "data=sc;statistic=mean;variable=B2",
+    # "data=sc;statistic=var;variable=B2",
+    # "data=sc;statistic=mean;variable=maxDepth"
+    # "data=sc;statistic=var;variable=event_count;type=clonal;event=missegregation"
 )
 for (row in 2:nrow(list_targets)) {
     list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
