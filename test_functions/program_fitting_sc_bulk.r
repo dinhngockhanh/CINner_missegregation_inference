@@ -150,9 +150,9 @@ for (i in 1:nrow(model_variables$chromosome_arm_library)) {
 # =============DEFINE LIST OF STATISTICS FOR BUILDING SIMULATION LIBRARY
 list_targets_library <- c(
     #---Bulk DNA: CN
-    "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
-    # "data=bulk;statistic=dist;class=average_CN;metric=euclidean",
-    # "data=bulk;statistic=mean;variable=event_count;type=clonal;event=missegregation",
+    # "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
+    "data=bulk;statistic=dist;class=average_CN;metric=euclidean",
+    "data=bulk;statistic=mean;class=average_CN;variable=event_count;type=total;event=missegregation",
     #---Single-cell DNA: subclonal CN
     "data=sc;statistic=mean;variable=shannon",
     "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
@@ -263,7 +263,6 @@ vec_centromeres <<- model_variables$cn_info$Centromere_location
 # )
 # tmp <- c()
 # ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
-# ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
 #---Get single-cell statistics & CN profiles
 #   Get statistics & clonal CN profiles for each single-cell sample
 cat(paste0("Loading ", N_data_dlp, " single-cell DNA-seq data sets...\n"))
@@ -354,32 +353,32 @@ for (type in 1:2) {
     names(ls_cn_bulk_ground_truth_all[[type]]) <- names(ls_cn_bulk_ground_truth[[1]][[type]])
 }
 # ===============================================MAKE SIMULATION LIBRARY
-# library_sc_CN(
-#     model_name = model_name,
-#     model_variables = model_variables,
-#     list_parameters = list_parameters,
-#     list_targets_library = list_targets_library,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     ABC_simcount = 3,
-#     arm_level = TRUE,
-#     cn_table = cn_table,
-#     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
-#     cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
-#     n_simulations_sc = N_data_dlp,
-#     n_simulations_bulk = N_data_bulk,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     library_name = model_name,
-#     save_sample_statistics = TRUE
-#     # n_cores = 30
-# )
+library_sc_CN(
+    model_name = model_name,
+    model_variables = model_variables,
+    list_parameters = list_parameters,
+    list_targets_library = list_targets_library,
+    ####
+    ####
+    ####
+    ####
+    ####
+    ABC_simcount = 3,
+    arm_level = TRUE,
+    cn_table = cn_table,
+    cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
+    cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
+    n_simulations_sc = N_data_dlp,
+    n_simulations_bulk = N_data_bulk,
+    ####
+    ####
+    ####
+    ####
+    ####
+    library_name = model_name,
+    save_sample_statistics = TRUE
+    # n_cores = 30
+)
 # ==================DEFINE LIST OF STATISTICS FOR FITTING EACH PARAMETER
 list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
 colnames(list_targets) <- c("Variable", list_targets_library)
@@ -389,7 +388,7 @@ list_targets_misseg <- c(
     "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
     "data=sc;statistic=mean;variable=shannon",
     "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
-    "data=sc;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
+    # "data=sc;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
     # "data=sc;statistic=var;variable=shannon",
     # "data=sc;statistic=var;variable=event_count;type=clonal;event=missegregation",
     # "data=sc;statistic=var;variable=event_count;type=subclonal;event=missegregation",
