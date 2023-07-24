@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-R_workplace <- getwd()
-R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+# R_workplace <- getwd()
+# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
 # R_libPaths <- ""
@@ -11,9 +11,9 @@ R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -150,9 +150,8 @@ for (i in 1:nrow(model_variables$chromosome_arm_library)) {
 # =============DEFINE LIST OF STATISTICS FOR BUILDING SIMULATION LIBRARY
 list_targets_library <- c(
     #---Bulk DNA: CN
-    # "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
-    "data=bulk;statistic=dist;class=average_CN;metric=euclidean",
-    "data=bulk;statistic=mean;class=average_CN;variable=event_count;type=total;event=missegregation",
+    "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
+    "data=bulk;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
     #---Single-cell DNA: subclonal CN
     "data=sc;statistic=mean;variable=shannon",
     "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",

@@ -1,0 +1,188 @@
+[
+  {
+    "Version of stats": "Performance rank",
+    "v1": 2,
+    "v2": 1,
+    "v3": 6,
+    "v4": 5,
+    "v5": 4,
+    "v6": 3
+  },
+  {
+    "Version of stats": "Specific target list",
+    "v1": "target_misseg",
+    "__EMPTY": "target_selection",
+    "v2": "target_misseg",
+    "__EMPTY_1": "target_selection",
+    "v3": "target_misseg",
+    "__EMPTY_2": "target_selection",
+    "v4": "target_misseg",
+    "__EMPTY_3": "target_selection",
+    "v5": "target_misseg",
+    "__EMPTY_4": "target_selection",
+    "v6": "target_misseg",
+    "__EMPTY_5": "target_selection"
+  },
+  {
+    "Version of stats": "Wasserstein_dist_bulk",
+    "v1": 1,
+    "__EMPTY": 1,
+    "v2": 1,
+    "__EMPTY_1": 1,
+    "v3": 1,
+    "__EMPTY_2": 1,
+    "v4": 1,
+    "__EMPTY_3": 1,
+    "v5": 1,
+    "__EMPTY_4": 1,
+    "v6": 1,
+    "__EMPTY_5": 1
+  },
+  {
+    "Version of stats": "Mean_Shannon",
+    "v1": 1,
+    "v2": 1,
+    "v3": 1,
+    "__EMPTY_3": 1,
+    "__EMPTY_4": 1,
+    "v6": 1,
+    "__EMPTY_5": 1
+  },
+  {
+    "Version of stats": "Mean_Clonal_misseg_count",
+    "v1": 1,
+    "v2": 1,
+    "v3": 1,
+    "v4": 1,
+    "__EMPTY_3": 1,
+    "v5": 1,
+    "__EMPTY_4": 1,
+    "v6": 1,
+    "__EMPTY_5": 1
+  },
+  {
+    "Version of stats": "Mean_Subclonal_misseg_count",
+    "v1": 1,
+    "v2": 1,
+    "v3": 1,
+    "v4": 1,
+    "v5": 1,
+    "v6": 1
+  },
+  {
+    "Version of stats": "Mean_Clonal_armmisseg_count"
+  },
+  {
+    "Version of stats": "Mean_Subclonal_armmisseg_count"
+  },
+  {
+    "Version of stats": "Var_Shannon",
+    "v1": 1,
+    "v5": 1
+  },
+  {
+    "Version of stats": "Var_Clonal_misseg_count",
+    "v1": 1,
+    "v5": 1
+  },
+  {
+    "Version of stats": "Var_Subclonal_misseg_count",
+    "v1": 1
+  },
+  {
+    "Version of stats": "Var_Clonal_armmisseg_count"
+  },
+  {
+    "Version of stats": "Var_Subclonal_armmisseg_count"
+  },
+  {
+    "Version of stats": "Wasserstein_dist_sc",
+    "v1": 1,
+    "__EMPTY": 1,
+    "v2": 1,
+    "__EMPTY_1": 1,
+    "v3": 1,
+    "__EMPTY_2": 1,
+    "v4": 1,
+    "__EMPTY_3": 1,
+    "v5": 1,
+    "__EMPTY_4": 1,
+    "v6": 1,
+    "__EMPTY_5": 1
+  },
+  {
+    "Version of stats": "Mean_Cherries"
+  },
+  {
+    "Version of stats": "Mean_Pitchforks"
+  },
+  {
+    "Version of stats": "Mean_IL_number"
+  },
+  {
+    "Version of stats": "Mean_AvgLadder"
+  },
+  {
+    "Version of stats": "Var_Cherries"
+  },
+  {
+    "Version of stats": "Var_Pitchforks"
+  },
+  {
+    "Version of stats": "Var_IL_number"
+  },
+  {
+    "Version of stats": "Var_AvgLadder"
+  },
+  {
+    "Version of stats": "Mean_Stairs"
+  },
+  {
+    "Version of stats": "Mean_Colless",
+    "v1": 1,
+    "__EMPTY_2": 1,
+    "__EMPTY_3": 1,
+    "__EMPTY_4": 1,
+    "__EMPTY_5": 1
+  },
+  {
+    "Version of stats": "Mean_Sackin",
+    "v1": 1,
+    "__EMPTY_2": 1,
+    "__EMPTY_3": 1,
+    "__EMPTY_4": 1,
+    "__EMPTY_5": 1
+  },
+  {
+    "Version of stats": "Mean_B2",
+    "v1": 1,
+    "v2": 1,
+    "__EMPTY_2": 1,
+    "v4": 1,
+    "v5": 1,
+    "v6": 1
+  },
+  {
+    "Version of stats": "Mean_MaxDepth",
+    "v1": 1,
+    "v2": 1,
+    "__EMPTY_2": 1,
+    "v4": 1,
+    "v5": 1
+  },
+  {
+    "Version of stats": "Var_Stairs"
+  },
+  {
+    "Version of stats": "Var_Colless"
+  },
+  {
+    "Version of stats": "Var_Sackin"
+  },
+  {
+    "Version of stats": "Var_B2"
+  },
+  {
+    "Version of stats": "Var_MaxDepth"
+  }
+]
