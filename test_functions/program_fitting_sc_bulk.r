@@ -3,17 +3,17 @@
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+# R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -27,9 +27,10 @@ setwd(R_libPaths_extra)
 files_sources <- list.files(pattern = "*.r$")
 sapply(files_sources, source)
 setwd(R_workplace)
+# devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
 # ======================COUNT OF SAMPLES IN BULK AND SINGLE-CELL COHORTS
-N_data_dlp <- 10
-N_data_bulk <- 100
+N_data_dlp <- 3
+N_data_bulk <- 3
 # ===============================================GROUND TRUTH PARAMETERS
 cell_lifespan <- 30
 T_0 <- list(0, "year")
@@ -255,6 +256,8 @@ tmp <- simulator_full_program(
     stage_final = 2,
     compute_parallel = TRUE,
     output_variables = c(
+        # "evolution_origin",
+        # "evolution_genotype_changes",
         "sample_genotype_unique_profile",
         "sample_genotype_unique",
         "sample_clone_ID"
@@ -363,7 +366,7 @@ library_sc_CN(
     ####
     ####
     ####
-    ABC_simcount = 10000,
+    ABC_simcount = 3,
     arm_level = TRUE,
     cn_table = cn_table,
     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
@@ -376,8 +379,7 @@ library_sc_CN(
     ####
     ####
     library_name = model_name,
-    save_sample_statistics = TRUE,
-    n_cores = 25
+    save_sample_statistics = TRUE
 )
 # ==================DEFINE LIST OF STATISTICS FOR FITTING EACH PARAMETER
 list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
