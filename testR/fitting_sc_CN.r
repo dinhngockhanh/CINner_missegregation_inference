@@ -953,14 +953,16 @@ fitting_sc_CN <- function(library_name,
         cat("Posterior mean: ", post_mean, "\n")
         cat("Posterior median: ", post_median, "\n")
         cat("Posterior mode: ", post_mode, "\n")
-        #   Save results for fitting this parameter
-        ABC_output <- list()
-        ABC_output$para_ID <- para_ID
-        ABC_output$post_mode <- post_mode
-        ABC_output$post_mean <- post_mean
-        ABC_output$post_median <- post_median
-        filename <- paste0(model_name, "_ABC_output_", para_ID, ".rda")
-        save(ABC_output, file = filename)
+        if ((shuffle_chromosome_arms | shuffle_chromosomes)) {
+            #   Save results for fitting this parameter
+            ABC_output <- list()
+            ABC_output$para_ID <- para_ID
+            ABC_output$post_mode <- post_mode
+            ABC_output$post_mean <- post_mean
+            ABC_output$post_median <- post_median
+            filename <- paste0(new_model_name, "_ABC_output_", para_ID, ".rda")
+            save(ABC_output, file = filename)
+        }
         #   Plot the prior, posterior and chosen best parameter for all variables
         true_para <- NULL
         if (!is.null(parameters_truth)) {

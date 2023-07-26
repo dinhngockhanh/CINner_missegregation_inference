@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+R_workplace <- getwd()
+R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
 # R_libPaths <- ""
@@ -11,9 +11,9 @@
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+# R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -98,6 +98,7 @@ selected_chromosomes <- c(
     "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11",
     "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X"
 )
+
 table_arm_selection_rates <- data.frame(
     Arm_ID = arm_id,
     Chromosome = arm_chromosome,
@@ -254,6 +255,8 @@ vec_centromeres <<- model_variables$cn_info$Centromere_location
 #     stage_final = 2,
 #     compute_parallel = TRUE,
 #     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
 #         "sample_genotype_unique_profile",
 #         "sample_genotype_unique",
 #         "sample_clone_ID"
@@ -362,7 +365,7 @@ library_sc_CN(
     ####
     ####
     ####
-    ABC_simcount = 3,
+    ABC_simcount = 10000,
     arm_level = TRUE,
     cn_table = cn_table,
     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
@@ -375,8 +378,8 @@ library_sc_CN(
     ####
     ####
     library_name = model_name,
-    save_sample_statistics = TRUE
-    # n_cores = 30
+    save_sample_statistics = TRUE,
+    n_cores = 25
 )
 # ==================DEFINE LIST OF STATISTICS FOR FITTING EACH PARAMETER
 list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
@@ -385,6 +388,7 @@ list_targets[, 1] <- list_parameters$Variable
 #---Statistics for fitting misseg rate
 list_targets_misseg <- c(
     "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
+    "data=bulk;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
     "data=sc;statistic=mean;variable=shannon",
     "data=sc;statistic=mean;variable=event_count;type=clonal;event=missegregation",
     # "data=sc;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
@@ -435,11 +439,12 @@ fitting_sc_CN(
     parameters_truth = parameters_truth,
     list_parameters = list_parameters,
     list_targets = list_targets,
-    shuffle_num = 3,
+    shuffle_num = 23,
     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
     cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
     arm_level = TRUE,
     cn_table = cn_table,
     shuffle_chromosome_arms = FALSE,
-    shuffle_chromosomes = FALSE
+    shuffle_chromosomes_by_permutation = FALSE,
+    shuffle_chromosomes_by_moving = TRUE
 )

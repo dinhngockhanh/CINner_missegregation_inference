@@ -415,7 +415,7 @@ get_statistics <- function(list_targets,
             if (stat_data == "sc") {
                 statistics[i] <- mean(simulations_statistics_sc[[stat_ID]])
             } else if (stat_data == "bulk") {
-                simpleError("Error: bulk data not implemented yet")
+                statistics[i] <- mean(simulations_statistics_bulk[[stat_ID]])
             }
         } else if (stat_type == "var") {
             if (stat_data == "sc") {
@@ -847,7 +847,7 @@ fitting_sc_CN <- function(library_name,
             #         sim_param_next <- rbind(sim_param_next, new_sim_param)
             #         sim_stat_next <- rbind(sim_stat_next, get_statistics(
             #             simulations_statistics = new_sim_sample_stat,
-            #             list_targets = list_targets,
+            #             list_targets = colnames(list_targets)[-1],
             #             cn_data = cn_data,
             #             arm_level = arm_level,
             #             cn_table = cn_table
@@ -870,9 +870,34 @@ fitting_sc_CN <- function(library_name,
             shuffle_num <- min(shuffle_num, max_shuffle_count)
             for (i in 2:shuffle_num) {
                 list_chromosomes_new <- c(list_chromosomes[i:length(list_chromosomes)], list_chromosomes[1:(i - 1)])
+                #   Permutate chromosomes
+                sim_param_next <- sim_param
+                sim_stat_next <- sim_stat
+                for (sim in 1:nrow(sim_param)) {
+                    current_sim_param <- sim_param[sim, ]
+                    current_sim_sample_stat <- sim_sample_stat_new[[sim]]
+                    df_permutate_chromosomes <- permutate_chromosomes(
+                        current_sim_param = current_sim_param,
+                        current_sim_sample_stat = current_sim_sample_stat,
+                        list_parameters = list_parameters,
+                        current_chromosomes = list_chromosomes,
+                        new_chromosomes = list_chromosomes_new
+                    )
+                    sim_param_next[sim, ] <- df_permutate_chromosomes$new_sim_param
+                    sim_stat_next[sim, ] <- get_statistics(
+                        list_targets = colnames(list_targets)[-1],
+                        simulations_statistics_sc = df_permutate_chromosomes$new_sim_sample_stat$sc,
+                        simulations_statistics_bulk = df_permutate_chromosomes$new_sim_sample_stat$bulk,
+                        cn_data_sc = cn_data_sc,
+                        cn_data_bulk = cn_data_bulk,
+                        arm_level = arm_level,
+                        cn_table = cn_table
+                    )$statistics
+                }
+                sim_param_new <- rbind(sim_param_new, sim_param_next)
+                sim_stat_new <- rbind(sim_stat_new, sim_stat_next)
             }
         }
-
 
         #---Boost simulated data by permutating chromosomes
         if (shuffle_chromosomes_by_permutation) {
@@ -896,6 +921,8 @@ fitting_sc_CN <- function(library_name,
                     }
                 }
                 already_tried_shuffles[[length(already_tried_shuffles) + 1]] <- list_chromosomes_new
+                print("------")
+                print(list_chromosomes_new)
                 #   Permutate chromosomes
                 sim_param_next <- sim_param
                 sim_stat_next <- sim_stat
@@ -911,7 +938,7 @@ fitting_sc_CN <- function(library_name,
                     )
                     sim_param_next[sim, ] <- df_permutate_chromosomes$new_sim_param
                     sim_stat_next[sim, ] <- get_statistics(
-                        list_targets = list_targets,
+                        list_targets = colnames(list_targets)[-1],
                         simulations_statistics_sc = df_permutate_chromosomes$new_sim_sample_stat$sc,
                         simulations_statistics_bulk = df_permutate_chromosomes$new_sim_sample_stat$bulk,
                         cn_data_sc = cn_data_sc,
@@ -923,6 +950,8 @@ fitting_sc_CN <- function(library_name,
                 sim_param_new <- rbind(sim_param_new, sim_param_next)
                 sim_stat_new <- rbind(sim_stat_new, sim_stat_next)
             }
+            # print("=====")
+            # print(sim_param_new)
             sim_param <- sim_param_new
             sim_stat <- sim_stat_new
         }
@@ -944,7 +973,6 @@ fitting_sc_CN <- function(library_name,
     #---Dataframe for data observation
     all_obs <- data.frame(matrix(DATA_target, nrow = 1))
     colnames(all_obs) <- paste0("stat_", 1:ncol(sim_stat))
-    print(all_obs)
     #---Fit each parameter with ABC-rf
     layout <- matrix(NA, nrow = 7, ncol = ceiling(length(parameter_IDs) / 7))
     gs <- list()
@@ -956,7 +984,6 @@ fitting_sc_CN <- function(library_name,
         cat(paste("\nABC for parameter ", para_ID, " [", para, "/", nrow(list_parameters), "]", "\n", sep = ""))
         #   Prepare observations for this parameter
         mini_obs <- all_obs[, which(list_targets[para, -1] == 1)]
-        print(mini_obs)
         #   Prepare library of statistics for this parameter
         mini_data <- all_data[, which(list_targets[para, -1] == 1)]
         #   Prepare library of parameters for this parameter
