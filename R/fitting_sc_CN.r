@@ -917,7 +917,7 @@ fitting_sc_CN <- function(library_name,
                 cl <- makePSOCKcluster(n_cores)
                 cat("\nShuffling by chromosomes...\n")
                 sim_param <<- sim_param
-                sim_sample_stat_new <<- sim_sample_stat_new
+                sim_sample_stat <<- sim_sample_stat
                 func_ABC_by_permutation <<- func_ABC_by_permutation
                 list_chromosomes <<- list_chromosomes
                 list_chromosomes_new <<- list_chromosomes_new
@@ -941,7 +941,7 @@ fitting_sc_CN <- function(library_name,
                 pbo <- pboptions(type = "txt")
                 sim_results_list <- pblapply(cl = cl, X = 1:nrow(sim_param), FUN = function(iteration) {
                     current_sim_param <- sim_param[iteration, ]
-                    current_sim_sample_stat <- sim_sample_stat_new[[iteration]]
+                    current_sim_sample_stat <- sim_sample_stat[[iteration]]
                     output <- func_ABC_by_permutation(
                         current_sim_param = current_sim_param,
                         current_sim_sample_stat = current_sim_sample_stat,
