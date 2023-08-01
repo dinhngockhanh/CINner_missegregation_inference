@@ -439,7 +439,7 @@ fitting_sc_CN(
     parameters_truth = parameters_truth,
     list_parameters = list_parameters,
     list_targets = list_targets,
-    shuffle_num = 23,
+    shuffle_num = 3,
     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
     cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
     arm_level = TRUE,

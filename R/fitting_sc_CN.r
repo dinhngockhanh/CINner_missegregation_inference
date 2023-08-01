@@ -767,6 +767,39 @@ permutate_chromosomes <- function(current_sim_param, current_sim_sample_stat, li
     output$new_sim_sample_stat <- new_sim_sample_stat
     return(output)
 }
+########################################################
+func_ABC_by_permutation <- function(current_sim_param,
+                                    current_sim_sample_stat,
+                                    current_chromosomes,
+                                    new_chromosomes,
+                                    list_parameters,
+                                    cn_data_sc = NULL,
+                                    cn_data_bulk = NULL,
+                                    cn_table = NULL,
+                                    arm_level = FALSE) {
+    df_permutate_chromosomes <- permutate_chromosomes(
+        current_sim_param = current_sim_param,
+        current_sim_sample_stat = current_sim_sample_stat,
+        list_parameters = list_parameters,
+        current_chromosomes = list_chromosomes,
+        new_chromosomes = list_chromosomes_new
+    )
+    sim_stat_new <- get_statistics(
+        list_targets = colnames(list_targets)[-1],
+        simulations_statistics_sc = df_permutate_chromosomes$new_sim_sample_stat$sc,
+        simulations_statistics_bulk = df_permutate_chromosomes$new_sim_sample_stat$bulk,
+        cn_data_sc = cn_data_sc,
+        cn_data_bulk = cn_data_bulk,
+        arm_level = arm_level,
+        cn_table = cn_table
+    )$statistics
+    output <- list()
+    output$sim_param <- df_permutate_chromosomes$new_sim_param
+    output$sim_stat <- sim_stat_new
+    return(output)
+}
+########################################################
+
 
 #' @export
 fitting_sc_CN <- function(library_name,
@@ -868,79 +901,107 @@ fitting_sc_CN <- function(library_name,
             #   Find maximum number of possible moves
             max_shuffle_count <- length(list_chromosomes)
             shuffle_num <- min(shuffle_num, max_shuffle_count)
-            cat("\nShuffling by chromosomes...\n")
-            pb <- txtProgressBar(
-                min = 2, max = shuffle_num,
-                style = 3, width = 50, char = "="
-            )
+
+            # pb <- txtProgressBar(
+            #     min = 2, max = shuffle_num,
+            #     style = 3, width = 50, char = "="
+            # )
             for (i in 2:shuffle_num) {
-                setTxtProgressBar(pb, i)
+                # setTxtProgressBar(pb, i)
                 list_chromosomes_new <- c(list_chromosomes[i:length(list_chromosomes)], list_chromosomes[1:(i - 1)])
                 #   Permutate chromosomes
                 sim_param_next <- sim_param
                 sim_stat_next <- sim_stat
+                # ==================================================================================================
+                start_time <- Sys.time()
+                cl <- makePSOCKcluster(n_cores)
+                cat("\nShuffling by chromosomes...\n")
+                sim_param <<- sim_param
+                sim_sample_stat_new <<- sim_sample_stat_new
+                func_ABC_by_permutation <<- func_ABC_by_permutation
+                list_chromosomes <<- list_chromosomes
+                list_chromosomes_new <<- list_chromosomes_new
+                list_parameters <<- list_parameters
+                cn_data_sc <<- cn_data_sc
+                cn_data_bulk <<- cn_data_bulk
+                arm_level <<- arm_level
+                cn_table <<- cn_table
+                ###
 
-                ########################################################
-                func_ABC_by_permutation <- function(current_sim_param,
-                                                    current_sim_sample_stat,
-                                                    current_chromosomes,
-                                                    new_chromosomes,
-                                                    list_parameters) {
-                    df_permutate_chromosomes <- permutate_chromosomes(
-                        current_sim_param = current_sim_param,
-                        current_sim_sample_stat = current_sim_sample_stat,
-                        list_parameters = list_parameters,
-                        current_chromosomes = list_chromosomes,
-                        new_chromosomes = list_chromosomes_new
-                    )
-                    sim_stat_new <- get_statistics(
-                        list_targets = colnames(list_targets)[-1],
-                        simulations_statistics_sc = df_permutate_chromosomes$new_sim_sample_stat$sc,
-                        simulations_statistics_bulk = df_permutate_chromosomes$new_sim_sample_stat$bulk,
-                        cn_data_sc = cn_data_sc,
-                        cn_data_bulk = cn_data_bulk,
-                        arm_level = arm_level,
-                        cn_table = cn_table
-                    )$statistics
-                    output <- list()
-                    output$sim_param <- df_permutate_chromosomes$new_sim_param
-                    output$sim_stat <- sim_stat_new
-                }
-                ########################################################
-
-                for (sim in 1:nrow(sim_param)) {
-                    current_sim_param <- sim_param[sim, ]
-                    current_sim_sample_stat <- sim_sample_stat_new[[sim]]
-                    # df_permutate_chromosomes <- permutate_chromosomes(
-                    #     current_sim_param = current_sim_param,
-                    #     current_sim_sample_stat = current_sim_sample_stat,
-                    #     list_parameters = list_parameters,
-                    #     current_chromosomes = list_chromosomes,
-                    #     new_chromosomes = list_chromosomes_new
-                    # )
-                    # sim_param_next[sim, ] <- df_permutate_chromosomes$new_sim_param
-                    # sim_stat_next[sim, ] <- get_statistics(
-                    #     list_targets = colnames(list_targets)[-1],
-                    #     simulations_statistics_sc = df_permutate_chromosomes$new_sim_sample_stat$sc,
-                    #     simulations_statistics_bulk = df_permutate_chromosomes$new_sim_sample_stat$bulk,
-                    #     cn_data_sc = cn_data_sc,
-                    #     cn_data_bulk = cn_data_bulk,
-                    #     arm_level = arm_level,
-                    #     cn_table = cn_table
-                    # )$statistics
+                clusterExport(cl, varlist = c(
+                    "sim_param", "sim_sample_stat_new", "func_ABC_by_permutation",
+                    "list_chromosomes", "list_chromosomes_new", "list_parameters",
+                    "cn_data_sc", "cn_data_bulk", "arm_level", "cn_table", "permutate_chromosomes", "get_statistics", "list_targets", "cohort_distance", "cn_distance", "sample_distance"
+                ))
+                e <- new.env()
+                e$libs <- .libPaths()
+                clusterExport(cl, "libs", envir = e)
+                clusterEvalQ(cl, .libPaths(libs))
+                # Create fitted parameters parallel
+                pbo <- pboptions(type = "txt")
+                sim_results_list <- pblapply(cl = cl, X = 1:nrow(sim_param), FUN = function(iteration) {
+                    current_sim_param <- sim_param[iteration, ]
+                    current_sim_sample_stat <- sim_sample_stat_new[[iteration]]
                     output <- func_ABC_by_permutation(
                         current_sim_param = current_sim_param,
                         current_sim_sample_stat = current_sim_sample_stat,
                         current_chromosomes = list_chromosomes,
                         new_chromosomes = list_chromosomes_new,
-                        list_parameters = list_parameters
+                        list_parameters = list_parameters,
+                        cn_data_sc = cn_data_sc,
+                        cn_data_bulk = cn_data_bulk,
+                        arm_level = arm_level,
+                        cn_table = cn_table
                     )
-                    sim_param_next[sim, ] <- output$sim_param
-                    sim_stat_next[sim, ] <- output$sim_stat
+                    return(output)
+                })
+                stopCluster(cl)
+                #   Group simulated statistics into one table
+                for (sim in 1:nrow(sim_param)) {
+                    sim_param_next[sim, ] <- sim_results_list[[sim]]$sim_param
+                    sim_stat_next[sim, ] <- sim_results_list[[sim]]$sim_stat
                 }
+                end_time <- Sys.time()
+                print(end_time - start_time)
+                # ==================================================================================================
+                # for (sim in 1:nrow(sim_param)) {
+                #     current_sim_param <- sim_param[sim, ]
+                #     current_sim_sample_stat <- sim_sample_stat_new[[sim]]
+                # df_permutate_chromosomes <- permutate_chromosomes(
+                #     current_sim_param = current_sim_param,
+                #     current_sim_sample_stat = current_sim_sample_stat,
+                #     list_parameters = list_parameters,
+                #     current_chromosomes = list_chromosomes,
+                #     new_chromosomes = list_chromosomes_new
+                # )
+                # sim_param_next[sim, ] <- df_permutate_chromosomes$new_sim_param
+                # sim_stat_next[sim, ] <- get_statistics(
+                #     list_targets = colnames(list_targets)[-1],
+                #     simulations_statistics_sc = df_permutate_chromosomes$new_sim_sample_stat$sc,
+                #     simulations_statistics_bulk = df_permutate_chromosomes$new_sim_sample_stat$bulk,
+                #     cn_data_sc = cn_data_sc,
+                #     cn_data_bulk = cn_data_bulk,
+                #     arm_level = arm_level,
+                #     cn_table = cn_table
+                # )$statistics
+                #     output <- func_ABC_by_permutation(
+                #         current_sim_param = current_sim_param,
+                #         current_sim_sample_stat = current_sim_sample_stat,
+                #         current_chromosomes = list_chromosomes,
+                #         new_chromosomes = list_chromosomes_new,
+                #         list_parameters = list_parameters,
+                #         cn_data_sc = cn_data_sc,
+                #         cn_data_bulk = cn_data_bulk,
+                #         arm_level = arm_level,
+                #         cn_table = cn_table
+                #     )
+                #     sim_param_next[sim, ] <- output$sim_param
+                #     sim_stat_next[sim, ] <- output$sim_stat
+                # }
                 sim_param_new <- rbind(sim_param_new, sim_param_next)
                 sim_stat_new <- rbind(sim_stat_new, sim_stat_next)
             }
+            print(sim_param_new)
             cat("\n")
         }
 
@@ -1099,7 +1160,7 @@ fitting_sc_CN <- function(library_name,
     print(p)
     dev.off()
     #---------------------------------Save shuffled simulated CN library
-    if (shuffle_chromosome_arms | shuffle_chromosomes_by_permutation) {
+    if (shuffle_chromosome_arms | shuffle_chromosomes_by_permutation | shuffle_chromosomes_by_moving) {
         ABC_input$sim_param <- sim_param
         ABC_input$sim_stat <- sim_stat
         filename <- paste0(library_name, "_ABC_input_shuffled.rda")
