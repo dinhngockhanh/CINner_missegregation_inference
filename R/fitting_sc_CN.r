@@ -833,12 +833,12 @@ fitting_sc_CN <- function(library_name,
     #-----------------------------------------Input simulated CN library
     filename <- paste0(library_name, "_ABC_input.rda")
     load(filename)
-    n_samples <- ABC_input$n_samples
     model_variables <- ABC_input$model_variables
     parameter_IDs <- ABC_input$parameter_IDs
     sim_param <- ABC_input$sim_param
     sim_stat <- ABC_input$sim_stat
     sim_sample_stat <- ABC_input$sim_sample_stat
+
     #--------------------------------Find statistics for each CN heatmap
     DATA_target <- copynumber_DATA$statistics
     # ========================INCREASE SIMULATED LIBRARY VIA PERMUTATION
@@ -860,7 +860,6 @@ fitting_sc_CN <- function(library_name,
         if (shuffle_chromosome_arms) {
             # sim_param_new <- sim_param
             # sim_stat_new <- sim_stat
-            # sim_sample_stat_new <- sim_sample_stat
             # for (chromosome in list_chromosomes) {
             #     if (length(which(list_parameters$Chromosome == chromosome)) <= 1) next
             #     if (length(which(list_parameters$Chromosome == chromosome)) > 2) simpleError("More than two arms for a chromosome")
@@ -868,7 +867,7 @@ fitting_sc_CN <- function(library_name,
             #     sim_stat_next <- sim_stat_new
             #     for (sim in 1:nrow(sim_param_new)) {
             #         current_sim_param <- sim_param_new[sim, ]
-            #         current_sim_sample_stat <- sim_sample_stat_new[[sim]]
+            #         current_sim_sample_stat <- sim_sample_stat[[sim]]
             #         df_permutate_chromosome_arms <- permutate_chromosome_arms(
             #             current_sim_param = current_sim_param,
             #             current_sim_sample_stat = current_sim_sample_stat,
@@ -894,10 +893,12 @@ fitting_sc_CN <- function(library_name,
         }
         #---Boost simulated data by moving chromosomes
         if (shuffle_chromosomes_by_moving) {
+            ##########################################
+            ABC_input <- c()
+            ##########################################
             #   Initialize new library
             sim_param_new <- sim_param
             sim_stat_new <- sim_stat
-            sim_sample_stat_new <- sim_sample_stat
             #   Find maximum number of possible moves
             max_shuffle_count <- length(list_chromosomes)
             shuffle_num <- min(shuffle_num, max_shuffle_count)
@@ -915,7 +916,7 @@ fitting_sc_CN <- function(library_name,
                 # ==================================================================================================
                 start_time <- Sys.time()
                 cl <- makePSOCKcluster(n_cores)
-                cat("\nShuffling by chromosomes...\n")
+                cat("Shuffling by chromosomes...\n")
                 sim_param <<- sim_param
                 sim_sample_stat <<- sim_sample_stat
                 func_ABC_by_permutation <<- func_ABC_by_permutation
@@ -929,7 +930,7 @@ fitting_sc_CN <- function(library_name,
                 ###
 
                 clusterExport(cl, varlist = c(
-                    "sim_param", "sim_sample_stat_new", "func_ABC_by_permutation",
+                    "sim_param", "sim_sample_stat", "func_ABC_by_permutation",
                     "list_chromosomes", "list_chromosomes_new", "list_parameters",
                     "cn_data_sc", "cn_data_bulk", "arm_level", "cn_table", "permutate_chromosomes", "get_statistics", "list_targets", "cohort_distance", "cn_distance", "sample_distance"
                 ))
@@ -966,7 +967,7 @@ fitting_sc_CN <- function(library_name,
                 # ==================================================================================================
                 # for (sim in 1:nrow(sim_param)) {
                 #     current_sim_param <- sim_param[sim, ]
-                #     current_sim_sample_stat <- sim_sample_stat_new[[sim]]
+                #     current_sim_sample_stat <- sim_sample_stat[[sim]]
                 # df_permutate_chromosomes <- permutate_chromosomes(
                 #     current_sim_param = current_sim_param,
                 #     current_sim_sample_stat = current_sim_sample_stat,
@@ -1002,7 +1003,6 @@ fitting_sc_CN <- function(library_name,
                 sim_stat_new <- rbind(sim_stat_new, sim_stat_next)
             }
             print(sim_param_new)
-            cat("\n")
         }
 
         #---Boost simulated data by permutating chromosomes
@@ -1010,7 +1010,6 @@ fitting_sc_CN <- function(library_name,
             #   Initialize new library
             sim_param_new <- sim_param
             sim_stat_new <- sim_stat
-            sim_sample_stat_new <- sim_sample_stat
             #   Find maximum number of possible permutations
             max_shuffle_count <- factorial(length(list_chromosomes))
             shuffle_num <- min(shuffle_num, max_shuffle_count)
@@ -1034,7 +1033,7 @@ fitting_sc_CN <- function(library_name,
                 sim_stat_next <- sim_stat
                 for (sim in 1:nrow(sim_param)) {
                     current_sim_param <- sim_param[sim, ]
-                    current_sim_sample_stat <- sim_sample_stat_new[[sim]]
+                    current_sim_sample_stat <- sim_sample_stat[[sim]]
                     df_permutate_chromosomes <- permutate_chromosomes(
                         current_sim_param = current_sim_param,
                         current_sim_sample_stat = current_sim_sample_stat,
@@ -1161,6 +1160,8 @@ fitting_sc_CN <- function(library_name,
     dev.off()
     #---------------------------------Save shuffled simulated CN library
     if (shuffle_chromosome_arms | shuffle_chromosomes_by_permutation | shuffle_chromosomes_by_moving) {
+        filename <- paste0(library_name, "_ABC_input.rda")
+        load(filename)
         ABC_input$sim_param <- sim_param
         ABC_input$sim_stat <- sim_stat
         filename <- paste0(library_name, "_ABC_input_shuffled.rda")

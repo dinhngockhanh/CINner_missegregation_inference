@@ -1,23 +1,24 @@
 #----------------------------------------------------Load the rda
 Paths <- "/Users/xiangzijin/Downloads/"
 setwd(Paths)
-rda_name <- "Simpler_DLP&BULK_DNA_ABC_input.rda"
+rda_name <- "Simpler_DLP&BULK_DNA_ABC_input1.rda"
 load(file = rda_name)
 #---------------------------------------------------Get statistics
 statistics <- ABC_input$sim_stat
 ncol(statistics)
 stat_names <- c(
   "Wasserstein_dist_bulk",
+  "Mean_Clonal_misseg_count_bulk",
   "Mean_Shannon",
-  "Mean_Clonal_misseg_count",
-  "Mean_Subclonal_misseg_count",
-  # "Mean_Clonal_armmisseg_count",
-  # "Mean_Subclonal_armmisseg_count",
+  "Mean_Clonal_misseg_count_sc",
+  "Mean_Subclonal_misseg_count_sc",
+  # "Mean_Clonal_armmisseg_count_sc",
+  # "Mean_Subclonal_armmisseg_count_sc",
   "Var_Shannon",
-  "Var_Clonal_misseg_count",
-  "Var_Subclonal_misseg_count",
-  # "Var_Clonal_armmisseg_count",
-  # "Var_Subclonal_armmisseg_count",
+  "Var_Clonal_misseg_count_sc",
+  "Var_Subclonal_misseg_count_sc",
+  # "Var_Clonal_armmisseg_count_sc",
+  # "Var_Subclonal_armmisseg_count_sc",
   "Wasserstein_dist_sc",
   "Mean_Cherries",
   "Mean_Pitchforks",
@@ -40,16 +41,17 @@ stat_names <- c(
 )
 total_stat_names <- c(
   "Wasserstein_dist_bulk",
+  "Mean_Clonal_misseg_count_bulk",
   "Mean_Shannon",
-  "Mean_Clonal_misseg_count",
-  "Mean_Subclonal_misseg_count",
-  "Mean_Clonal_armmisseg_count",
-  "Mean_Subclonal_armmisseg_count",
+  "Mean_Clonal_misseg_count_sc",
+  "Mean_Subclonal_misseg_count_sc",
+  "Mean_Clonal_armmisseg_count_sc",
+  "Mean_Subclonal_armmisseg_count_sc",
   "Var_Shannon",
-  "Var_Clonal_misseg_count",
-  "Var_Subclonal_misseg_count",
-  "Var_Clonal_armmisseg_count",
-  "Var_Subclonal_armmisseg_count",
+  "Var_Clonal_misseg_count_sc",
+  "Var_Subclonal_misseg_count_sc",
+  "Var_Clonal_armmisseg_count_sc",
+  "Var_Subclonal_armmisseg_count_sc",
   "Wasserstein_dist_sc",
   "Mean_Cherries",
   "Mean_Pitchforks",
@@ -71,7 +73,6 @@ total_stat_names <- c(
   "Var_MaxDepth"
 )
 colnames(statistics) <- total_stat_names
-colnames(statistics)
 
 locs_chosen_stat <- which(total_stat_names %in% stat_names)
 chosen_statistics <- data.frame(statistics[, locs_chosen_stat])
@@ -105,14 +106,16 @@ param_names <- c(
   "Xp"
 )
 # get rid of last column of parameters
-
 colnames(parameters) <- param_names
 # prob_armmisseg <- parameters[, "prob_armmisseg"]
 prob_misseg <- parameters[, "prob_misseg"]
 # Correlation Plot=================================================
 # =================================================================
 #-------------------------------------------Get correlation matrix
-corr_mtx <- cor(y = parameters[, -1], x = chosen_statistics)
+corr_mtx <- cor(y = parameters, x = chosen_statistics)
+# mean(corr_mtx[, ])
+# sort(mean(abs(corr_mtx[, 1])), TRUE)
+# sort(abs(corr_mtx[, 1]), TRUE)
 #--------------------------------------------Plot correlation plot
 
 
@@ -121,7 +124,7 @@ corr_plot <- function(corr_mtx) {
   plot <- ggcorrplot(corr_mtx, ggtheme = ggplot2::theme_gray) +
     theme(axis.text.x = element_text(colour = c(
       "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
-      "#00BA38",
+      "#00BA38", "#00BA38",
       "#619CFF", "#619CFF", "#619CFF", "#619CFF",
       "#619CFF", "#619CFF", "#619CFF", "#619CFF",
       "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
@@ -131,9 +134,9 @@ corr_plot <- function(corr_mtx) {
       # "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
       # "#619CFF", "#619CFF", "#619CFF", "#619CFF",
       # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
-    ))) +
-    scale_fill_gradient2(limit = c(-0.2, 0.2), low = "blue", high = "red", )
-  ggsave(file = "correlation_plot.png", plot = plot, width = 12, height = 10, units = "in", dpi = 300, limitsize = FALSE)
+    )))
+  # scale_fill_gradient2(limit = c(-0.3, 0.3), low = "blue", high = "red", )
+  ggsave(file = "correlation_plot.png", plot = plot, width = 13, height = 10, units = "in", dpi = 300, limitsize = FALSE)
   return(plot)
 }
 corr_plot(corr_mtx)
@@ -146,15 +149,16 @@ p_value_plot <- function(parameter, statistic, title) {
   library(ggplot2)
   CN_stats <- c(
     "Mean_Shannon",
-    "Mean_Clonal_misseg_count",
-    "Mean_Subclonal_misseg_count",
-    "Mean_Clonal_armmisseg_count",
-    "Mean_Subclonal_armmisseg_count",
+    "Mean_Clonal_misseg_count_sc",
+    "Mean_Clonal_misseg_count_bulk",
+    "Mean_Subclonal_misseg_count_sc",
+    "Mean_Clonal_armmisseg_count_sc",
+    "Mean_Subclonal_armmisseg_count_sc",
     "Var_Shannon",
-    "Var_Clonal_misseg_count",
-    "Var_Subclonal_misseg_count",
-    "Var_Clonal_armmisseg_count",
-    "Var_Subclonal_armmisseg_count",
+    "Var_Clonal_misseg_count_sc",
+    "Var_Subclonal_misseg_count_sc",
+    "Var_Clonal_armmisseg_count_sc",
+    "Var_Subclonal_armmisseg_count_sc",
     "Wasserstein_dist_sc",
     "Wasserstein_dist_bulk"
   )
@@ -242,3 +246,6 @@ p_value_plot(parameters[, 24], statistics, title = "Xp")
 prob_sel <- parameters[, "prob_misseg"]
 # lm(prob_misseg ~ chosen_statistics)
 # summary(lm(prob_misseg ~ statistics))
+# DA analysis Plot=====================================================
+# =================================================================
+library("domir")
