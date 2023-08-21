@@ -129,112 +129,109 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
         #   Get requested statistics for this simulation
         for (stat in list_targets) {
             stat_details <- strsplit(stat, ";")[[1]]
-            stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
             stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
             stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
-            if (stat_target == "genome") {
-                if (stat_variable == "shannon") {
-                    #   Get Shannon index
-                    frequencies <- table(simulation$sample$sample_clone_ID)
-                    simulations_statistics[[stat_ID]][i] <- diversity(frequencies, index = "shannon")
-                } else if (stat_variable == "event_count") {
-                    #   Get source of data
-                    stat_data <- strsplit(stat_details[grep("data=", stat_details)], "=")[[1]][2]
-                    #   Get count of clonal/subclonal events of a given type
-                    clonal_type <- strsplit(stat_details[grep("type=", stat_details)], "=")[[1]][2]
-                    event_type <- strsplit(stat_details[grep("event=", stat_details)], "=")[[1]][2]
-                    if (stat_data == "sc") {
-                        #   Get event count from single-cell samples
-                        if (clonal_type == "clonal") {
-                            simulations_statistics[[stat_ID]][i] <- find_event_count(clonal_ancestry, event_type, evolution_genotype_changes)
-                        } else if (clonal_type == "subclonal") {
-                            sample_genotype_event_counts <- rep(0, length(sample_genotype_unique))
-                            for (j in 1:length(sample_genotype_unique)) {
-                                sample_genotype_event_counts[j] <- find_event_count(subclonal_ancestry[[j]], event_type, evolution_genotype_changes)
-                            }
-                            simulations_statistics[[stat_ID]][i] <-
-                                sum(sample_genotype_event_counts * table(simulation$sample$sample_clone_ID)) /
-                                length(simulation$sample$sample_clone_ID) -
-                                find_event_count(clonal_ancestry, event_type, evolution_genotype_changes)
-                        } else {
-                            stop(paste0("Error: Unknown clonal type: ", stat))
+            if (stat_variable == "shannon") {
+                #   Get Shannon index
+                frequencies <- table(simulation$sample$sample_clone_ID)
+                simulations_statistics[[stat_ID]][i] <- diversity(frequencies, index = "shannon")
+            } else if (stat_variable == "event_count") {
+                #   Get source of data
+                stat_data <- strsplit(stat_details[grep("data=", stat_details)], "=")[[1]][2]
+                #   Get count of clonal/subclonal events of a given type
+                clonal_type <- strsplit(stat_details[grep("type=", stat_details)], "=")[[1]][2]
+                event_type <- strsplit(stat_details[grep("event=", stat_details)], "=")[[1]][2]
+                if (stat_data == "sc") {
+                    #   Get event count from single-cell samples
+                    if (clonal_type == "clonal") {
+                        simulations_statistics[[stat_ID]][i] <- find_event_count(clonal_ancestry, event_type, evolution_genotype_changes)
+                    } else if (clonal_type == "subclonal") {
+                        sample_genotype_event_counts <- rep(0, length(sample_genotype_unique))
+                        for (j in 1:length(sample_genotype_unique)) {
+                            sample_genotype_event_counts[j] <- find_event_count(subclonal_ancestry[[j]], event_type, evolution_genotype_changes)
                         }
-                    } else if (stat_data == "bulk") {
-                        #   Get event count from bulk samples
-                        representative_CN_type <- strsplit(stat_details[grep("representative_CN=", stat_details)], "=")[[1]][2]
-                        if (representative_CN_type == "average_CN") {
-                            sample_genotype_event_counts <- rep(0, length(sample_genotype_unique))
-                            for (j in 1:length(sample_genotype_unique)) {
-                                sample_genotype_event_counts[j] <- find_event_count(subclonal_ancestry[[j]], event_type, evolution_genotype_changes)
-                            }
-                            simulations_statistics[[stat_ID]][i] <-
-                                sum(sample_genotype_event_counts * table(simulation$sample$sample_clone_ID)) / length(simulation$sample$sample_clone_ID)
-                        } else if (representative_CN_type == "maximal_CN") {
-                            simpleError("Error: event count from maximal CN in bulk data not implemented yet")
-                        }
+                        simulations_statistics[[stat_ID]][i] <-
+                            sum(sample_genotype_event_counts * table(simulation$sample$sample_clone_ID)) /
+                            length(simulation$sample$sample_clone_ID) -
+                            find_event_count(clonal_ancestry, event_type, evolution_genotype_changes)
+                    } else {
+                        stop(paste0("Error: Unknown clonal type: ", stat))
                     }
-                } else if (stat_variable == "cherries") {
-                    #   Get cell phylogeny tree
-                    tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                    #   Get number of cherries
-                    simulations_statistics[[stat_ID]][i] <- cherries(tree, normalise = TRUE)
-                } else if (stat_variable == "pitchforks") {
-                    #   Get cell phylogeny tree
-                    tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                    #   Get number of pitchforks
-                    simulations_statistics[[stat_ID]][i] <- pitchforks(tree, normalise = TRUE)
-                } else if (stat_variable == "colless") {
-                    #   Get cell phylogeny tree
-                    tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                    #   Get colless index
-                    simulations_statistics[[stat_ID]][i] <- colless.phylo(tree, normalise = TRUE)
-                } else if (stat_variable == "sackin") {
-                    #   Get cell phylogeny tree
-                    tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                    #   Get sackin index
-                    simulations_statistics[[stat_ID]][i] <- sackin.phylo(tree, normalise = TRUE)
-                } else if (stat_variable == "IL_number") {
-                    #   Get cell phylogeny tree
-                    tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                    #   Get IL_number
-                    simulations_statistics[[stat_ID]][i] <- ILnumber(tree, normalise = TRUE)
-                } else if (stat_variable == "avgLadder") {
-                    #   Get cell phylogeny tree
-                    tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                    #   Get avgLadder
-                    simulations_statistics[[stat_ID]][i] <- avgLadder(tree, normalise = TRUE)
-                } else if (stat_variable == "maxDepth") {
-                    #   Get cell phylogeny tree
-                    tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                    #   Get maxDepth
-                    simulations_statistics[[stat_ID]][i] <- maxDepth(tree)
-                } else if (stat_variable == "stairs") {
-                    #   Get cell phylogeny tree
-                    tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                    #   Get stairness
-                    simulations_statistics[[stat_ID]][i] <- stairs(tree)[1]
-                } else if (stat_variable == "B2") {
-                    #   Get cell phylogeny tree
-                    tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
-                    #   Get B2Index
-                    simulations_statistics[[stat_ID]][i] <- B2I(tree, logbase = 2)
-                } else if (stat_variable == "clonal_CN") {
-                    #   Get clonal CN profiles and their populations
-                    simulations_statistics[["variable=clonal_CN_profiles"]][[i]] <-
-                        simulations_clonal_CN[["variable=clonal_CN_profiles"]][[i]]
-                    simulations_statistics[["variable=clonal_CN_populations"]][[i]] <-
-                        simulations_clonal_CN[["variable=clonal_CN_populations"]][[i]]
-                } else if (stat_variable == "maximal_CN") {
-                    #   Get maximal CN profile
-                    simulations_statistics[["variable=maximal_CN_profile"]][[i]] <-
-                        simulations_clonal_CN[["variable=maximal_CN_profile"]][[i]]
-                } else if (stat_variable == "average_CN") {
-                    #   Get average CN profile
-                    simulations_statistics[["variable=average_CN_profile"]][[i]] <-
-                        simulations_clonal_CN[["variable=average_CN_profile"]][[i]]
-                } else {
-                    stop(paste0("Error: Unknown statistic: ", stat))
+                } else if (stat_data == "bulk") {
+                    #   Get event count from bulk samples
+                    representative_CN_type <- strsplit(stat_details[grep("representative_CN=", stat_details)], "=")[[1]][2]
+                    if (representative_CN_type == "average_CN") {
+                        sample_genotype_event_counts <- rep(0, length(sample_genotype_unique))
+                        for (j in 1:length(sample_genotype_unique)) {
+                            sample_genotype_event_counts[j] <- find_event_count(subclonal_ancestry[[j]], event_type, evolution_genotype_changes)
+                        }
+                        simulations_statistics[[stat_ID]][i] <-
+                            sum(sample_genotype_event_counts * table(simulation$sample$sample_clone_ID)) / length(simulation$sample$sample_clone_ID)
+                    } else if (representative_CN_type == "maximal_CN") {
+                        simpleError("Error: event count from maximal CN in bulk data not implemented yet")
+                    }
                 }
+            } else if (stat_variable == "cherries") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get number of cherries
+                simulations_statistics[[stat_ID]][i] <- cherries(tree, normalise = TRUE)
+            } else if (stat_variable == "pitchforks") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get number of pitchforks
+                simulations_statistics[[stat_ID]][i] <- pitchforks(tree, normalise = TRUE)
+            } else if (stat_variable == "colless") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get colless index
+                simulations_statistics[[stat_ID]][i] <- colless.phylo(tree, normalise = TRUE)
+            } else if (stat_variable == "sackin") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get sackin index
+                simulations_statistics[[stat_ID]][i] <- sackin.phylo(tree, normalise = TRUE)
+            } else if (stat_variable == "IL_number") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get IL_number
+                simulations_statistics[[stat_ID]][i] <- ILnumber(tree, normalise = TRUE)
+            } else if (stat_variable == "avgLadder") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get avgLadder
+                simulations_statistics[[stat_ID]][i] <- avgLadder(tree, normalise = TRUE)
+            } else if (stat_variable == "maxDepth") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get maxDepth
+                simulations_statistics[[stat_ID]][i] <- maxDepth(tree)
+            } else if (stat_variable == "stairs") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get stairness
+                simulations_statistics[[stat_ID]][i] <- stairs(tree)[1]
+            } else if (stat_variable == "B2") {
+                #   Get cell phylogeny tree
+                tree <- simulation$sample_phylogeny$phylogeny_clustering_truth$tree
+                #   Get B2Index
+                simulations_statistics[[stat_ID]][i] <- B2I(tree, logbase = 2)
+            } else if (stat_variable == "clonal_CN") {
+                #   Get clonal CN profiles and their populations
+                simulations_statistics[["variable=clonal_CN_profiles"]][[i]] <-
+                    simulations_clonal_CN[["variable=clonal_CN_profiles"]][[i]]
+                simulations_statistics[["variable=clonal_CN_populations"]][[i]] <-
+                    simulations_clonal_CN[["variable=clonal_CN_populations"]][[i]]
+            } else if (stat_variable == "maximal_CN") {
+                #   Get maximal CN profile
+                simulations_statistics[["variable=maximal_CN_profile"]][[i]] <-
+                    simulations_clonal_CN[["variable=maximal_CN_profile"]][[i]]
+            } else if (stat_variable == "average_CN") {
+                #   Get average CN profile
+                simulations_statistics[["variable=average_CN_profile"]][[i]] <-
+                    simulations_clonal_CN[["variable=average_CN_profile"]][[i]]
+            } else {
+                stop(paste0("Error: Unknown statistic: ", stat))
             }
         }
     }
@@ -406,7 +403,7 @@ get_statistics <- function(list_targets,
         simulations_statistics_bulk <- get_each_statistics(simulations_bulk, simulations_clonal_CN_bulk, list_targets_bulk)
     }
     #-----------------------------------------Get statistics for fitting
-    statistics <- vector("list", length(list_targets))
+    statistics <- rep(0, length(list_targets))
     for (i in 1:length(list_targets)) {
         stat <- list_targets[i]
         stat_details <- strsplit(stat, ";")[[1]]
@@ -414,55 +411,50 @@ get_statistics <- function(list_targets,
         stat_data <- strsplit(stat_details[grep("data=", stat_details)], "=")[[1]][2]
         stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
         stat_type <- strsplit(stat_details[grepl("statistic=", stat_details)], "=")[[1]][2]
-        stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
-        if (stat_target == "genome") {
-            if (stat_type == "mean") {
-                if (stat_data == "sc") {
-                    statistics[[i]] <- mean(simulations_statistics_sc[[stat_ID]])
-                } else if (stat_data == "bulk") {
-                    statistics[[i]] <- mean(simulations_statistics_bulk[[stat_ID]])
-                }
-            } else if (stat_type == "var") {
-                if (stat_data == "sc") {
-                    statistics[[i]] <- var(simulations_statistics_sc[[stat_ID]])
-                } else if (stat_data == "bulk") {
-                    statistics[[i]] <- var(simulations_statistics_bulk[[stat_ID]])
-                }
-            } else if (stat_type == "dist") {
-                if (stat_variable == "clonal_CN" & stat_data == "sc") {
-                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                    if (is.null(cn_data_sc)) cn_data_sc <- simulations_statistics_sc
-                    statistics[[i]] <- cohort_distance(
-                        cohort_from = simulations_statistics_sc,
-                        cohort_to = cn_data_sc,
-                        metric = stat_metric
-                    )
-                } else if (stat_variable == "average_CN" & stat_data == "bulk") {
-                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                    if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
-                    statistics[[i]] <- cohort_distance(
-                        cohort_from = simulations_statistics_bulk,
-                        cohort_to = cn_data_bulk,
-                        metric = stat_metric,
-                        bulk_CN_input = "average",
-                        bulk = TRUE
-                    )
-                } else if (stat_variable == "maximal_CN" & stat_data == "bulk") {
-                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                    if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
-                    statistics[[i]] <- cohort_distance(
-                        cohort_from = simulations_statistics_bulk,
-                        cohort_to = cn_data_bulk,
-                        metric = stat_metric,
-                        bulk_CN_input = "maximal",
-                        bulk = TRUE
-                    )
-                }
-            } else {
-                stop(paste0("Error: Unknown statistic type: ", stat))
+        if (stat_type == "mean") {
+            if (stat_data == "sc") {
+                statistics[i] <- mean(simulations_statistics_sc[[stat_ID]])
+            } else if (stat_data == "bulk") {
+                statistics[i] <- mean(simulations_statistics_bulk[[stat_ID]])
             }
-        } else if (stat_target == "chromosome_arms") {
-            statistics[[i]] <- 888
+        } else if (stat_type == "var") {
+            if (stat_data == "sc") {
+                statistics[i] <- var(simulations_statistics_sc[[stat_ID]])
+            } else if (stat_data == "bulk") {
+                simpleError("Error: bulk data not implemented yet")
+            }
+        } else if (stat_type == "dist") {
+            if (stat_variable == "clonal_CN" & stat_data == "sc") {
+                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                if (is.null(cn_data_sc)) cn_data_sc <- simulations_statistics_sc
+                statistics[i] <- cohort_distance(
+                    cohort_from = simulations_statistics_sc,
+                    cohort_to = cn_data_sc,
+                    metric = stat_metric
+                )
+            } else if (stat_variable == "average_CN" & stat_data == "bulk") {
+                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
+                statistics[i] <- cohort_distance(
+                    cohort_from = simulations_statistics_bulk,
+                    cohort_to = cn_data_bulk,
+                    metric = stat_metric,
+                    bulk_CN_input = "average",
+                    bulk = TRUE
+                )
+            } else if (stat_variable == "maximal_CN" & stat_data == "bulk") {
+                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
+                statistics[i] <- cohort_distance(
+                    cohort_from = simulations_statistics_bulk,
+                    cohort_to = cn_data_bulk,
+                    metric = stat_metric,
+                    bulk_CN_input = "maximal",
+                    bulk = TRUE
+                )
+            }
+        } else {
+            stop(paste0("Error: Unknown statistic type: ", stat))
         }
     }
     #-----------------------------------------------------Prepare output
@@ -678,6 +670,7 @@ library_sc_CN <- function(model_name,
     save(ABC_input, file = filename)
 }
 
+
 permutate_chromosome_arms <- function(current_sim_param, current_sim_sample_stat, list_parameters, permutate_chromosome) {
     #--------------------------------Permutate simulation parameters
     locs_old_chrom_arms <- which(list_parameters$Chromosome == permutate_chromosome)
@@ -824,7 +817,8 @@ fitting_sc_CN <- function(library_name,
                           arm_level = FALSE,
                           shuffle_chromosome_arms = FALSE,
                           shuffle_chromosomes_by_permutation = FALSE,
-                          shuffle_chromosomes_by_moving = FALSE) {
+                          shuffle_chromosomes_by_moving = FALSE,
+                          currentpath) {
     library(parallel)
     library(pbapply)
     library(abcrf)
@@ -841,12 +835,41 @@ fitting_sc_CN <- function(library_name,
     #-----------------------------------------Input simulated CN library
     filename <- paste0(library_name, "_ABC_input.rda")
     load(filename)
-    n_samples <- ABC_input$n_samples
+    setwd(currentpath)
+    dir.create(file.path(currentpath, "N_rda_files"))
+    setwd(paste0(currentpath, "/N_rda_files"))
+    ABC_simcount <- nrow(ABC_input$sim_param)
+    for (i in 1:ABC_simcount) {
+        ABC_small <- list()
+        ABC_small$model_variables <- ABC_input$model_variables
+        ABC_small$parameter_IDs <- ABC_input$parameter_IDs
+        ABC_small$sim_param <- ABC_input$sim_param[i, ]
+        ABC_small$sim_stat <- ABC_input$sim_stat[i, ]
+        sim_sample_stat <- ABC_input$sim_sample_stat[[i]]
+        filename <- paste0(library_name, "_ABC_small_", i, ".rda")
+        save(ABC_small, file = filename)
+        ABC_small <- c()
+    }
+    ABC_input <- c()
+    for (i in 1:ABC_simcount) {
+        filename <- paste0(library_name, "_ABC_small_", i, ".rda")
+        load(filename)
+        model_variables <- ABC_small$model_variables
+        parameter_IDs <- ABC_small$parameter_IDs
+        sim_param <- ABC_small$sim_param
+        sim_stat <- ABC_small$sim_stat
+        sim_sample_stat <- ABC_small$sim_sample_stat
+    }
+
+
+    #############################################
     model_variables <- ABC_input$model_variables
     parameter_IDs <- ABC_input$parameter_IDs
     sim_param <- ABC_input$sim_param
     sim_stat <- ABC_input$sim_stat
     sim_sample_stat <- ABC_input$sim_sample_stat
+    #############################################
+
     #--------------------------------Find statistics for each CN heatmap
     DATA_target <- copynumber_DATA$statistics
     # ========================INCREASE SIMULATED LIBRARY VIA PERMUTATION
@@ -868,7 +891,6 @@ fitting_sc_CN <- function(library_name,
         if (shuffle_chromosome_arms) {
             # sim_param_new <- sim_param
             # sim_stat_new <- sim_stat
-            # sim_sample_stat_new <- sim_sample_stat
             # for (chromosome in list_chromosomes) {
             #     if (length(which(list_parameters$Chromosome == chromosome)) <= 1) next
             #     if (length(which(list_parameters$Chromosome == chromosome)) > 2) simpleError("More than two arms for a chromosome")
@@ -876,7 +898,7 @@ fitting_sc_CN <- function(library_name,
             #     sim_stat_next <- sim_stat_new
             #     for (sim in 1:nrow(sim_param_new)) {
             #         current_sim_param <- sim_param_new[sim, ]
-            #         current_sim_sample_stat <- sim_sample_stat_new[[sim]]
+            #         current_sim_sample_stat <- sim_sample_stat[[sim]]
             #         df_permutate_chromosome_arms <- permutate_chromosome_arms(
             #             current_sim_param = current_sim_param,
             #             current_sim_sample_stat = current_sim_sample_stat,
@@ -908,11 +930,6 @@ fitting_sc_CN <- function(library_name,
             #   Find maximum number of possible moves
             max_shuffle_count <- length(list_chromosomes)
             shuffle_num <- min(shuffle_num, max_shuffle_count)
-
-            # pb <- txtProgressBar(
-            #     min = 2, max = shuffle_num,
-            #     style = 3, width = 50, char = "="
-            # )
             for (i in 2:shuffle_num) {
                 # setTxtProgressBar(pb, i)
                 list_chromosomes_new <- c(list_chromosomes[i:length(list_chromosomes)], list_chromosomes[1:(i - 1)])
@@ -920,77 +937,35 @@ fitting_sc_CN <- function(library_name,
                 sim_param_next <- sim_param
                 sim_stat_next <- sim_stat
                 # ==================================================================================================
-                start_time <- Sys.time()
-                cl <- makePSOCKcluster(n_cores)
-                cat("\nShuffling by chromosomes...\n")
-                sim_param <<- sim_param
-                sim_sample_stat <<- sim_sample_stat
-                func_ABC_by_permutation <<- func_ABC_by_permutation
-                list_chromosomes <<- list_chromosomes
-                list_chromosomes_new <<- list_chromosomes_new
-                list_parameters <<- list_parameters
-                cn_data_sc <<- cn_data_sc
-                cn_data_bulk <<- cn_data_bulk
-                arm_level <<- arm_level
-                cn_table <<- cn_table
-                ###
+                # start_time <- Sys.time()
+                # cl <- makePSOCKcluster(n_cores)
+                # cat("Shuffling by chromosomes...\n")
+                # sim_param <<- sim_param
+                # sim_sample_stat <<- sim_sample_stat
+                # func_ABC_by_permutation <<- func_ABC_by_permutation
+                # list_chromosomes <<- list_chromosomes
+                # list_chromosomes_new <<- list_chromosomes_new
+                # list_parameters <<- list_parameters
+                # cn_data_sc <<- cn_data_sc
+                # cn_data_bulk <<- cn_data_bulk
+                # arm_level <<- arm_level
+                # cn_table <<- cn_table
+                # ###
 
-                clusterExport(cl, varlist = c(
-                    "sim_param", "sim_sample_stat", "func_ABC_by_permutation",
-                    "list_chromosomes", "list_chromosomes_new", "list_parameters",
-                    "cn_data_sc", "cn_data_bulk", "arm_level", "cn_table", "permutate_chromosomes", "get_statistics", "list_targets", "cohort_distance", "cn_distance", "sample_distance"
-                ))
-                e <- new.env()
-                e$libs <- .libPaths()
-                clusterExport(cl, "libs", envir = e)
-                clusterEvalQ(cl, .libPaths(libs))
-                # Create fitted parameters parallel
-                pbo <- pboptions(type = "txt")
-                sim_results_list <- pblapply(cl = cl, X = 1:nrow(sim_param), FUN = function(iteration) {
-                    current_sim_param <- sim_param[iteration, ]
-                    current_sim_sample_stat <- sim_sample_stat[[iteration]]
-                    output <- func_ABC_by_permutation(
-                        current_sim_param = current_sim_param,
-                        current_sim_sample_stat = current_sim_sample_stat,
-                        current_chromosomes = list_chromosomes,
-                        new_chromosomes = list_chromosomes_new,
-                        list_parameters = list_parameters,
-                        cn_data_sc = cn_data_sc,
-                        cn_data_bulk = cn_data_bulk,
-                        arm_level = arm_level,
-                        cn_table = cn_table
-                    )
-                    return(output)
-                })
-                stopCluster(cl)
-                #   Group simulated statistics into one table
-                for (sim in 1:nrow(sim_param)) {
-                    sim_param_next[sim, ] <- sim_results_list[[sim]]$sim_param
-                    sim_stat_next[sim, ] <- sim_results_list[[sim]]$sim_stat
-                }
-                end_time <- Sys.time()
-                print(end_time - start_time)
-                # ==================================================================================================
-                # for (sim in 1:nrow(sim_param)) {
-                #     current_sim_param <- sim_param[sim, ]
-                #     current_sim_sample_stat <- sim_sample_stat_new[[sim]]
-                # df_permutate_chromosomes <- permutate_chromosomes(
-                #     current_sim_param = current_sim_param,
-                #     current_sim_sample_stat = current_sim_sample_stat,
-                #     list_parameters = list_parameters,
-                #     current_chromosomes = list_chromosomes,
-                #     new_chromosomes = list_chromosomes_new
-                # )
-                # sim_param_next[sim, ] <- df_permutate_chromosomes$new_sim_param
-                # sim_stat_next[sim, ] <- get_statistics(
-                #     list_targets = colnames(list_targets)[-1],
-                #     simulations_statistics_sc = df_permutate_chromosomes$new_sim_sample_stat$sc,
-                #     simulations_statistics_bulk = df_permutate_chromosomes$new_sim_sample_stat$bulk,
-                #     cn_data_sc = cn_data_sc,
-                #     cn_data_bulk = cn_data_bulk,
-                #     arm_level = arm_level,
-                #     cn_table = cn_table
-                # )$statistics
+                # clusterExport(cl, varlist = c(
+                #     "sim_param", "sim_sample_stat", "func_ABC_by_permutation",
+                #     "list_chromosomes", "list_chromosomes_new", "list_parameters",
+                #     "cn_data_sc", "cn_data_bulk", "arm_level", "cn_table", "permutate_chromosomes", "get_statistics", "list_targets", "cohort_distance", "cn_distance", "sample_distance"
+                # ))
+                # e <- new.env()
+                # e$libs <- .libPaths()
+                # clusterExport(cl, "libs", envir = e)
+                # clusterEvalQ(cl, .libPaths(libs))
+                # # Create fitted parameters parallel
+                # pbo <- pboptions(type = "txt")
+                # sim_results_list <- pblapply(cl = cl, X = 1:nrow(sim_param), FUN = function(iteration) {
+                #     current_sim_param <- sim_param[iteration, ]
+                #     current_sim_sample_stat <- sim_sample_stat[[iteration]]
                 #     output <- func_ABC_by_permutation(
                 #         current_sim_param = current_sim_param,
                 #         current_sim_sample_stat = current_sim_sample_stat,
@@ -1002,14 +977,60 @@ fitting_sc_CN <- function(library_name,
                 #         arm_level = arm_level,
                 #         cn_table = cn_table
                 #     )
-                #     sim_param_next[sim, ] <- output$sim_param
-                #     sim_stat_next[sim, ] <- output$sim_stat
+                #     return(output)
+                # })
+                # stopCluster(cl)
+                # #   Group simulated statistics into one table
+                # for (sim in 1:nrow(sim_param)) {
+                #     sim_param_next[sim, ] <- sim_results_list[[sim]]$sim_param
+                #     sim_stat_next[sim, ] <- sim_results_list[[sim]]$sim_stat
+                # }
+                # end_time <- Sys.time()
+                # print(end_time - start_time)
+                # ==================================================================================================
+
+                for (sim in 1:nrow(sim_param)) {
+                    current_sim_param <- sim_param[sim, ]
+                    current_sim_sample_stat <- sim_sample_stat[[sim]]
+                    df_permutate_chromosomes <- permutate_chromosomes(
+                        current_sim_param = current_sim_param,
+                        current_sim_sample_stat = current_sim_sample_stat,
+                        list_parameters = list_parameters,
+                        current_chromosomes = list_chromosomes,
+                        new_chromosomes = list_chromosomes_new
+                    )
+                    sim_param_next[sim, ] <- df_permutate_chromosomes$new_sim_param
+                    sim_stat_next[sim, ] <- get_statistics(
+                        list_targets = colnames(list_targets)[-1],
+                        simulations_statistics_sc = df_permutate_chromosomes$new_sim_sample_stat$sc,
+                        simulations_statistics_bulk = df_permutate_chromosomes$new_sim_sample_stat$bulk,
+                        cn_data_sc = cn_data_sc,
+                        cn_data_bulk = cn_data_bulk,
+                        arm_level = arm_level,
+                        cn_table = cn_table
+                    )$statistics
+                }
+                # sim_param_new <- rbind(sim_param_new, sim_param_next)
+                # sim_stat_new <- rbind(sim_stat_new, sim_stat_next)
+                ##########################################
+                #     output <- func_ABC_by_permutation(
+                #         current_sim_param = current_sim_param,
+                #         current_sim_sample_stat = current_sim_sample_stat,
+                #         current_chromosomes = list_chromosomes,
+                #         new_chromosomes = list_chromosomes_new,
+                #         list_parameters = list_parameters,
+                #         cn_data_sc = cn_data_sc,
+                #         cn_data_bulk = cn_data_bulk,
+                #         arm_level = arm_level,
+                #         cn_table = cn_table
+                #     )
+                # sim_param_next[sim, ] <- df_permutate_chromosomes$new_sim_param
+                # sim_stat_next[sim, ] <- output$sim_stat
                 # }
                 sim_param_new <- rbind(sim_param_new, sim_param_next)
                 sim_stat_new <- rbind(sim_stat_new, sim_stat_next)
             }
             print(sim_param_new)
-            cat("\n")
         }
 
         #---Boost simulated data by permutating chromosomes
@@ -1167,6 +1188,8 @@ fitting_sc_CN <- function(library_name,
     dev.off()
     #---------------------------------Save shuffled simulated CN library
     if (shuffle_chromosome_arms | shuffle_chromosomes_by_permutation | shuffle_chromosomes_by_moving) {
+        filename <- paste0(library_name, "_ABC_input.rda")
+        load(filename)
         ABC_input$sim_param <- sim_param
         ABC_input$sim_stat <- sim_stat
         filename <- paste0(library_name, "_ABC_input_shuffled.rda")
