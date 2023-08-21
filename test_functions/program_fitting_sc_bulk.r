@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-R_workplace <- getwd()
-R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+# R_workplace <- getwd()
+# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
 # R_libPaths <- ""
@@ -11,9 +11,9 @@ R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+R_workplace <- "/Users/dinhngockhanh/DLPfit/test_functions"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/testR"
 
 
 
@@ -97,11 +97,6 @@ for (i in 1:length(arm_s)) {
         if (runif(1) < 0.5) arm_s[i] <- 1 / arm_s[i]
     }
 }
-selected_chromosomes <- c(
-    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11",
-    "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X"
-)
-
 table_arm_selection_rates <- data.frame(
     Arm_ID = arm_id,
     Chromosome = arm_chromosome,
@@ -151,13 +146,21 @@ for (i in 1:nrow(model_variables$chromosome_arm_library)) {
         )
     }
 }
+tmp <- unique(model_variables$chromosome_arm_library$Chromosome)
+list_chromosomes <- ""
+for (i in 1:length(tmp)) {
+    list_chromosomes <- paste0(list_chromosomes, tmp[i])
+    if (i < length(tmp)) {
+        list_chromosomes <- paste0(list_chromosomes, ",")
+    }
+}
 # =============DEFINE LIST OF STATISTICS FOR BUILDING SIMULATION LIBRARY
 list_targets_library <- c(
     #---Bulk DNA: CN
     "data=bulk;target=genome;statistic=dist;variable=average_CN;metric=euclidean",
     "data=bulk;target=genome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
-    "data=bulk;target=chromosome_arms;statistic=dist;variable=average_CN;metric=euclidean",
-    "data=bulk;target=chromosome_arms;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
+    paste0("data=bulk;target=chromosome;statistic=dist;variable=average_CN;metric=euclidean;chromosome=", list_chromosomes),
+    "data=bulk;target=chromosome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
     #---Single-cell DNA: subclonal CN
     "data=sc;target=genome;statistic=dist;variable=clonal_CN;metric=euclidean",
     "data=sc;target=genome;statistic=mean;variable=shannon",
@@ -170,17 +173,17 @@ list_targets_library <- c(
     "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=missegregation",
     "data=sc;target=genome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
     "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    "data=sc;target=chromosome_arms;statistic=dist;variable=clonal_CN;metric=euclidean",
-    "data=sc;target=chromosome_arms;statistic=mean;variable=shannon",
-    "data=sc;target=chromosome_arms;statistic=mean;variable=event_count;type=clonal;event=missegregation",
-    "data=sc;target=chromosome_arms;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
-    "data=sc;target=chromosome_arms;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
-    "data=sc;target=chromosome_arms;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    "data=sc;target=chromosome_arms;statistic=var;variable=shannon",
-    "data=sc;target=chromosome_arms;statistic=var;variable=event_count;type=clonal;event=missegregation",
-    "data=sc;target=chromosome_arms;statistic=var;variable=event_count;type=subclonal;event=missegregation",
-    "data=sc;target=chromosome_arms;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
-    "data=sc;target=chromosome_arms;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
+    "data=sc;target=chromosome;statistic=dist;variable=clonal_CN;metric=euclidean",
+    "data=sc;target=chromosome;statistic=mean;variable=shannon",
+    "data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=missegregation",
+    "data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
+    "data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
+    "data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
+    "data=sc;target=chromosome;statistic=var;variable=shannon",
+    "data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=missegregation",
+    "data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=missegregation",
+    "data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
+    "data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
     #---Single-cell DNA: phylo stats for tips
     "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
     "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips

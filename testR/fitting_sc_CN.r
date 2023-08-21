@@ -104,6 +104,19 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
     library(phyloTop)
     library(treebalance)
     simulations_statistics <- list()
+    #----------------------Initialize matrices for simulation statistics
+    for (stat in list_targets) {
+        stat_details <- strsplit(stat, ";")[[1]]
+        stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
+        stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
+        if (stat_target == "genome") {
+            simulations_statistics[[stat_ID]] <- matrix(0, nrow = length(simulations), ncol = 1)
+        } else if (stat_target == "chromosome") {
+            stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")
+            simulations_statistics[[stat_ID]] <- matrix(0, nrow = length(simulations), ncol = length(stat_chromosome_ID))
+        }
+    }
+    #--------------------------------------Compute simulation statistics
     for (i in 1:length(simulations)) {
         simulation <- simulations[[i]]
         #   Find clonal ancestors for single-cell or bulk average-CN-based event counts
@@ -132,7 +145,17 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
             stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
             stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
             stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
-            if (stat_target == "genome") {
+            if (stat_target == "chromosome") {
+                if (stat_variable == "shannon") {
+                    #   Get Shannon index
+                } else if (stat_variable == "event_count") {
+                    stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")
+                    # .....
+                    for (j in 1:length(stat_chromosome_ID)) {
+                        simulations_statistics[[stat_ID]][i, j] <- find_event_count(clonal_ancestry, event_type, evolution_genotype_changes, by_chromosome = stat_chromosome_ID[j])
+                    }
+                }
+            } else if (stat_target == "genome") {
                 if (stat_variable == "shannon") {
                     #   Get Shannon index
                     frequencies <- table(simulation$sample$sample_clone_ID)
@@ -258,14 +281,20 @@ find_clonal_ancestry <- function(list_subclonal_ancestry) {
 }
 #---Function to find the number of events
 #---given a list of clones and event type
-find_event_count <- function(clone_ancestry, event_type, evolution_genotype_changes) {
+find_event_count <- function(clone_ancestry, event_type, evolution_genotype_changes, by_chromosome = NULL) {
     event_count <- 0
     for (clone in clone_ancestry) {
         if (clone <= 0) next
         if (length(evolution_genotype_changes[[clone]]) == 0) next
         for (j in 1:length(evolution_genotype_changes[[clone]])) {
             if (evolution_genotype_changes[[clone]][[j]][1] == event_type) {
-                event_count <- event_count + 1
+                if (is.null(by_chromosome)) {
+                    event_count <- event_count + 1
+                } else {
+                    if (evolution_genotype_changes[[clone]][[j]][2] %in% by_chromosome) {
+                        event_count <- event_count + 1
+                    }
+                }
             }
         }
     }
@@ -414,55 +443,50 @@ get_statistics <- function(list_targets,
         stat_data <- strsplit(stat_details[grep("data=", stat_details)], "=")[[1]][2]
         stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
         stat_type <- strsplit(stat_details[grepl("statistic=", stat_details)], "=")[[1]][2]
-        stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
-        if (stat_target == "genome") {
-            if (stat_type == "mean") {
-                if (stat_data == "sc") {
-                    statistics[[i]] <- mean(simulations_statistics_sc[[stat_ID]])
-                } else if (stat_data == "bulk") {
-                    statistics[[i]] <- mean(simulations_statistics_bulk[[stat_ID]])
-                }
-            } else if (stat_type == "var") {
-                if (stat_data == "sc") {
-                    statistics[[i]] <- var(simulations_statistics_sc[[stat_ID]])
-                } else if (stat_data == "bulk") {
-                    statistics[[i]] <- var(simulations_statistics_bulk[[stat_ID]])
-                }
-            } else if (stat_type == "dist") {
-                if (stat_variable == "clonal_CN" & stat_data == "sc") {
-                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                    if (is.null(cn_data_sc)) cn_data_sc <- simulations_statistics_sc
-                    statistics[[i]] <- cohort_distance(
-                        cohort_from = simulations_statistics_sc,
-                        cohort_to = cn_data_sc,
-                        metric = stat_metric
-                    )
-                } else if (stat_variable == "average_CN" & stat_data == "bulk") {
-                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                    if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
-                    statistics[[i]] <- cohort_distance(
-                        cohort_from = simulations_statistics_bulk,
-                        cohort_to = cn_data_bulk,
-                        metric = stat_metric,
-                        bulk_CN_input = "average",
-                        bulk = TRUE
-                    )
-                } else if (stat_variable == "maximal_CN" & stat_data == "bulk") {
-                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                    if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
-                    statistics[[i]] <- cohort_distance(
-                        cohort_from = simulations_statistics_bulk,
-                        cohort_to = cn_data_bulk,
-                        metric = stat_metric,
-                        bulk_CN_input = "maximal",
-                        bulk = TRUE
-                    )
-                }
-            } else {
-                stop(paste0("Error: Unknown statistic type: ", stat))
+        if (stat_type == "mean") {
+            if (stat_data == "sc") {
+                statistics[[i]] <- apply(simulations_statistics_sc[[stat_ID]], 2, mean)
+            } else if (stat_data == "bulk") {
+                statistics[[i]] <- apply(simulations_statistics_bulk[[stat_ID]], 2, mean)
             }
-        } else if (stat_target == "chromosome_arms") {
-            statistics[[i]] <- 888
+        } else if (stat_type == "var") {
+            if (stat_data == "sc") {
+                statistics[[i]] <- apply(simulations_statistics_sc[[stat_ID]], 2, var)
+            } else if (stat_data == "bulk") {
+                statistics[[i]] <- apply(simulations_statistics_bulk[[stat_ID]], 2, var)
+            }
+        } else if (stat_type == "dist") {
+            if (stat_variable == "clonal_CN" & stat_data == "sc") {
+                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                if (is.null(cn_data_sc)) cn_data_sc <- simulations_statistics_sc
+                statistics[[i]] <- cohort_distance(
+                    cohort_from = simulations_statistics_sc,
+                    cohort_to = cn_data_sc,
+                    metric = stat_metric
+                )
+            } else if (stat_variable == "average_CN" & stat_data == "bulk") {
+                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
+                statistics[[i]] <- cohort_distance(
+                    cohort_from = simulations_statistics_bulk,
+                    cohort_to = cn_data_bulk,
+                    metric = stat_metric,
+                    bulk_CN_input = "average",
+                    bulk = TRUE
+                )
+            } else if (stat_variable == "maximal_CN" & stat_data == "bulk") {
+                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
+                statistics[[i]] <- cohort_distance(
+                    cohort_from = simulations_statistics_bulk,
+                    cohort_to = cn_data_bulk,
+                    metric = stat_metric,
+                    bulk_CN_input = "maximal",
+                    bulk = TRUE
+                )
+            }
+        } else {
+            stop(paste0("Error: Unknown statistic type: ", stat))
         }
     }
     #-----------------------------------------------------Prepare output
