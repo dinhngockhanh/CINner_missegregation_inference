@@ -112,7 +112,7 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
         if (stat_target == "genome") {
             simulations_statistics[[stat_ID]] <- matrix(0, nrow = length(simulations), ncol = 1)
         } else if (stat_target == "chromosome") {
-            stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")
+            stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")[[1]]
             simulations_statistics[[stat_ID]] <- matrix(0, nrow = length(simulations), ncol = length(stat_chromosome_ID))
         }
     }
@@ -146,13 +146,49 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
             stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
             stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
             if (stat_target == "chromosome") {
+                stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")[[1]]
                 if (stat_variable == "shannon") {
                     #   Get Shannon index
                 } else if (stat_variable == "event_count") {
-                    stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")
-                    # .....
-                    for (j in 1:length(stat_chromosome_ID)) {
-                        simulations_statistics[[stat_ID]][i, j] <- find_event_count(clonal_ancestry, event_type, evolution_genotype_changes, by_chromosome = stat_chromosome_ID[j])
+                    #   Get source of data
+                    stat_data <- strsplit(stat_details[grep("data=", stat_details)], "=")[[1]][2]
+                    #   Get count of clonal/subclonal events of a given type
+                    clonal_type <- strsplit(stat_details[grep("type=", stat_details)], "=")[[1]][2]
+                    event_type <- strsplit(stat_details[grep("event=", stat_details)], "=")[[1]][2]
+                    if (stat_data == "sc") {
+                        #   Get event count from single-cell samples
+                        if (clonal_type == "clonal") {
+                            for (j in 1:length(stat_chromosome_ID)) {
+                                simulations_statistics[[stat_ID]][i, j] <- find_event_count(clonal_ancestry, event_type, evolution_genotype_changes, by_chromosome = stat_chromosome_ID[j])
+                            }
+                        } else if (clonal_type == "subclonal") {
+                            sample_genotype_event_counts <- rep(0, length(sample_genotype_unique))
+                            for (j in 1:length(stat_chromosome_ID)) {
+                                for (k in 1:length(sample_genotype_unique)) {
+                                    sample_genotype_event_counts[k] <- find_event_count(subclonal_ancestry[[k]], event_type, evolution_genotype_changes, by_chromosome = stat_chromosome_ID[j])
+                                }
+                                simulations_statistics[[stat_ID]][i, j] <-
+                                    sum(sample_genotype_event_counts * table(simulation$sample$sample_clone_ID)) /
+                                    length(simulation$sample$sample_clone_ID) -
+                                    find_event_count(clonal_ancestry, event_type, evolution_genotype_changes, by_chromosome = stat_chromosome_ID[j])
+                            }
+                        } else {
+                            stop(paste0("Error: Unknown clonal type: ", stat))
+                        }
+                    } else if (stat_data == "bulk") {
+                        representative_CN_type <- strsplit(stat_details[grep("representative_CN=", stat_details)], "=")[[1]][2]
+                        if (representative_CN_type == "average_CN") {
+                            sample_genotype_event_counts <- rep(0, length(sample_genotype_unique))
+                            for (j in 1:length(stat_chromosome_ID)) {
+                                for (k in 1:length(sample_genotype_unique)) {
+                                    sample_genotype_event_counts[k] <- find_event_count(subclonal_ancestry[[k]], event_type, evolution_genotype_changes, by_chromosome = stat_chromosome_ID[j])
+                                }
+                                simulations_statistics[[stat_ID]][i, j] <-
+                                    sum(sample_genotype_event_counts * table(simulation$sample$sample_clone_ID)) / length(simulation$sample$sample_clone_ID)
+                            }
+                        } else if (representative_CN_type == "maximal_CN") {
+                            simpleError("Error: event count from maximal CN in bulk data not implemented yet")
+                        }
                     }
                 }
             } else if (stat_target == "genome") {
@@ -291,7 +327,7 @@ find_event_count <- function(clone_ancestry, event_type, evolution_genotype_chan
                 if (is.null(by_chromosome)) {
                     event_count <- event_count + 1
                 } else {
-                    if (evolution_genotype_changes[[clone]][[j]][2] %in% by_chromosome) {
+                    if (evolution_genotype_changes[[clone]][[j]][2] == by_chromosome) {
                         event_count <- event_count + 1
                     }
                 }
