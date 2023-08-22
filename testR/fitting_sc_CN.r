@@ -148,7 +148,25 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
             if (stat_target == "chromosome") {
                 stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")[[1]]
                 if (stat_variable == "shannon") {
-                    #   Get Shannon index
+                    #   Extract CN for each chromosome from each unique clone
+                    ls_chrom_profiles <- vector("list", length(stat_chromosome_ID))
+                    for (j in 1:length(simulation$sample$sample_genotype_unique)) {
+                        genome_profile <- simulation$sample$sample_genotype_unique_profile[[j]]
+                        for (k in 1:length(stat_chromosome_ID)) {
+                            vec_CN <- paste(genome_profile$copy[genome_profile$chr == stat_chromosome_ID[k]], collapse = "")
+                            ls_chrom_profiles[[k]][j] <- vec_CN
+                        }
+                    }
+                    #   Get Shannon index for each chromosome
+                    diversity_by_chromosome <- rep(0, length(stat_chromosome_ID))
+                    for (j in 1:length(stat_chromosome_ID)) {
+                        tmp <- cbind(simulation$sample$sample_genotype_unique, match(ls_chrom_profiles[[j]], unique(ls_chrom_profiles[[j]])))
+                        tmp_sample_clone_ID <- simulation$sample$sample_clone_ID
+                        for (k in 1:nrow(tmp)) {
+                            tmp_sample_clone_ID[which(simulation$sample$sample_clone_ID == tmp[k, 1])] <- tmp[k, 2]
+                        }
+                        simulations_statistics[[stat_ID]][i, j] <- diversity(table(tmp_sample_clone_ID), index = "shannon")
+                    }
                 } else if (stat_variable == "event_count") {
                     #   Get source of data
                     stat_data <- strsplit(stat_details[grep("data=", stat_details)], "=")[[1]][2]
@@ -194,8 +212,7 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
             } else if (stat_target == "genome") {
                 if (stat_variable == "shannon") {
                     #   Get Shannon index
-                    frequencies <- table(simulation$sample$sample_clone_ID)
-                    simulations_statistics[[stat_ID]][i] <- diversity(frequencies, index = "shannon")
+                    simulations_statistics[[stat_ID]][i] <- diversity(table(simulation$sample$sample_clone_ID), index = "shannon")
                 } else if (stat_variable == "event_count") {
                     #   Get source of data
                     stat_data <- strsplit(stat_details[grep("data=", stat_details)], "=")[[1]][2]
