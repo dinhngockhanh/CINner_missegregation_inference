@@ -160,10 +160,10 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
                     #   Get Shannon index for each chromosome
                     diversity_by_chromosome <- rep(0, length(stat_chromosome_ID))
                     for (j in 1:length(stat_chromosome_ID)) {
-                        tmp <- cbind(simulation$sample$sample_genotype_unique, match(ls_chrom_profiles[[j]], unique(ls_chrom_profiles[[j]])))
+                        tmp_frequency_table <- cbind(simulation$sample$sample_genotype_unique, match(ls_chrom_profiles[[j]], unique(ls_chrom_profiles[[j]])))
                         tmp_sample_clone_ID <- simulation$sample$sample_clone_ID
-                        for (k in 1:nrow(tmp)) {
-                            tmp_sample_clone_ID[which(simulation$sample$sample_clone_ID == tmp[k, 1])] <- tmp[k, 2]
+                        for (k in 1:nrow(tmp_frequency_table)) {
+                            tmp_sample_clone_ID[which(simulation$sample$sample_clone_ID == tmp_frequency_table[k, 1])] <- tmp_frequency_table[k, 2]
                         }
                         simulations_statistics[[stat_ID]][i, j] <- diversity(table(tmp_sample_clone_ID), index = "shannon")
                     }
@@ -403,60 +403,126 @@ sample_distance <- function(from_clonal_CN_populations,
 }
 #---Function to find distance between two sample cohorts
 #---based on clonal population and CN profiles
-cohort_distance <- function(cohort_from, cohort_to, metric, bulk_CN_input = "", bulk = FALSE) {
+cohort_distance <- function(cohort_from, cohort_to, metric, bulk_CN_input = "", bulk = FALSE, by_chromosome = NULL) {
     library(transport)
     #-----------------------------Define cost matrix between two cohorts
-    if (bulk) {
-        if (bulk_CN_input == "average") {
-            n_cohort_from <- length(cohort_from[["variable=average_CN_profile"]])
-            n_cohort_to <- length(cohort_to[["variable=average_CN_profile"]])
-        } else if (bulk_CN_input == "maximal") {
-            n_cohort_from <- length(cohort_from[["variable=maximal_CN_profile"]])
-            n_cohort_to <- length(cohort_to[["variable=maximal_CN_profile"]])
-        }
-        sample_distance_mtx <- matrix(0, nrow = n_cohort_from, ncol = n_cohort_to)
-        for (i in 1:n_cohort_from) {
-            for (j in 1:n_cohort_to) {
-                if (bulk_CN_input == "average") {
-                    from_CN_profile <- cohort_from[["variable=average_CN_profile"]][[i]]$copy
-                    to_CN_profile <- cohort_to[["variable=average_CN_profile"]][[j]]$copy
-                } else if (bulk_CN_input == "maximal") {
-                    from_CN_profile <- cohort_from[["variable=maximal_CN_profile"]][[i]]$copy
-                    to_CN_profile <- cohort_to[["variable=maximal_CN_profile"]][[j]]$copy
+    if (is.null(by_chromosome)) {
+        if (bulk) {
+            if (bulk_CN_input == "average") {
+                n_cohort_from <- length(cohort_from[["variable=average_CN_profile"]])
+                n_cohort_to <- length(cohort_to[["variable=average_CN_profile"]])
+            } else if (bulk_CN_input == "maximal") {
+                n_cohort_from <- length(cohort_from[["variable=maximal_CN_profile"]])
+                n_cohort_to <- length(cohort_to[["variable=maximal_CN_profile"]])
+            }
+            sample_distance_mtx <- matrix(0, nrow = n_cohort_from, ncol = n_cohort_to)
+            for (i in 1:n_cohort_from) {
+                for (j in 1:n_cohort_to) {
+                    if (bulk_CN_input == "average") {
+                        from_CN_profile <- cohort_from[["variable=average_CN_profile"]][[i]]$copy
+                        to_CN_profile <- cohort_to[["variable=average_CN_profile"]][[j]]$copy
+                    } else if (bulk_CN_input == "maximal") {
+                        from_CN_profile <- cohort_from[["variable=maximal_CN_profile"]][[i]]$copy
+                        to_CN_profile <- cohort_to[["variable=maximal_CN_profile"]][[j]]$copy
+                    }
+                    sample_distance_mtx[i, j] <- cn_distance(from_CN_profile, to_CN_profile, metric)
                 }
-                sample_distance_mtx[i, j] <- cn_distance(from_CN_profile, to_CN_profile, metric)
+            }
+        } else {
+            #   Compute distance between any pair of samples in the cohorts
+            n_cohort_from <- length(cohort_from[["variable=clonal_CN_populations"]])
+            n_cohort_to <- length(cohort_to[["variable=clonal_CN_populations"]])
+            sample_distance_mtx <- matrix(0, nrow = n_cohort_from, ncol = n_cohort_to)
+            for (i in 1:n_cohort_from) {
+                for (j in 1:n_cohort_to) {
+                    from_clonal_CN_populations <- cohort_from[["variable=clonal_CN_populations"]][[i]]
+                    from_clonal_CN_profiles <- cohort_from[["variable=clonal_CN_profiles"]][[i]]
+                    to_clonal_CN_populations <- cohort_to[["variable=clonal_CN_populations"]][[j]]
+                    to_clonal_CN_profiles <- cohort_to[["variable=clonal_CN_profiles"]][[j]]
+                    sample_distance_mtx[i, j] <- sample_distance(
+                        from_clonal_CN_populations = from_clonal_CN_populations,
+                        from_clonal_CN_profiles = from_clonal_CN_profiles,
+                        to_clonal_CN_populations = to_clonal_CN_populations,
+                        to_clonal_CN_profiles = to_clonal_CN_profiles,
+                        metric = metric
+                    )
+                }
             }
         }
+        #---------------------------------------Normalize clonal populations
+        dist_from <- rep(1 / n_cohort_from, n_cohort_from)
+        dist_to <- rep(1 / n_cohort_to, n_cohort_to)
+        #-----------Compute the Wasserstein distance between the two cohorts
+        wasserstein_dist <- wasserstein(
+            dist_from,
+            dist_to,
+            costm = sample_distance_mtx, p = 1
+        )
     } else {
-        #   Compute distance between any pair of samples in the cohorts
-        n_cohort_from <- length(cohort_from[["variable=clonal_CN_populations"]])
-        n_cohort_to <- length(cohort_to[["variable=clonal_CN_populations"]])
-        sample_distance_mtx <- matrix(0, nrow = n_cohort_from, ncol = n_cohort_to)
-        for (i in 1:n_cohort_from) {
-            for (j in 1:n_cohort_to) {
-                from_clonal_CN_populations <- cohort_from[["variable=clonal_CN_populations"]][[i]]
-                from_clonal_CN_profiles <- cohort_from[["variable=clonal_CN_profiles"]][[i]]
-                to_clonal_CN_populations <- cohort_to[["variable=clonal_CN_populations"]][[j]]
-                to_clonal_CN_profiles <- cohort_to[["variable=clonal_CN_profiles"]][[j]]
-                sample_distance_mtx[i, j] <- sample_distance(
-                    from_clonal_CN_populations = from_clonal_CN_populations,
-                    from_clonal_CN_profiles = from_clonal_CN_profiles,
-                    to_clonal_CN_populations = to_clonal_CN_populations,
-                    to_clonal_CN_profiles = to_clonal_CN_profiles,
-                    metric = metric
-                )
+        if (bulk) {
+            if (bulk_CN_input == "average") {
+                n_cohort_from <- length(cohort_from[["variable=average_CN_profile"]])
+                n_cohort_to <- length(cohort_to[["variable=average_CN_profile"]])
+            } else if (bulk_CN_input == "maximal") {
+                n_cohort_from <- length(cohort_from[["variable=maximal_CN_profile"]])
+                n_cohort_to <- length(cohort_to[["variable=maximal_CN_profile"]])
+            }
+            sample_distance_mtx <- matrix(0, nrow = n_cohort_from, ncol = n_cohort_to)
+            for (i in 1:n_cohort_from) {
+                for (j in 1:n_cohort_to) {
+                    if (bulk_CN_input == "average") {
+                        from_CN_profile_genome <- cohort_from[["variable=average_CN_profile"]][[i]]
+                        to_CN_profile_genome <- cohort_to[["variable=average_CN_profile"]][[j]]
+                        from_CN_profile <- from_CN_profile_genome[which(from_CN_profile_genome$chr == by_chromosome), ]$copy
+                        to_CN_profile <- to_CN_profile_genome[which(to_CN_profile_genome$chr == by_chromosome), ]$copy
+                    } else if (bulk_CN_input == "maximal") {
+                        from_CN_profile_genome <- cohort_from[["variable=maximal_CN_profile"]][[i]]
+                        to_CN_profile_genome <- cohort_to[["variable=maximal_CN_profile"]][[j]]
+                        from_CN_profile <- from_CN_profile_genome[which(from_CN_profile_genome$chr == by_chromosome), ]$copy
+                        to_CN_profile <- to_CN_profile_genome[which(to_CN_profile_genome$chr == by_chromosome), ]$copy
+                    }
+                    sample_distance_mtx[i, j] <- cn_distance(from_CN_profile, to_CN_profile, metric)
+                }
+            }
+        } else {
+            #   Compute distance between any pair of samples in the cohorts
+            n_cohort_from <- length(cohort_from[["variable=clonal_CN_populations"]])
+            n_cohort_to <- length(cohort_to[["variable=clonal_CN_populations"]])
+            sample_distance_mtx <- matrix(0, nrow = n_cohort_from, ncol = n_cohort_to)
+            for (i in 1:n_cohort_from) {
+                for (j in 1:n_cohort_to) {
+                    from_clonal_CN_populations <- cohort_from[["variable=clonal_CN_populations"]][[i]]
+                    from_clonal_CN_profiles_genome <- cohort_from[["variable=clonal_CN_profiles"]][[i]]
+                    from_clonal_CN_profiles <- list()
+                    for (k in 1:length(from_clonal_CN_profiles_genome)) {
+                        from_clonal_CN_profiles[[k]] <- from_clonal_CN_profiles_genome[[k]][which(from_clonal_CN_profiles_genome[[k]]$chr == by_chromosome), ]
+                    }
+                    to_clonal_CN_populations <- cohort_to[["variable=clonal_CN_populations"]][[j]]
+                    to_clonal_CN_profiles_genome <- cohort_to[["variable=clonal_CN_profiles"]][[j]]
+                    to_clonal_CN_profiles <- list()
+                    for (k in 1:length(to_clonal_CN_profiles_genome)) {
+                        to_clonal_CN_profiles[[k]] <- to_clonal_CN_profiles_genome[[k]][which(to_clonal_CN_profiles_genome[[k]]$chr == by_chromosome), ]
+                    }
+                    sample_distance_mtx[i, j] <- sample_distance(
+                        from_clonal_CN_populations = from_clonal_CN_populations,
+                        from_clonal_CN_profiles = from_clonal_CN_profiles,
+                        to_clonal_CN_populations = to_clonal_CN_populations,
+                        to_clonal_CN_profiles = to_clonal_CN_profiles,
+                        metric = metric
+                    )
+                }
             }
         }
+        #---------------------------------------Normalize clonal populations
+        dist_from <- rep(1 / n_cohort_from, n_cohort_from)
+        dist_to <- rep(1 / n_cohort_to, n_cohort_to)
+        #-----------Compute the Wasserstein distance between the two cohorts
+        wasserstein_dist <- wasserstein(
+            dist_from,
+            dist_to,
+            costm = sample_distance_mtx, p = 1
+        )
     }
-    #---------------------------------------Normalize clonal populations
-    dist_from <- rep(1 / n_cohort_from, n_cohort_from)
-    dist_to <- rep(1 / n_cohort_to, n_cohort_to)
-    #-----------Compute the Wasserstein distance between the two cohorts
-    wasserstein_dist <- wasserstein(
-        dist_from,
-        dist_to,
-        costm = sample_distance_mtx, p = 1
-    )
     return(wasserstein_dist)
 }
 
@@ -496,6 +562,7 @@ get_statistics <- function(list_targets,
         stat_data <- strsplit(stat_details[grep("data=", stat_details)], "=")[[1]][2]
         stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
         stat_type <- strsplit(stat_details[grepl("statistic=", stat_details)], "=")[[1]][2]
+        stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
         if (stat_type == "mean") {
             if (stat_data == "sc") {
                 statistics[[i]] <- apply(simulations_statistics_sc[[stat_ID]], 2, mean)
@@ -509,34 +576,76 @@ get_statistics <- function(list_targets,
                 statistics[[i]] <- apply(simulations_statistics_bulk[[stat_ID]], 2, var)
             }
         } else if (stat_type == "dist") {
-            if (stat_variable == "clonal_CN" & stat_data == "sc") {
-                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                if (is.null(cn_data_sc)) cn_data_sc <- simulations_statistics_sc
-                statistics[[i]] <- cohort_distance(
-                    cohort_from = simulations_statistics_sc,
-                    cohort_to = cn_data_sc,
-                    metric = stat_metric
-                )
-            } else if (stat_variable == "average_CN" & stat_data == "bulk") {
-                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
-                statistics[[i]] <- cohort_distance(
-                    cohort_from = simulations_statistics_bulk,
-                    cohort_to = cn_data_bulk,
-                    metric = stat_metric,
-                    bulk_CN_input = "average",
-                    bulk = TRUE
-                )
-            } else if (stat_variable == "maximal_CN" & stat_data == "bulk") {
-                stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
-                if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
-                statistics[[i]] <- cohort_distance(
-                    cohort_from = simulations_statistics_bulk,
-                    cohort_to = cn_data_bulk,
-                    metric = stat_metric,
-                    bulk_CN_input = "maximal",
-                    bulk = TRUE
-                )
+            if (stat_target == "chromosome") {
+                stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")[[1]]
+                if (stat_variable == "clonal_CN" & stat_data == "sc") {
+                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                    if (is.null(cn_data_sc)) cn_data_sc <- simulations_statistics_sc
+                    for (j in 1:length(stat_chromosome_ID)) {
+                        statistics[[i]][j] <- cohort_distance(
+                            cohort_from = simulations_statistics_sc,
+                            cohort_to = cn_data_sc,
+                            metric = stat_metric,
+                            by_chromosome = stat_chromosome_ID[j]
+                        )
+                    }
+                } else if (stat_variable == "average_CN" & stat_data == "bulk") {
+                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                    if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
+                    for (j in 1:length(stat_chromosome_ID)) {
+                        statistics[[i]][j] <- cohort_distance(
+                            cohort_from = simulations_statistics_bulk,
+                            cohort_to = cn_data_bulk,
+                            metric = stat_metric,
+                            bulk_CN_input = "average",
+                            bulk = TRUE,
+                            by_chromosome = stat_chromosome_ID[j]
+                        )
+                    }
+                } else if (stat_variable == "maximal_CN" & stat_data == "bulk") {
+                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                    if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
+                    for (j in 1:length(stat_chromosome_ID)) {
+                        statistics[[i]][j] <- cohort_distance(
+                            cohort_from = simulations_statistics_bulk,
+                            cohort_to = cn_data_bulk,
+                            metric = stat_metric,
+                            bulk_CN_input = "maximal",
+                            bulk = TRUE,
+                            by_chromosome = stat_chromosome_ID[j]
+                        )
+                    }
+                }
+            } else {
+                if (stat_variable == "clonal_CN" & stat_data == "sc") {
+                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                    if (is.null(cn_data_sc)) cn_data_sc <- simulations_statistics_sc
+                    statistics[[i]] <- cohort_distance(
+                        cohort_from = simulations_statistics_sc,
+                        cohort_to = cn_data_sc,
+                        metric = stat_metric
+                    )
+                } else if (stat_variable == "average_CN" & stat_data == "bulk") {
+                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                    if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
+                    statistics[[i]] <- cohort_distance(
+                        cohort_from = simulations_statistics_bulk,
+                        cohort_to = cn_data_bulk,
+                        metric = stat_metric,
+                        bulk_CN_input = "average",
+                        bulk = TRUE
+                    )
+                } else if (stat_variable == "maximal_CN" & stat_data == "bulk") {
+                    stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
+                    if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
+                    statistics[[i]] <- cohort_distance(
+                        cohort_from = simulations_statistics_bulk,
+                        cohort_to = cn_data_bulk,
+                        metric = stat_metric,
+                        bulk_CN_input = "maximal",
+                        bulk = TRUE
+                    )
+                }
             }
         } else {
             stop(paste0("Error: Unknown statistic type: ", stat))

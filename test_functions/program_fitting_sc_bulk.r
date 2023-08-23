@@ -44,7 +44,7 @@ selection_model <- "chrom-arm-selection"
 CN_bin_length <- 500000
 #---Probabilities of CNA
 prob_CN_missegregation <- 2e-4
-prob_CN_chrom_arm_missegregation <- 0
+prob_CN_chrom_arm_missegregation <- 2e-4
 #---Viability thresholds
 bound_driver <- 3
 bound_maximum_CN <- 8
@@ -146,11 +146,11 @@ for (i in 1:nrow(model_variables$chromosome_arm_library)) {
         )
     }
 }
-tmp <- unique(model_variables$chromosome_arm_library$Chromosome)
+tmp_unique_chr <- unique(model_variables$chromosome_arm_library$Chromosome)
 list_chromosomes <- ""
-for (i in 1:length(tmp)) {
-    list_chromosomes <- paste0(list_chromosomes, tmp[i])
-    if (i < length(tmp)) {
+for (i in 1:length(tmp_unique_chr)) {
+    list_chromosomes <- paste0(list_chromosomes, tmp_unique_chr[i])
+    if (i < length(tmp_unique_chr)) {
         list_chromosomes <- paste0(list_chromosomes, ",")
     }
 }
@@ -159,8 +159,10 @@ list_targets_library <- c(
     #---Bulk DNA: CN
     "data=bulk;target=genome;statistic=dist;variable=average_CN;metric=euclidean",
     "data=bulk;target=genome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
+    "data=bulk;target=genome;statistic=var;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
     paste0("data=bulk;target=chromosome;statistic=dist;variable=average_CN;metric=euclidean;chromosome=", list_chromosomes),
     paste0("data=bulk;target=chromosome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation;chromosome=", list_chromosomes),
+    paste0("data=bulk;target=chromosome;statistic=var;representative_CN=average_CN;variable=event_count;type=total;event=missegregation;chromosome=", list_chromosomes),
     #---Single-cell DNA: subclonal CN
     "data=sc;target=genome;statistic=dist;variable=clonal_CN;metric=euclidean",
     "data=sc;target=genome;statistic=mean;variable=shannon",
@@ -173,13 +175,13 @@ list_targets_library <- c(
     "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=missegregation",
     "data=sc;target=genome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
     "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    # paste0("data=sc;target=chromosome;statistic=dist;variable=clonal_CN;metric=euclidean;chromosome=", list_chromosomes),
-    # paste0("data=sc;target=chromosome;statistic=mean;variable=shannon;chromosome=", list_chromosomes),
+    paste0("data=sc;target=chromosome;statistic=dist;variable=clonal_CN;metric=euclidean;chromosome=", list_chromosomes),
+    paste0("data=sc;target=chromosome;statistic=mean;variable=shannon;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
-    # paste0("data=sc;target=chromosome;statistic=var;variable=shannon;chromosome=", list_chromosomes),
+    paste0("data=sc;target=chromosome;statistic=var;variable=shannon;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
@@ -205,6 +207,25 @@ list_targets_library <- c(
     "data=sc;target=genome;statistic=var;variable=B2",
     "data=sc;target=genome;statistic=var;variable=maxDepth"
 )
+################################testing#########################################
+# for (j in 1:length(ls_cn_sc_ground_truth[[1]]$sample$sample_genotype_unique)) {
+#   genome_profile <- ls_cn_sc_ground_truth[[1]]$sample$sample_genotype_unique_profile[[j]]
+#   for (k in 1:length(stat_chromosome_ID)) {
+#     vec_CN <- paste(genome_profile$copy[genome_profile$chr == stat_chromosome_ID[k]], collapse = "")
+#     ls_chrom_profiles[[k]][j] <- vec_CN
+#   }
+# }
+# #   Get Shannon index for each chromosome
+# diversity_by_chromosome <- rep(0, length(stat_chromosome_ID))
+# for (j in 1:length(stat_chromosome_ID)) {
+#   tmp <- cbind(ls_cn_sc_ground_truth[[1]]$sample$sample_genotype_unique, match(ls_chrom_profiles[[j]], unique(ls_chrom_profiles[[j]])))
+#   tmp_sample_clone_ID <- ls_cn_sc_ground_truth[[1]]$sample$sample_clone_ID
+#   for (k in 1:nrow(tmp)) {
+#     tmp_sample_clone_ID[which(ls_cn_sc_ground_truth[[1]]$sample$sample_clone_ID == tmp[k, 1])] <- tmp[k, 2]
+#   }
+#   simulations_statistics[[stat_ID]][1, j] <- diversity(table(tmp_sample_clone_ID), index = "shannon")
+# }
+
 #---Get statistics for single-cell data and simulations
 list_targets_library_sc <- list_targets_library[grepl("data=sc", list_targets_library)]
 #---Get statistics for bulk data and simulations
@@ -249,43 +270,159 @@ vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 # ================================================MAKE GROUND-TRUTH DATA
 #---Make single-cell ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
-tmp <- simulator_full_program(
-    model = paste0(model_name, "_sc"),
-    n_simulations = N_data_dlp,
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
-tmp <- c()
-#---Make bulk ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
-tmp <- simulator_full_program(
-    model = paste0(model_name, "_bulk"),
-    n_simulations = N_data_bulk,
-    stage_final = 2,
-    compute_parallel = TRUE,
-    output_variables = c(
-        # "evolution_origin",
-        # "evolution_genotype_changes",
-        "sample_genotype_unique_profile",
-        "sample_genotype_unique",
-        "sample_clone_ID"
-    ),
-    R_libPaths = R_libPaths
-)
-tmp <- c()
+# cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = paste0(model_name, "_sc"),
+#     n_simulations = N_data_dlp,
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# tmp <- c()
+# #---Make bulk ground-truth simulations
+# cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = paste0(model_name, "_bulk"),
+#     n_simulations = N_data_bulk,
+#     stage_final = 2,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         # "evolution_origin",
+#         # "evolution_genotype_changes",
+#         "sample_genotype_unique_profile",
+#         "sample_genotype_unique",
+#         "sample_clone_ID"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# tmp <- c()
 # ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
 #---Get single-cell statistics & CN profiles
 #   Get statistics & clonal CN profiles for each single-cell sample
+cat(paste0("Loading ", N_data_dlp, " single-cell DNA-seq data sets...\n"))
+n_cores <- max(detectCores() - 1, 1)
+cl <- makePSOCKcluster(n_cores)
+model_name <<- model_name
+clusterExport(cl, varlist = c(
+  "model_name", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
+  "cn_table", "get_each_statistics", "list_targets_library_sc", "find_clonal_ancestry", "find_event_count"
+))
+e <- new.env()
+e$libs <- .libPaths()
+clusterExport(cl, "libs", envir = e)
+clusterEvalQ(cl, .libPaths(libs))
+pbo <- pboptions(type = "txt")
+ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:N_data_dlp, FUN = function(i) {
+  load(paste0(model_name, "_sc_simulation_", i, ".rda"))
+  simulations <- list()
+  simulations[[1]] <- simulation
+  ls_each_sim <- list()
+  ls_each_sim[[1]] <- get_each_clonal_CN_profiles(
+    simulations,
+    arm_level = TRUE,
+    cn_table = cn_table
+  )
+  ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_sc)
+  return(ls_each_sim)
+})
+stopCluster(cl)
+#   Get statistics & clonal CN profiles for entire single-cell cohort
+ls_cn_sc_ground_truth_all <- vector("list", length = 2)
+for (type in 1:2) {
+  #   type = 1 <-> representative CN profiles; type = 2 <-> statistics
+  if (type == 1) {
+    for (statistic in 1:length(ls_cn_sc_ground_truth[[1]][[type]])) {
+      for (simulation in 1:N_data_dlp) {
+        if (simulation == 1) {
+          ls_cn_sc_ground_truth_all[[type]][[statistic]] <- ls_cn_sc_ground_truth[[simulation]][[type]][[statistic]][1]
+        } else {
+          ls_cn_sc_ground_truth_all[[type]][[statistic]] <- c(ls_cn_sc_ground_truth_all[[type]][[statistic]], ls_cn_sc_ground_truth[[simulation]][[type]][[statistic]][1])
+        }
+      }
+    }
+  } else {
+    for (stat_ID in names(ls_cn_sc_ground_truth[[1]][[type]])) {
+      stat_details <- strsplit(stat_ID, ";")[[1]]
+      for (simulation in 1:N_data_dlp) {
+        if (simulation == 1) {
+          ls_cn_sc_ground_truth_all[[type]][[stat_ID]] <- ls_cn_sc_ground_truth[[1]][[type]][[stat_ID]]
+        } else {
+          ls_cn_sc_ground_truth_all[[type]][[stat_ID]] <- rbind(ls_cn_sc_ground_truth_all[[type]][[stat_ID]], ls_cn_sc_ground_truth[[simulation]][[type]][[stat_ID]])
+        }
+      }
+    }
+  }
+  names(ls_cn_sc_ground_truth_all[[type]]) <- names(ls_cn_sc_ground_truth[[1]][[type]])
+}
+#---Get bulk statistics & CN profiles
+#   Get statistics & representative CN profiles for each bulk sample
+cat(paste0("Loading ", N_data_bulk, " bulk DNA-seq data sets...\n"))
+n_cores <- max(detectCores() - 1, 1)
+cl <- makePSOCKcluster(n_cores)
+model_name <<- model_name
+clusterExport(cl, varlist = c(
+  "model_name", "N_data_dlp", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
+  "cn_table", "get_each_statistics", "list_targets_library_bulk", "find_clonal_ancestry", "find_event_count"
+))
+e <- new.env()
+e$libs <- .libPaths()
+clusterExport(cl, "libs", envir = e)
+clusterEvalQ(cl, .libPaths(libs))
+pbo <- pboptions(type = "txt")
+ls_cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i) {
+  load(paste0(model_name, "_bulk_simulation_", i, ".rda"))
+  simulations <- list()
+  simulations[[1]] <- simulation
+  ls_each_sim <- list()
+  ls_each_sim[[1]] <- get_each_clonal_CN_profiles(
+    simulations,
+    arm_level = TRUE,
+    cn_table = cn_table,
+    bulk = TRUE
+  )
+  ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_bulk)
+  return(ls_each_sim)
+})
+
+#   Get statistics & representative CN profiles for entire bulk cohort
+ls_cn_bulk_ground_truth_all <- vector("list", length = 2)
+for (type in 1:2) {
+  #   type = 1 <-> representative CN profiles; type = 2 <-> statistics
+  if (type == 1) {
+    for (statistic in 1:length(ls_cn_bulk_ground_truth[[1]][[type]])) {
+      for (simulation in 1:N_data_bulk) {
+        if (simulation == 1) {
+          ls_cn_bulk_ground_truth_all[[type]][[statistic]] <- ls_cn_bulk_ground_truth[[simulation]][[type]][[statistic]][1]
+        } else {
+          ls_cn_bulk_ground_truth_all[[type]][[statistic]] <- c(ls_cn_bulk_ground_truth_all[[type]][[statistic]], ls_cn_bulk_ground_truth[[simulation]][[type]][[statistic]][1])
+        }
+      }
+    }
+  } else {
+    for (stat_ID in names(ls_cn_bulk_ground_truth[[1]][[type]])) {
+      stat_details <- strsplit(stat_ID, ";")[[1]]
+      for (simulation in 1:N_data_bulk) {
+        if (simulation == 1) {
+          ls_cn_bulk_ground_truth_all[[type]][[stat_ID]] <- ls_cn_bulk_ground_truth[[1]][[type]][[stat_ID]]
+        } else {
+          ls_cn_bulk_ground_truth_all[[type]][[stat_ID]] <- rbind(ls_cn_bulk_ground_truth_all[[type]][[stat_ID]], ls_cn_bulk_ground_truth[[simulation]][[type]][[stat_ID]])
+        }
+      }
+    }
+  }
+  names(ls_cn_bulk_ground_truth_all[[type]]) <- names(ls_cn_bulk_ground_truth[[1]][[type]])
+}
+#################################################################################
+#################################################################################
+#################################################################################
 cat(paste0("Loading ", N_data_dlp, " single-cell DNA-seq data sets...\n"))
 n_cores <- max(detectCores() - 1, 1)
 cl <- makePSOCKcluster(n_cores)
@@ -299,7 +436,7 @@ e$libs <- .libPaths()
 clusterExport(cl, "libs", envir = e)
 clusterEvalQ(cl, .libPaths(libs))
 pbo <- pboptions(type = "txt")
-ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:N_data_dlp, FUN = function(i) {
+ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:1, FUN = function(i) {
     load(paste0(model_name, "_sc_simulation_", i, ".rda"))
     simulations <- list()
     simulations[[1]] <- simulation
@@ -319,7 +456,7 @@ for (type in 1:2) {
     #   type = 1 <-> representative CN profiles; type = 2 <-> statistics
     if (type == 1) {
         for (statistic in 1:length(ls_cn_sc_ground_truth[[1]][[type]])) {
-            for (simulation in 1:N_data_dlp) {
+            for (simulation in 1:1) {
                 if (simulation == 1) {
                     ls_cn_sc_ground_truth_all[[type]][[statistic]] <- ls_cn_sc_ground_truth[[simulation]][[type]][[statistic]][1]
                 } else {
@@ -330,7 +467,7 @@ for (type in 1:2) {
     } else {
         for (stat_ID in names(ls_cn_sc_ground_truth[[1]][[type]])) {
             stat_details <- strsplit(stat_ID, ";")[[1]]
-            for (simulation in 1:N_data_dlp) {
+            for (simulation in 1:1) {
                 if (simulation == 1) {
                     ls_cn_sc_ground_truth_all[[type]][[stat_ID]] <- ls_cn_sc_ground_truth[[1]][[type]][[stat_ID]]
                 } else {
@@ -341,8 +478,62 @@ for (type in 1:2) {
     }
     names(ls_cn_sc_ground_truth_all[[type]]) <- names(ls_cn_sc_ground_truth[[1]][[type]])
 }
-
-
+###################copytest
+cat(paste0("Loading ", N_data_dlp, " single-cell DNA-seq data sets...\n"))
+n_cores <- max(detectCores() - 1, 1)
+cl <- makePSOCKcluster(n_cores)
+model_name <<- model_name
+clusterExport(cl, varlist = c(
+  "model_name", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
+  "cn_table", "get_each_statistics", "list_targets_library_sc", "find_clonal_ancestry", "find_event_count"
+))
+e <- new.env()
+e$libs <- .libPaths()
+clusterExport(cl, "libs", envir = e)
+clusterEvalQ(cl, .libPaths(libs))
+pbo <- pboptions(type = "txt")
+ls_cn_sc_ground_truth2 <- pblapply(cl = cl, X = 2:N_data_dlp, FUN = function(i) {
+  load(paste0(model_name, "_sc_simulation_", i, ".rda"))
+  simulations <- list()
+  simulations[[1]] <- simulation
+  ls_each_sim <- list()
+  ls_each_sim[[1]] <- get_each_clonal_CN_profiles(
+    simulations,
+    arm_level = TRUE,
+    cn_table = cn_table
+  )
+  ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_sc)
+  return(ls_each_sim)
+})
+stopCluster(cl)
+#   Get statistics & clonal CN profiles for entire single-cell cohort
+ls_cn_sc_ground_truth_all2 <- vector("list", length = 2)
+for (type in 1:2) {
+  #   type = 1 <-> representative CN profiles; type = 2 <-> statistics
+  if (type == 1) {
+    for (statistic in 1:length(ls_cn_sc_ground_truth2[[1]][[type]])) {
+      for (simulation in 1:(N_data_dlp-1)) {
+        if (simulation == 1) {
+          ls_cn_sc_ground_truth_all2[[type]][[statistic]] <- ls_cn_sc_ground_truth2[[simulation]][[type]][[statistic]][1]
+        } else {
+          ls_cn_sc_ground_truth_all2[[type]][[statistic]] <- c(ls_cn_sc_ground_truth_all2[[type]][[statistic]], ls_cn_sc_ground_truth2[[simulation]][[type]][[statistic]][1])
+        }
+      }
+    }
+  } else {
+    for (stat_ID in names(ls_cn_sc_ground_truth2[[1]][[type]])) {
+      stat_details <- strsplit(stat_ID, ";")[[1]]
+      for (simulation in 1:(N_data_dlp-1)) {
+        if (simulation == 1) {
+          ls_cn_sc_ground_truth_all2[[type]][[stat_ID]] <- ls_cn_sc_ground_truth2[[1]][[type]][[stat_ID]]
+        } else {
+          ls_cn_sc_ground_truth_all2[[type]][[stat_ID]] <- rbind(ls_cn_sc_ground_truth_all2[[type]][[stat_ID]], ls_cn_sc_ground_truth2[[simulation]][[type]][[stat_ID]])
+        }
+      }
+    }
+  }
+  names(ls_cn_sc_ground_truth_all2[[type]]) <- names(ls_cn_sc_ground_truth2[[1]][[type]])
+}
 #---Get bulk statistics & CN profiles
 #   Get statistics & representative CN profiles for each bulk sample
 cat(paste0("Loading ", N_data_bulk, " bulk DNA-seq data sets...\n"))
@@ -358,7 +549,7 @@ e$libs <- .libPaths()
 clusterExport(cl, "libs", envir = e)
 clusterEvalQ(cl, .libPaths(libs))
 pbo <- pboptions(type = "txt")
-ls_cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i) {
+ls_cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:1, FUN = function(i) {
     load(paste0(model_name, "_bulk_simulation_", i, ".rda"))
     simulations <- list()
     simulations[[1]] <- simulation
@@ -379,7 +570,7 @@ for (type in 1:2) {
     #   type = 1 <-> representative CN profiles; type = 2 <-> statistics
     if (type == 1) {
         for (statistic in 1:length(ls_cn_bulk_ground_truth[[1]][[type]])) {
-            for (simulation in 1:N_data_bulk) {
+            for (simulation in 1:1) {
                 if (simulation == 1) {
                     ls_cn_bulk_ground_truth_all[[type]][[statistic]] <- ls_cn_bulk_ground_truth[[simulation]][[type]][[statistic]][1]
                 } else {
@@ -390,7 +581,7 @@ for (type in 1:2) {
     } else {
         for (stat_ID in names(ls_cn_bulk_ground_truth[[1]][[type]])) {
             stat_details <- strsplit(stat_ID, ";")[[1]]
-            for (simulation in 1:N_data_bulk) {
+            for (simulation in 1:1) {
                 if (simulation == 1) {
                     ls_cn_bulk_ground_truth_all[[type]][[stat_ID]] <- ls_cn_bulk_ground_truth[[1]][[type]][[stat_ID]]
                 } else {
@@ -400,6 +591,63 @@ for (type in 1:2) {
         }
     }
     names(ls_cn_bulk_ground_truth_all[[type]]) <- names(ls_cn_bulk_ground_truth[[1]][[type]])
+}
+#############copytest
+cat(paste0("Loading ", N_data_bulk, " bulk DNA-seq data sets...\n"))
+n_cores <- max(detectCores() - 1, 1)
+cl <- makePSOCKcluster(n_cores)
+model_name <<- model_name
+clusterExport(cl, varlist = c(
+  "model_name", "N_data_dlp", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
+  "cn_table", "get_each_statistics", "list_targets_library_bulk", "find_clonal_ancestry", "find_event_count"
+))
+e <- new.env()
+e$libs <- .libPaths()
+clusterExport(cl, "libs", envir = e)
+clusterEvalQ(cl, .libPaths(libs))
+pbo <- pboptions(type = "txt")
+ls_cn_bulk_ground_truth2 <- pblapply(cl = cl, X = 2:N_data_bulk, FUN = function(i) {
+  load(paste0(model_name, "_bulk_simulation_", i, ".rda"))
+  simulations <- list()
+  simulations[[1]] <- simulation
+  ls_each_sim <- list()
+  ls_each_sim[[1]] <- get_each_clonal_CN_profiles(
+    simulations,
+    arm_level = TRUE,
+    cn_table = cn_table,
+    bulk = TRUE
+  )
+  ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_bulk)
+  return(ls_each_sim)
+})
+
+#   Get statistics & representative CN profiles for entire bulk cohort
+ls_cn_bulk_ground_truth_all2 <- vector("list", length = 2)
+for (type in 1:2) {
+  #   type = 1 <-> representative CN profiles; type = 2 <-> statistics
+  if (type == 1) {
+    for (statistic in 1:length(ls_cn_bulk_ground_truth2[[1]][[type]])) {
+      for (simulation in 1:(N_data_bulk-1)) {
+        if (simulation == 1) {
+          ls_cn_bulk_ground_truth_all2[[type]][[statistic]] <- ls_cn_bulk_ground_truth2[[simulation]][[type]][[statistic]][1]
+        } else {
+          ls_cn_bulk_ground_truth_all2[[type]][[statistic]] <- c(ls_cn_bulk_ground_truth_all2[[type]][[statistic]], ls_cn_bulk_ground_truth2[[simulation]][[type]][[statistic]][1])
+        }
+      }
+    }
+  } else {
+    for (stat_ID in names(ls_cn_bulk_ground_truth2[[1]][[type]])) {
+      stat_details <- strsplit(stat_ID, ";")[[1]]
+      for (simulation in 1:(N_data_bulk-1)) {
+        if (simulation == 1) {
+          ls_cn_bulk_ground_truth_all2[[type]][[stat_ID]] <- ls_cn_bulk_ground_truth2[[1]][[type]][[stat_ID]]
+        } else {
+          ls_cn_bulk_ground_truth_all2[[type]][[stat_ID]] <- rbind(ls_cn_bulk_ground_truth_all2[[type]][[stat_ID]], ls_cn_bulk_ground_truth2[[simulation]][[type]][[stat_ID]])
+        }
+      }
+    }
+  }
+  names(ls_cn_bulk_ground_truth_all2[[type]]) <- names(ls_cn_bulk_ground_truth2[[1]][[type]])
 }
 # ===============================================MAKE SIMULATION LIBRARY
 # library_sc_CN(
@@ -526,7 +774,18 @@ for (type in 1:2) {
 #     list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
 # }
 # =========================GET FITTING STATISTICS FROM GROUND-TRUTH DATA
-# DLP_stats <- get_statistics(
+DLP_stats <- get_statistics(
+    simulations_statistics_sc = ls_cn_sc_ground_truth_all2[[2]],
+    simulations_statistics_bulk = ls_cn_bulk_ground_truth_all2[[2]],
+    list_targets = list_targets_library,
+    cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
+    cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
+    arm_level = TRUE,
+    cn_table = cn_table,
+    save_sample_statistics = FALSE
+)
+
+# get_statistics(
 #     simulations_statistics_sc = ls_cn_sc_ground_truth_all[[2]],
 #     simulations_statistics_bulk = ls_cn_bulk_ground_truth_all[[2]],
 #     list_targets = list_targets_library,
@@ -536,16 +795,6 @@ for (type in 1:2) {
 #     cn_table = cn_table,
 #     save_sample_statistics = FALSE
 # )
-get_statistics(
-    simulations_statistics_sc = ls_cn_sc_ground_truth_all[[2]],
-    simulations_statistics_bulk = ls_cn_bulk_ground_truth_all[[2]],
-    list_targets = list_targets_library,
-    cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
-    cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
-    arm_level = TRUE,
-    cn_table = cn_table,
-    save_sample_statistics = FALSE
-)
 # # ==============================================FIT PARAMETERS USING ABC
 # fitting_sc_CN(
 #     library_name = model_name,
@@ -584,17 +833,17 @@ get_statistics(
 #   return(simulation)
 # })
 # stopCluster(cl)
-#
+# 
 # tmp <- get_each_clonal_CN_profiles(
 #   ls_cn_bulk_ground_truth,
 #   arm_level = TRUE,
 #   cn_table = cn_table,
 #   bulk = TRUE
 # )
-#
-# get_each_statistics(ls_cn_bulk_ground_truth, tmp, list_targets_library_bulk)
-# ################################################################################
-# ############################################################## testing：：：：sc
+# 
+# statsss1 <- get_each_statistics(ls_cn_bulk_ground_truth, tmp, list_targets_library_bulk)
+# # ################################################################################
+# # ############################################################## testing：：：：sc
 # cat(paste0("Loading ", N_data_dlp, " single-cell DNA-seq data sets...\n"))
 # n_cores <- max(detectCores() - 1, 1)
 # cl <- makePSOCKcluster(n_cores)
@@ -613,11 +862,11 @@ get_statistics(
 #   return(simulation)
 # })
 # stopCluster(cl)
-#
+# 
 # tmp2 <- get_each_clonal_CN_profiles(
 #   ls_cn_sc_ground_truth,
 #   arm_level = TRUE,
 #   cn_table = cn_table
 # )
-#
-# statsss <- get_each_statistics(ls_cn_sc_ground_truth, tmp2, list_targets_library_sc)
+# 
+# statsss2 <- get_each_statistics(ls_cn_sc_ground_truth, tmp2, list_targets_library_sc)
