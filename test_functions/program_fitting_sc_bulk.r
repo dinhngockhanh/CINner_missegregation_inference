@@ -476,15 +476,15 @@ list_targets_chr20 <- list_targets_library[c(1:5, 8:20, 16:30)]
 list_targets_chr21 <- list_targets_library[c(1:6, 16:30)]
 list_targets_chr22 <- list_targets_library[c(1:5, 8:20, 16:30)]
 list_targets_chrX <- list_targets_library[c(1:6, 16:30)]
-for (i in 1:length(chromosomes)){
-  list_targets[(i+1), which(colnames(list_targets) %in% eval(parse(text=paste0("list_targets_chr",chromosomes[i]))))] <- 1
+for (i in 1:length(chromosomes)) {
+    list_targets[(i + 1), which(colnames(list_targets) %in% eval(parse(text = paste0("list_targets_chr", chromosomes[i]))))] <- 1
 }
 
 
 # for (row in 2:nrow(list_targets)) {
-  #     list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
-  # }
-  
+#     list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
+# }
+
 # list_targets_misseg <- c(
 #     "data=bulk;statistic=dist;variable=average_CN;metric=euclidean",
 #     "data=bulk;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
