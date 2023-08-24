@@ -1345,7 +1345,7 @@ fitting_sc_CN <- function(library_name,
         col <- ceiling(id / 7)
         layout[row, col] <- id
         gs[[id]] <- plot_parameter_ABC(
-            model_rf, all_obs, data_rf,
+            model_rf, mini_obs, data_rf,
             protocol = "arm",
             ###
             highlight_values = c(true_para, post_mode, post_mean, post_median),
