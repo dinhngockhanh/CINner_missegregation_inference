@@ -1,7 +1,7 @@
 #----------------------------------------------------Load the rda
 Paths <- "/Users/xiangzijin/Downloads/"
 setwd(Paths)
-rda_name <- "Simpler_DLP&BULK_DNA_ABC_input_9500.rda"
+rda_name <- "Simpler_DLP&BULK_DNA_ABC_input_10000.rda"
 load(file = rda_name)
 #---------------------------------------------------Get parameters
 parameters <- ABC_input$sim_param
@@ -37,11 +37,7 @@ colnames(parameters) <- param_names
 prob_misseg <- parameters[, "prob_misseg"]
 #---------------------------------------------------Get statistics
 
-for (i in 2:length(param_names)) {
-
-}
-
-stat_names <- c(
+misseg_stat_names <- c(
   #-----bulk
   "Wasserstein_dist_bulk_genome",
   "Mean_Clonal_misseg_count_bulk_genome",
@@ -131,16 +127,54 @@ sel_stat_names <- c(
   "Var_B2_genome",
   "Var_MaxDepth_genome"
 )
+stat_names <- c(
+  #-----bulk
+  "Wasserstein_dist_bulk",
+  "Mean_Clonal_misseg_count_bulk",
+  "Var_Clonal_misseg_count_bulk",
+  #-----sc_subclonal CN
+  "Wasserstein_dist_sc",
+  "Mean_Shannon",
+  "Mean_Clonal_misseg_count_sc",
+  "Mean_Subclonal_misseg_count_sc",
+  "Mean_Clonal_armmisseg_count_sc",
+  "Mean_Subclonal_armmisseg_count_sc",
+  "Var_Shannon",
+  "Var_Clonal_misseg_count_sc",
+  "Var_Subclonal_misseg_count_sc",
+  "Var_Clonal_armmisseg_count_sc",
+  "Var_Subclonal_armmisseg_count_sc",
+  #-----sc_Phylo Stats
+  "Mean_Cherries",
+  "Mean_Pitchforks",
+  "Mean_IL_number",
+  "Mean_AvgLadder",
+  "Var_Cherries",
+  "Var_Pitchforks",
+  "Var_IL_number",
+  "Var_AvgLadder",
+  # balance
+  "Mean_Stairs",
+  "Mean_Colless",
+  "Mean_Sackin",
+  "Mean_B2",
+  "Mean_MaxDepth",
+  "Var_Stairs",
+  "Var_Colless",
+  "Var_Sackin",
+  "Var_B2",
+  "Var_MaxDepth"
+)
+
 #-------------------------------------------Get correlation matrix (misseg)
 statistics_misseg <- data.frame(matrix(ncol = 0, nrow = 10000))
-for (i in 1:length(which(grepl("genome", stat_names)))) {
-  statistics_misseg[, i] <- ABC_input$sim_stat[which(grepl("genome", stat_names))[i]]
+for (i in 1:length(which(grepl("genome", misseg_stat_names)))) {
+  statistics_misseg[, i] <- ABC_input$sim_stat[which(grepl("genome", misseg_stat_names))[i]]
 }
 prob_misseg <- data.frame(ABC_input$sim_param[, 1])
-colnames(statistics_misseg) <- stat_names[which(grepl("genome", stat_names))]
+colnames(statistics_misseg) <- misseg_stat_names[which(grepl("genome", misseg_stat_names))]
 corr_mtx_misseg <- cor(y = prob_misseg, x = statistics_misseg)
-a <- NULL
-a <- cbind(a, corr_mtx_misseg)
+
 #-------------------------------------------Get correlation matrix (selection)
 which(grepl(sel_stat_names[10], stat_names))
 corr_mtx_sel_mix <- NULL
@@ -148,9 +182,9 @@ for (i in 2:length(param_names)) {
   statistics_sel <- data.frame(matrix(ncol = 0, nrow = 10000))
   for (j in 1:length(sel_stat_names)) {
     if (grepl("genome", sel_stat_names[j])) {
-      statistics_sel[, j] <- ABC_input$sim_stat[[which(grepl(sel_stat_names[j], stat_names))]]
+      statistics_sel[, j] <- ABC_input$sim_stat[[which(grepl(sel_stat_names[j], misseg_stat_names))]]
     } else if (grepl("chr", sel_stat_names[j])) {
-      statistics_sel[, j] <- ABC_input$sim_stat[[which(grepl(sel_stat_names[j], stat_names))]][, (i - 1)]
+      statistics_sel[, j] <- ABC_input$sim_stat[[which(grepl(sel_stat_names[j], misseg_stat_names))]][, (i - 1)]
     }
   }
   colnames(statistics_sel) <- sel_stat_names
@@ -160,7 +194,9 @@ for (i in 2:length(param_names)) {
 }
 colnames(corr_mtx_sel_mix) <- param_names[-1]
 dim(corr_mtx_sel_mix)
-
+corr_mtx <- cbind(corr_mtx_misseg, corr_mtx_sel_mix)
+rownames(corr_mtx) <- stat_names
+colnames(corr_mtx) <- param_names
 
 # locs_chosen_stat <- which(total_stat_names %in% stat_names)
 # chosen_statistics <- data.frame(statistics[, locs_chosen_stat])
@@ -201,11 +237,11 @@ corr_plot <- function(corr_mtx) {
       # "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
     )), plot.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "in"))
   # scale_fill_gradient2(limit = c(-0.3, 0.3), low = "blue", high = "red", )
-  ggsave(file = "correlation_plot.png", width = 15, height = 10, units = "in", plot = plot, dpi = 300, limitsize = TRUE)
+  ggsave(file = "correlation_plot.png", width = 10, height = 10, units = "in", plot = plot, dpi = 300, limitsize = TRUE)
   return(plot)
 }
 
-corr_plot(corr_mtx_sel_mix)
+corr_plot(corr_mtx)
 min(corr_mtx)
 max(corr_mtx)
 
@@ -317,3 +353,40 @@ prob_sel <- parameters[, "prob_misseg"]
 # DA analysis Plot=====================================================
 # =================================================================
 library("domir")
+misseg_dataset <- cbind(parameters[, 1], statistics_misseg)
+colnames(misseg_dataset)[1] <- "prob_misseg"
+
+domin(
+  misseg_dataset$prob_misseg ~ misseg_dataset$Wasserstein_dist_bulk_genome +
+    misseg_dataset$Mean_Clonal_misseg_count_bulk_genome +
+    misseg_dataset$Var_Clonal_misseg_count_bulk_genome +
+    misseg_dataset$Wasserstein_dist_sc_genome +
+    misseg_dataset$Mean_Shannon_genome +
+    misseg_dataset$Mean_Clonal_misseg_count_sc_genome +
+    misseg_dataset$Mean_Subclonal_misseg_count_sc_genome +
+    misseg_dataset$Var_Shannon_genome +
+    misseg_dataset$Var_Clonal_misseg_count_sc_genome +
+    misseg_dataset$Var_Subclonal_misseg_count_sc_genome +
+    misseg_dataset$Mean_Cherries_genome +
+    misseg_dataset$Mean_Pitchforks_genome +
+    misseg_dataset$Mean_IL_number_genome +
+    misseg_dataset$Mean_AvgLadder_genome +
+    misseg_dataset$Var_Cherries_genome +
+    misseg_dataset$Var_Pitchforks_genome +
+    misseg_dataset$Var_IL_number_genome +
+    misseg_dataset$Var_AvgLadder_genome +
+    misseg_dataset$Mean_Stairs_genome +
+    misseg_dataset$Mean_Colless_genome +
+    misseg_dataset$Mean_Sackin_genome +
+    misseg_dataset$Mean_B2_genome +
+    misseg_dataset$Mean_MaxDepth_genome +
+    misseg_dataset$Var_Stairs_genome +
+    misseg_dataset$Var_Colless_genome +
+    misseg_dataset$Var_Sackin_genome +
+    misseg_dataset$Var_B2_genome +
+    misseg_dataset$Var_MaxDepth_genome,
+  lm,
+  list(summary, "r.squared"),
+  data = misseg_dataset
+)
+?domin
