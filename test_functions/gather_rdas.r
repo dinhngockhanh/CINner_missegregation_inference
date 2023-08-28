@@ -2,7 +2,7 @@
 filename <- paste0("Simpler_DLP&BULK_DNA", "_ABC_input1.rda")
 load(filename)
 ABC_input_all <- ABC_input
-for (batch in 2:20) {
+for (batch in 2:19) {
     filename <- paste0("Simpler_DLP&BULK_DNA", "_ABC_input", batch, ".rda")
     load(filename)
     ABC_input_all$sim_param <- rbind(ABC_input_all$sim_param, ABC_input$sim_param)
