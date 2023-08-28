@@ -1041,6 +1041,11 @@ fitting_sc_CN <- function(library_name,
     sim_sample_stat <- ABC_input$sim_sample_stat
     #--------------------------------Find statistics for each CN heatmap
     DATA_target <- copynumber_DATA$statistics
+    #--------------------------------Initialize the output csv
+    list_parameters_output <- data.frame(matrix(ncol = 5, nrow = length(parameters_truth$Variable)))
+    colnames(list_parameters_output) <- c("Variable", "Ground_truth_value", "Mean", "Median", "Mode")
+    list_parameters_output$Variable <- parameters_truth$Variable
+    list_parameters_output$Ground_truth_value <- parameters_truth$Value
     # ========================INCREASE SIMULATED LIBRARY VIA PERMUTATION
     # if ((shuffle_chromosome_arms | shuffle_chromosomes_by_permutation | shuffle_chromosomes_by_moving) &
     # ((any(grepl("sc", names(sim_sample_stat[[1]])))) |
@@ -1332,6 +1337,10 @@ fitting_sc_CN <- function(library_name,
         cat("Posterior mean: ", post_mean, "\n")
         cat("Posterior median: ", post_median, "\n")
         cat("Posterior mode: ", post_mode, "\n")
+        #   Save the parameter output table
+        list_parameters_output$Mean[which(list_parameters_output$Variable == para_ID)] <- post_mean
+        list_parameters_output$Median[which(list_parameters_output$Variable == para_ID)] <- post_median
+        list_parameters_output$Mode[which(list_parameters_output$Variable == para_ID)] <- post_mode
         #   Save results for fitting this parameter
         ABC_output <- list()
         ABC_output$para_ID <- para_ID
@@ -1370,6 +1379,8 @@ fitting_sc_CN <- function(library_name,
         post_rf <- c()
         post_mode <- c()
     }
+    #   Output the csv of parameter values
+    write.csv(list_parameters_output, "parameters_output_values.csv")
     #   Plot the prior, posterior and chosen best parameter for all variables
     filename <- paste0(model_name, "_ABC_all.jpeg")
     jpeg(filename, width = 3000, height = 1500)
