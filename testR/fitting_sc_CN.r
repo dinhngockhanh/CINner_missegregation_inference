@@ -1308,14 +1308,8 @@ fitting_sc_CN <- function(library_name,
         colnames(mini_data) <- paste0("stat_", 1:ncol(mini_data))
         mini_obs <- data.frame(matrix(mini_obs, nrow = 1))
         colnames(mini_obs) <- paste0("stat_", 1:ncol(mini_obs))
-        print("HERE IS MINI DATA")
-        print(mini_data)
-        print("HERE IS MINI OBS")
-        print(mini_obs)
         #   Prepare library of parameters for this parameter
         data_rf <- cbind(all_paras[para_ID], mini_data)
-        print("HERE IS DATA RF")
-        print(data_rf)
         #   Train the random forest
         colnames(data_rf)[1] <- "para"
         f <- as.formula("para ~.")

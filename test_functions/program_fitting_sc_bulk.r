@@ -1,8 +1,8 @@
-# #---Gather simulation librarys of 1000&500
+#---Gather simulation librarys of 1000&500
 # filename <- paste0("Simpler_DLP&BULK_DNA", "_ABC_input1.rda")
 # load(filename)
 # ABC_input_all <- ABC_input
-# for (batch in 2:19) {
+# for (batch in 2:47) {
 #     filename <- paste0("Simpler_DLP&BULK_DNA", "_ABC_input", batch, ".rda")
 #     load(filename)
 #     ABC_input_all$sim_param <- rbind(ABC_input_all$sim_param, ABC_input$sim_param)
@@ -49,7 +49,7 @@ sapply(files_sources, source)
 setwd(R_workplace)
 # devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
 # ======================COUNT OF SAMPLES IN BULK AND SINGLE-CELL COHORTS
-N_data_dlp <- 10
+N_data_dlp <- 50
 N_data_bulk <- 100
 # ===============================================GROUND TRUTH PARAMETERS
 cell_lifespan <- 30
@@ -129,9 +129,10 @@ model_variables <- BUILD_driver_library(
     model_variables = model_variables,
     table_arm_selection_rates = table_arm_selection_rates,
 )
+
 #---Set up initial cell population
 cell_count <- 20
-CN_matrix <- BUILD_cn_normal_XX(model_variables$cn_info)
+CN_matrix <- BUILD_cn_normal_autosomes(model_variables$cn_info)
 drivers <- list()
 model_variables <- BUILD_initial_population(
     model_variables = model_variables,
@@ -286,40 +287,40 @@ vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 # ================================================MAKE GROUND-TRUTH DATA
 #---Make single-cell ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
-tmp <- simulator_full_program(
-    model = paste0(model_name, "_sc"),
-    n_simulations = N_data_dlp,
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
-tmp <- c()
-#---Make bulk ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
-tmp <- simulator_full_program(
-    model = paste0(model_name, "_bulk"),
-    n_simulations = N_data_bulk,
-    stage_final = 2,
-    compute_parallel = TRUE,
-    output_variables = c(
-        # "evolution_origin",
-        # "evolution_genotype_changes",
-        "sample_genotype_unique_profile",
-        "sample_genotype_unique",
-        "sample_clone_ID"
-    ),
-    R_libPaths = R_libPaths
-)
-tmp <- c()
+# cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = paste0(model_name, "_sc"),
+#     n_simulations = N_data_dlp,
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# tmp <- c()
+# #---Make bulk ground-truth simulations
+# cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
+# tmp <- simulator_full_program(
+#     model = paste0(model_name, "_bulk"),
+#     n_simulations = N_data_bulk,
+#     stage_final = 2,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         # "evolution_origin",
+#         # "evolution_genotype_changes",
+#         "sample_genotype_unique_profile",
+#         "sample_genotype_unique",
+#         "sample_clone_ID"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# tmp <- c()
 # ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
 #---Get single-cell statistics & CN profiles
 #   Get statistics & clonal CN profiles for each single-cell sample
@@ -347,6 +348,9 @@ ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:N_data_dlp, FUN = function(i) {
         cn_table = cn_table
     )
     ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_sc)
+    # filename <- paste0("Get_each_stats_sc_simulation", i, ".rda")
+    # sim_stats <- ls_each_sim[[2]]
+    # save(sim_stats, file = filename)
     return(ls_each_sim)
 })
 stopCluster(cl)
@@ -405,6 +409,9 @@ ls_cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i
         bulk = TRUE
     )
     ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_bulk)
+    # filename <- paste0("Get_each_stats_bulk_simulation", i, ".rda")
+    # sim_stats <- ls_each_sim[[2]]
+    # save(sim_stats, file = filename)
     return(ls_each_sim)
 })
 
@@ -437,31 +444,31 @@ for (type in 1:2) {
     names(ls_cn_bulk_ground_truth_all[[type]]) <- names(ls_cn_bulk_ground_truth[[1]][[type]])
 }
 # ===============================================MAKE SIMULATION LIBRARY
-library_sc_CN(
-    model_name = model_name,
-    model_variables = model_variables,
-    list_parameters = list_parameters,
-    list_targets_library = list_targets_library,
-    ####
-    ####
-    ####
-    ####
-    ####
-    ABC_simcount = 200,
-    arm_level = TRUE,
-    cn_table = cn_table,
-    cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
-    cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
-    n_simulations_sc = N_data_dlp,
-    n_simulations_bulk = N_data_bulk,
-    ####
-    ####
-    ####
-    ####
-    ####
-    library_name = model_name,
-    save_sample_statistics = FALSE
-)
+# library_sc_CN(
+#     model_name = model_name,
+#     model_variables = model_variables,
+#     list_parameters = list_parameters,
+#     list_targets_library = list_targets_library,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     ABC_simcount = 500,
+#     arm_level = TRUE,
+#     cn_table = cn_table,
+#     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
+#     cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
+#     n_simulations_sc = N_data_dlp,
+#     n_simulations_bulk = N_data_bulk,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     library_name = model_name,
+#     save_sample_statistics = FALSE
+# )
 # ==================DEFINE LIST OF STATISTICS FOR FITTING EACH PARAMETER
 list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
 colnames(list_targets) <- c("Variable", list_targets_library)
@@ -525,14 +532,14 @@ list_targets_selection <- c(
     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
     #---Single-cell DNA: phylo stats for tips
-    # "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
-    # "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
-    # "data=sc;target=genome;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
-    # "data=sc;target=genome;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
-    # "data=sc;target=genome;statistic=var;variable=cherries",
-    # "data=sc;target=genome;statistic=var;variable=pitchforks",
-    # "data=sc;target=genome;statistic=var;variable=IL_number",
-    # "data=sc;target=genome;statistic=var;variable=avgLadder",
+    "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
+    "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
+    "data=sc;target=genome;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
+    "data=sc;target=genome;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
+    "data=sc;target=genome;statistic=var;variable=cherries",
+    "data=sc;target=genome;statistic=var;variable=pitchforks",
+    "data=sc;target=genome;statistic=var;variable=IL_number",
+    "data=sc;target=genome;statistic=var;variable=avgLadder",
     #---Single-cell DNA: phylo stats for balance
     "data=sc;target=genome;statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
     "data=sc;target=genome;statistic=mean;variable=colless", # balance index of phylogeny tree
