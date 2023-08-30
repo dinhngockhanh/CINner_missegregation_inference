@@ -1,4 +1,3 @@
-#---Gather simulation librarys of 1000&500
 filename <- paste0("Simpler_DLP&BULK_DNA", "_ABC_input1.rda")
 load(filename)
 ABC_input_all <- ABC_input

@@ -81,6 +81,9 @@ table_population_dynamics <- cbind(vec_time, vec_cell_count)
 model_variables <- BUILD_general_variables(
     cell_lifespan = cell_lifespan,
     T_0 = T_0, T_end = T_end,
+    ####################################################################
+    CN_arm_level = TRUE,
+    ####################################################################
     CN_bin_length = CN_bin_length,
     CN_arm_level = TRUE,
     Table_sample = Table_sample,
@@ -141,7 +144,7 @@ model_variables <- BUILD_initial_population(
     drivers = drivers
 )
 #---Save model variables
-model_name <- "Simpler_DLP&BULK_DNA"
+model_name <- "Chromosome_missegregation"
 model_variables <- CHECK_model_variables(model_variables)
 SAVE_model_variables(
     model_name = paste0(model_name, "_sc"),
@@ -444,6 +447,9 @@ for (type in 1:2) {
     names(ls_cn_bulk_ground_truth_all[[type]]) <- names(ls_cn_bulk_ground_truth[[1]][[type]])
 }
 # ===============================================MAKE SIMULATION LIBRARY
+ABC_simcount <- 500
+
+
 # library_sc_CN(
 #     model_name = model_name,
 #     model_variables = model_variables,
@@ -454,7 +460,7 @@ for (type in 1:2) {
 #     ####
 #     ####
 #     ####
-#     ABC_simcount = 500,
+#     ABC_simcount = ABC_simcount,
 #     arm_level = TRUE,
 #     cn_table = cn_table,
 #     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
@@ -575,6 +581,7 @@ fitting_sc_CN(
     parameters_truth = parameters_truth,
     list_parameters = list_parameters,
     list_targets = list_targets,
+    ABC_simcount = ABC_simcount,
     shuffle_num = 3,
     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
     cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
