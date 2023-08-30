@@ -1,5 +1,9 @@
 #----------------------------------------------------Load the rda
-Paths <- "/Users/xiangzijin/Downloads/"
+# Paths <- "/Users/xiangzijin/Downloads/"
+# setwd(Paths)
+# rda_name <- "Simpler_DLP&BULK_DNA_ABC_input_10000.rda"
+# load(file = rda_name)
+Paths <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
 setwd(Paths)
 rda_name <- "Simpler_DLP&BULK_DNA_ABC_input_10000.rda"
 load(file = rda_name)
@@ -356,7 +360,7 @@ library("domir")
 misseg_dataset <- cbind(parameters[, 1], statistics_misseg)
 colnames(misseg_dataset)[1] <- "prob_misseg"
 
-domin(
+lm_da <- domin(
   misseg_dataset$prob_misseg ~ misseg_dataset$Wasserstein_dist_bulk_genome +
     misseg_dataset$Mean_Clonal_misseg_count_bulk_genome +
     misseg_dataset$Var_Clonal_misseg_count_bulk_genome +
@@ -369,24 +373,25 @@ domin(
     misseg_dataset$Var_Subclonal_misseg_count_sc_genome +
     misseg_dataset$Mean_Cherries_genome +
     misseg_dataset$Mean_Pitchforks_genome +
-    misseg_dataset$Mean_IL_number_genome +
-    misseg_dataset$Mean_AvgLadder_genome +
-    misseg_dataset$Var_Cherries_genome +
-    misseg_dataset$Var_Pitchforks_genome +
-    misseg_dataset$Var_IL_number_genome +
-    misseg_dataset$Var_AvgLadder_genome +
-    misseg_dataset$Mean_Stairs_genome +
-    misseg_dataset$Mean_Colless_genome +
-    misseg_dataset$Mean_Sackin_genome +
-    misseg_dataset$Mean_B2_genome +
-    misseg_dataset$Mean_MaxDepth_genome +
-    misseg_dataset$Var_Stairs_genome +
-    misseg_dataset$Var_Colless_genome +
-    misseg_dataset$Var_Sackin_genome +
-    misseg_dataset$Var_B2_genome +
-    misseg_dataset$Var_MaxDepth_genome,
+    misseg_dataset$Mean_IL_number_genome ,
+    # misseg_dataset$Mean_AvgLadder_genome +
+    # misseg_dataset$Var_Cherries_genome +
+    # misseg_dataset$Var_Pitchforks_genome +
+    # misseg_dataset$Var_IL_number_genome +
+    # misseg_dataset$Var_AvgLadder_genome +
+    # misseg_dataset$Mean_Stairs_genome +
+    # misseg_dataset$Mean_Colless_genome +
+    # misseg_dataset$Mean_Sackin_genome +
+    # misseg_dataset$Mean_B2_genome +
+    # misseg_dataset$Mean_MaxDepth_genome +
+    # misseg_dataset$Var_Stairs_genome +
+    # misseg_dataset$Var_Colless_genome +
+    # misseg_dataset$Var_Sackin_genome +
+    # misseg_dataset$Var_B2_genome +
+    # misseg_dataset$Var_MaxDepth_genome,
   lm,
   list(summary, "r.squared"),
   data = misseg_dataset
 )
-?domin
+summary(lm_da)$Strongest_Dominance
+# Error: vector memory exhausted (limit reached?)
