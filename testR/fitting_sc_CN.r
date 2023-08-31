@@ -952,13 +952,14 @@ fitting_sc_CN <- function(library_name,
     model_name <<- model_name
     ABC_simcount <<- ABC_simcount
     get_statistics <<- get_statistics
+    cohort_distance <<- cohort_distance
     cn_data_sc <<- cn_data_sc
     cn_data_bulk <<- cn_data_bulk
     arm_level <<- arm_level
     cn_table <<- cn_table
     clusterExport(cl, varlist = c(
         "ABC_simcount", "get_statistics","model_name","list_targets","library_name","cn_data_sc",
-        "cn_data_bulk","arm_level","cn_table"
+        "cn_data_bulk","arm_level","cn_table","cohort_distance","cn_distance","sample_distance"
     ))
     e <- new.env()
     e$libs <- .libPaths()
@@ -974,14 +975,14 @@ fitting_sc_CN <- function(library_name,
             simulations_statistics_bulk = simulation_statistics$stats_bulk,
             cn_data_sc = cn_data_sc,
             cn_data_bulk = cn_data_bulk,
-            list_targets = list_targets,
+            list_targets = colnames(list_targets)[-1],
             arm_level = arm_level,
             cn_table = cn_table
         )
         parameters <- simulation_statistics$parameters
         output <- list()
         output$parameters <- parameters
-        output$stat <- simulation_statistics$stats_sc
+        output$stat <- stat
         return(output)
     })
     stopCluster(cl)
