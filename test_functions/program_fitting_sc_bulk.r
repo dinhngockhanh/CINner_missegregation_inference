@@ -81,8 +81,6 @@ table_population_dynamics <- cbind(vec_time, vec_cell_count)
 model_variables <- BUILD_general_variables(
     cell_lifespan = cell_lifespan,
     T_0 = T_0, T_end = T_end,
-    ####################################################################
-    ####################################################################
     CN_bin_length = CN_bin_length,
     CN_arm_level = TRUE,
     Table_sample = Table_sample,
@@ -289,40 +287,40 @@ vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 # ================================================MAKE GROUND-TRUTH DATA
 #---Make single-cell ground-truth simulations
-# cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
-# tmp <- simulator_full_program(
-#     model = paste0(model_name, "_sc"),
-#     n_simulations = N_data_dlp,
-#     stage_final = 3,
-#     compute_parallel = TRUE,
-#     output_variables = c(
-#         "evolution_origin",
-#         "evolution_genotype_changes",
-#         "sample_clone_ID",
-#         "sample_genotype_unique",
-#         "sample_genotype_unique_profile",
-#         "phylogeny_clustering_truth"
-#     ),
-#     R_libPaths = R_libPaths
-# )
-# tmp <- c()
-# #---Make bulk ground-truth simulations
-# cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
-# tmp <- simulator_full_program(
-#     model = paste0(model_name, "_bulk"),
-#     n_simulations = N_data_bulk,
-#     stage_final = 2,
-#     compute_parallel = TRUE,
-#     output_variables = c(
-#         # "evolution_origin",
-#         # "evolution_genotype_changes",
-#         "sample_genotype_unique_profile",
-#         "sample_genotype_unique",
-#         "sample_clone_ID"
-#     ),
-#     R_libPaths = R_libPaths
-# )
-# tmp <- c()
+cat(paste0("\n\n\nMaking ", N_data_dlp, " single-cell simulations...\n"))
+tmp <- simulator_full_program(
+    model = paste0(model_name, "_sc"),
+    n_simulations = N_data_dlp,
+    stage_final = 3,
+    compute_parallel = TRUE,
+    output_variables = c(
+        "evolution_origin",
+        "evolution_genotype_changes",
+        "sample_clone_ID",
+        "sample_genotype_unique",
+        "sample_genotype_unique_profile",
+        "phylogeny_clustering_truth"
+    ),
+    R_libPaths = R_libPaths
+)
+tmp <- c()
+#---Make bulk ground-truth simulations
+cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
+tmp <- simulator_full_program(
+    model = paste0(model_name, "_bulk"),
+    n_simulations = N_data_bulk,
+    stage_final = 2,
+    compute_parallel = TRUE,
+    output_variables = c(
+        # "evolution_origin",
+        # "evolution_genotype_changes",
+        "sample_genotype_unique_profile",
+        "sample_genotype_unique",
+        "sample_clone_ID"
+    ),
+    R_libPaths = R_libPaths
+)
+tmp <- c()
 # ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
 #---Get single-cell statistics & CN profiles
 #   Get statistics & clonal CN profiles for each single-cell sample
@@ -446,34 +444,31 @@ for (type in 1:2) {
     names(ls_cn_bulk_ground_truth_all[[type]]) <- names(ls_cn_bulk_ground_truth[[1]][[type]])
 }
 # ===============================================MAKE SIMULATION LIBRARY
-ABC_simcount <- 500
-
-
-# library_sc_CN(
-#     model_name = model_name,
-#     model_variables = model_variables,
-#     list_parameters = list_parameters,
-#     list_targets_library = list_targets_library,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     ABC_simcount = ABC_simcount,
-#     arm_level = TRUE,
-#     cn_table = cn_table,
-#     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
-#     cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
-#     n_simulations_sc = N_data_dlp,
-#     n_simulations_bulk = N_data_bulk,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     library_name = model_name,
-#     save_sample_statistics = FALSE
-# )
+ABC_simcount <- 70
+library_sc_CN(
+    model_name = model_name,
+    model_variables = model_variables,
+    list_parameters = list_parameters,
+    list_targets_library = list_targets_library,
+    ####
+    ####
+    ####
+    ####
+    ####
+    ABC_simcount = ABC_simcount,
+    arm_level = TRUE,
+    cn_table = cn_table,
+    cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
+    cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
+    n_simulations_sc = N_data_dlp,
+    n_simulations_bulk = N_data_bulk,
+    ####
+    ####
+    ####
+    ####
+    ####
+    library_name = model_name
+)
 # ==================DEFINE LIST OF STATISTICS FOR FITTING EACH PARAMETER
 list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
 colnames(list_targets) <- c("Variable", list_targets_library)
@@ -569,8 +564,7 @@ DLP_stats <- get_statistics(
     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
     cn_data_bulk = ls_cn_bulk_ground_truth_all[[1]],
     arm_level = TRUE,
-    cn_table = cn_table,
-    save_sample_statistics = FALSE
+    cn_table = cn_table
 )
 # ==============================================FIT PARAMETERS USING ABC
 fitting_sc_CN(
