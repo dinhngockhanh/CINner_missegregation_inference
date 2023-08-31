@@ -455,7 +455,8 @@ library_sc_CN(
     ####
     ####
     ####
-    ABC_simcount = ABC_simcount,
+    ABC_simcount_start = 0,
+    ABC_simcount = 100,
     arm_level = TRUE,
     cn_table = cn_table,
     cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
