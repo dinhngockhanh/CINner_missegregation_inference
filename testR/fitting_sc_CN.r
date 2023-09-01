@@ -915,10 +915,7 @@ fitting_sc_CN <- function(library_name,
                           cn_data_sc = NULL,
                           cn_data_bulk = NULL,
                           cn_table = NULL,
-                          arm_level = FALSE,
-                          shuffle_chromosome_arms = FALSE,
-                          shuffle_chromosomes_by_permutation = FALSE,
-                          shuffle_chromosomes_by_moving = FALSE) {
+                          arm_level = FALSE) {
     library(parallel)
     library(pbapply)
     library(abcrf)
@@ -1129,4 +1126,29 @@ fitting_sc_CN <- function(library_name,
         }
     }
     return(output)
+}
+
+#' @export
+fitting_sensitivity_sc_CN <- function(library_name,
+                                      model_name,
+                                      sensitivity_variable_name = "",
+                                      sensitivity_variable_values = c(),
+                                      copynumber_DATA,
+                                      parameters_truth = NULL,
+                                      list_parameters,
+                                      list_targets,
+                                      ABC_simcount,
+                                      shuffle_num,
+                                      n_cores = NULL,
+                                      cn_data_sc = NULL,
+                                      cn_data_bulk = NULL,
+                                      cn_table = NULL,
+                                      arm_level = FALSE) {
+    if (sensitivity_variable_name == "ABC_simcount") {
+
+    } else if (sensitivity_variable_name == "N_data_bulk") {
+
+    } else if (sensitivity_variable_name == "N_data_dlp") {
+
+    }
 }
