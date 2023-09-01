@@ -414,7 +414,7 @@ vec_centromeres <<- model_variables$cn_info$Centromere_location
 #     # save(sim_stats, file = filename)
 #     return(ls_each_sim)
 # })
-# 
+#
 # #   Get statistics & representative CN profiles for entire bulk cohort
 # ls_cn_bulk_ground_truth_all <- vector("list", length = 2)
 # for (type in 1:2) {
@@ -455,8 +455,8 @@ library_sc_CN(
     ####
     ####
     ####
-    ABC_simcount_start = 5000,
-    ABC_simcount = ABC_simcount,
+    ABC_simcount_start = 0,
+    ABC_simcount = 500,
     arm_level = TRUE,
     cn_table = cn_table,
     # cn_data_sc = ls_cn_sc_ground_truth_all[[1]],
@@ -556,7 +556,7 @@ library_sc_CN(
 # for (row in 2:nrow(list_targets)) {
 #     list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
 # }
-# 
+#
 # # =========================GET FITTING STATISTICS FROM GROUND-TRUTH DATA
 # DLP_stats <- get_statistics(
 #     simulations_statistics_sc = ls_cn_sc_ground_truth_all[[2]],
