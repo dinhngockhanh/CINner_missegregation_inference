@@ -901,6 +901,104 @@ library_sc_CN <- function(model_name,
     # filename <- paste0(library_name, "_ABC_input.rda")
     # save(ABC_input, file = filename)
 }
+#' @export
+get_statistics_sensitivity <- function(library_name,
+                                       model_name,
+                                       sensitivity_variable_name = "",
+                                       list_targets_library,
+                                       ABC_simcount,
+                                       n_cores = NULL,
+                                       cn_data_sc = NULL,
+                                       cn_data_bulk = NULL,
+                                       cn_table = NULL,
+                                       arm_level = FALSE) {
+    library(parallel)
+    library(pbapply)
+    library(abcrf)
+    library(grid)
+    library(gridExtra)
+    library(ggplot2)
+    library(signals)
+    library(data.table)
+    library(matrixStats)
+    library(combinat)
+    if (is.null(n_cores)) {
+        n_cores <- max(detectCores() - 1, 1)
+    }
+    if (sensitivity_variable_name == "N_data_bulk") {
+        dir.create("sensitivity_stat_bulk")
+        # for (bulknum in seq(10, 100, by = 10)) {
+        for (bulknum in seq(2, 10, by = 2)) {
+            # n_simulations_sc <- 50
+            n_simulations_sc <- 5
+            n_simulations_bulk <- bulknum
+            #   Get statistics for each simulation w.r.t. data
+            cl <- makePSOCKcluster(n_cores)
+            cat("\nGetting statistics...\n")
+            library_name <<- library_name
+            model_name <<- model_name
+            ABC_simcount <<- ABC_simcount
+            get_statistics <<- get_statistics
+            cohort_distance <<- cohort_distance
+            cn_data_sc <<- cn_data_sc
+            cn_data_bulk <<- cn_data_bulk
+            n_simulations_sc <<- n_simulations_sc
+            n_simulations_bulk <<- n_simulations_bulk
+            arm_level <<- arm_level
+            cn_table <<- cn_table
+            clusterExport(cl, varlist = c(
+                "ABC_simcount", "get_statistics", "model_name", "list_targets_library", "library_name", "cn_data_sc",
+                "cn_data_bulk", "arm_level", "cn_table", "cohort_distance", "cn_distance", "sample_distance", "n_simulations_sc", "n_simulations_bulk"
+            ))
+            e <- new.env()
+            e$libs <- .libPaths()
+            clusterExport(cl, "libs", envir = e)
+            clusterEvalQ(cl, .libPaths(libs))
+            #   Create simulated results in parallel
+            pbo <- pboptions(type = "txt")
+            sim_output_list <- pblapply(cl = cl, X = 1:ABC_simcount, FUN = function(iteration) {
+                filename <- paste0(library_name, "/", library_name, "_ABC_simulation_statistics_", iteration, ".rda")
+                load(filename)
+                simulation_statistics_sensitivity <- list()
+                simulation_statistics_sensitivity$stats_sc <- list()
+                for (i in grep("data=sc", names(simulation_statistics[["stats_sc"]]))) {
+                    simulation_statistics_sensitivity$stats_sc[[names(simulation_statistics[["stats_sc"]])[i]]] <- matrix()
+                    simulation_statistics_sensitivity$stats_sc[[names(simulation_statistics[["stats_sc"]])[i]]] <- simulation_statistics[["stats_sc"]][[i]][1:n_simulations_sc, ]
+                }
+                simulation_statistics_sensitivity$stats_sc[["variable=clonal_CN_profiles"]] <- simulation_statistics[["stats_sc"]][["variable=clonal_CN_profiles"]][1:n_simulations_sc]
+                simulation_statistics_sensitivity$stats_sc[["variable=clonal_CN_populations"]] <- simulation_statistics[["stats_sc"]][["variable=clonal_CN_populations"]][1:n_simulations_sc]
+                stat <- get_statistics(
+                    simulations_statistics_sc = simulation_statistics_sensitivity$stats_sc,
+                    simulations_statistics_bulk = simulation_statistics$stats_bulk,
+                    cn_data_sc = cn_data_sc,
+                    cn_data_bulk = cn_data_bulk,
+                    list_targets = list_targets_library,
+                    arm_level = arm_level,
+                    cn_table = cn_table
+                )
+                parameters <- simulation_statistics$parameters
+                output <- list()
+                output$parameters <- parameters
+                output$stat <- stat
+                return(output)
+            })
+            stopCluster(cl)
+            #   Group simulated statistics into one table
+            # sim_param <- NULL
+            sim_stat <- vector("list", length = length(list_targets_library))
+            for (row in 1:ABC_simcount) {
+                for (i in 1:length(list_targets_library)) {
+                    sim_stat[[i]] <- rbind(sim_stat[[i]], sim_output_list[[row]]$stat$statistics[[i]])
+                }
+            }
+            file_name <- paste0("sensitivity_stat_bulk", "/", "sensitivity_stat_bulknum_", bulknum, ".rda")
+            save(sim_stat, file = file_name)
+        }
+    } else if (sensitivity_variable_name == "N_data_dlp") {
+        print("A")
+    }
+}
+
 
 #' @export
 fitting_sc_CN <- function(library_name,
@@ -938,7 +1036,7 @@ fitting_sc_CN <- function(library_name,
     # list_parameters_output$Variable <- parameters_truth$Variable
     # list_parameters_output$Type <- parameters_truth$Type
     # list_parameters_output$Ground_truth_value <- parameters_truth$Value
-    
+
     # ================FIND STATISTICS FOR EACH SIMULATION IN THE LIBRARY
     #   Get statistics for each simulation w.r.t. data
     cl <- makePSOCKcluster(n_cores)
