@@ -528,6 +528,8 @@ cohort_distance <- function(cohort_from, cohort_to, metric, bulk_CN_input = "", 
 
 #' @export
 get_statistics <- function(list_targets,
+                           n_simulations_sc = NULL,
+                           n_simulations_bulk = NULL,
                            simulations_sc = NULL,
                            simulations_bulk = NULL,
                            simulations_statistics_sc = NULL,
@@ -539,19 +541,39 @@ get_statistics <- function(list_targets,
                            save_sample_statistics = FALSE) {
     #-------------Get clonal CN profiles for all single-cell simulations
     if (is.null(simulations_statistics_sc)) {
+        if (!is.null(n_simulations_sc)) {
+            simulations_sc <- simulations_sc[1:n_simulations_sc]
+        }
         if (any(grepl("variable=clonal_CN", list_targets))) {
             simulations_clonal_CN_sc <- get_each_clonal_CN_profiles(simulations_sc, arm_level, cn_table)
         }
         list_targets_sc <- list_targets[grepl("data=sc", list_targets)]
         simulations_statistics_sc <- get_each_statistics(simulations_sc, simulations_clonal_CN_sc, list_targets_sc)
+    } else {
+        if (!is.null(n_simulations_sc)) {
+            statistics <- names(simulations_statistics_sc)
+            for (statistic in statistics) {
+                simulations_statistics_sc[[statistic]] <- simulations_statistics_sc[[statistic]][1:n_simulations_sc, ]
+            }
+        }
     }
     #------------Get representative CN profiles for all bulk simulations
     if (is.null(simulations_statistics_bulk)) {
+        if (!is.null(n_simulations_bulk)) {
+            simulations_bulk <- simulations_bulk[1:n_simulations_bulk]
+        }
         if ((any(grepl("variable=average_CN", list_targets))) | (any(grepl("variable=maximal_CN", list_targets)))) {
             simulations_clonal_CN_bulk <- get_each_clonal_CN_profiles(simulations_bulk, arm_level, cn_table, bulk = TRUE)
         }
         list_targets_bulk <- list_targets[grepl("data=bulk", list_targets)]
         simulations_statistics_bulk <- get_each_statistics(simulations_bulk, simulations_clonal_CN_bulk, list_targets_bulk)
+    } else {
+        if (!is.null(n_simulations_bulk)) {
+            statistics <- names(simulations_statistics_bulk)
+            for (statistic in statistics) {
+                simulations_statistics_bulk[[statistic]] <- simulations_statistics_bulk[[statistic]][1:n_simulations_bulk, ]
+            }
+        }
     }
     #-----------------------------------------Get statistics for fitting
     statistics <- vector("list", length(list_targets))
@@ -1007,6 +1029,8 @@ fitting_sc_CN <- function(library_name,
                           parameters_truth = NULL,
                           list_parameters,
                           list_targets,
+                          n_simulations_sc = NULL,
+                          n_simulations_bulk = NULL,
                           ABC_simcount,
                           shuffle_num,
                           n_cores = NULL,
@@ -1050,9 +1074,13 @@ fitting_sc_CN <- function(library_name,
     cn_data_bulk <<- cn_data_bulk
     arm_level <<- arm_level
     cn_table <<- cn_table
+    simulation_trimming <<- simulation_trimming
+    n_simulations_sc <<- n_simulations_sc
+    n_simulations_bulk <<- n_simulations_bulk
     clusterExport(cl, varlist = c(
         "ABC_simcount", "get_statistics", "model_name", "list_targets", "library_name", "cn_data_sc",
-        "cn_data_bulk", "arm_level", "cn_table", "cohort_distance", "cn_distance", "sample_distance"
+        "cn_data_bulk", "arm_level", "cn_table", "cohort_distance", "cn_distance", "sample_distance",
+        "n_simulations_sc", "n_simulations_bulk"
     ))
     e <- new.env()
     e$libs <- .libPaths()
@@ -1066,6 +1094,8 @@ fitting_sc_CN <- function(library_name,
         stat <- get_statistics(
             simulations_statistics_sc = simulation_statistics$stats_sc,
             simulations_statistics_bulk = simulation_statistics$stats_bulk,
+            n_simulations_sc = n_simulations_sc,
+            n_simulations_bulk = n_simulations_bulk,
             cn_data_sc = cn_data_sc,
             cn_data_bulk = cn_data_bulk,
             list_targets = colnames(list_targets)[-1],
@@ -1230,27 +1260,78 @@ fitting_sc_CN <- function(library_name,
     return(output)
 }
 
-# #' @export
-# fitting_sensitivity_sc_CN <- function(library_name,
-#                                       model_name,
-#                                       sensitivity_variable_name = "",
-#                                       sensitivity_variable_values = c(),
-#                                       copynumber_DATA,
-#                                       parameters_truth = NULL,
-#                                       list_parameters,
-#                                       list_targets,
-#                                       ABC_simcount,
-#                                       shuffle_num,
-#                                       n_cores = NULL,
-#                                       cn_data_sc = NULL,
-#                                       cn_data_bulk = NULL,
-#                                       cn_table = NULL,
-#                                       arm_level = FALSE) {
-#     if (sensitivity_variable_name == "ABC_simcount") {
+#' @export
+fitting_sensitivity_sc_CN <- function(library_name,
+                                      model_name,
+                                      sensitivity_variable_name = "",
+                                      sensitivity_variable_values = c(),
+                                      simulations_statistics_sc,
+                                      simulations_statistics_bulk,
+                                      cn_data_sc = NULL,
+                                      cn_data_bulk = NULL,
+                                      parameters_truth = NULL,
+                                      list_parameters,
+                                      list_targets,
+                                      list_targets_library,
+                                      ABC_simcount,
+                                      n_simulations_sc = 0,
+                                      n_simulations_bulk = 0,
+                                      n_cores = NULL,
+                                      cn_table = NULL,
+                                      arm_level = FALSE) {
+    if (sensitivity_variable_name == "ABC_simcount") {
 
-#     } else if (sensitivity_variable_name == "N_data_bulk") {
+    } else if (sensitivity_variable_name == "n_simulations_bulk") {
+        for (n_simulations_bulk in sensitivity_variable_values) {
+            #---Extract observed samples according to requested counts
+            cn_data_sc_mini <- cn_data_sc
+            statistics <- names(cn_data_sc_mini)
+            for (statistic in statistics) {
+                cn_data_sc_mini[[statistic]] <- cn_data_sc_mini[[statistic]][1:n_simulations_sc]
+            }
+            cn_data_bulk_mini <- cn_data_bulk
+            statistics <- names(cn_data_bulk_mini)
+            for (statistic in statistics) {
+                cn_data_bulk_mini[[statistic]] <- cn_data_bulk_mini[[statistic]][1:n_simulations_bulk]
+            }
+            simulations_statistics_sc_mini <- simulations_statistics_sc
+            statistics <- names(simulations_statistics_sc_mini)
+            for (statistic in statistics) {
+                simulations_statistics_sc_mini[[statistic]] <- simulations_statistics_sc_mini[[statistic]][1:n_simulations_sc, ]
+            }
+            simulations_statistics_bulk_mini <- simulations_statistics_bulk
+            statistics <- names(simulations_statistics_bulk_mini)
+            for (statistic in statistics) {
+                simulations_statistics_bulk_mini[[statistic]] <- simulations_statistics_bulk_mini[[statistic]][1:n_simulations_bulk, ]
+            }
+            #---Get fitting statistics
+            copynumber_DATA <- get_statistics(
+                simulations_statistics_sc = simulations_statistics_sc_mini,
+                simulations_statistics_bulk = simulations_statistics_bulk_mini,
+                list_targets = list_targets_library,
+                cn_data_sc = cn_data_sc_mini,
+                cn_data_bulk = cn_data_bulk_mini,
+                arm_level = arm_level,
+                cn_table = cn_table
+            )
+            #---Fit parameters with ABC
+            fitting_output <- fitting_sc_CN(
+                library_name = model_name,
+                model_name = model_name,
+                copynumber_DATA = copynumber_DATA,
+                parameters_truth = parameters_truth,
+                n_simulations_sc = n_simulations_sc,
+                n_simulations_bulk = n_simulations_bulk,
+                list_parameters = list_parameters,
+                list_targets = list_targets,
+                ABC_simcount = ABC_simcount,
+                cn_data_sc = cn_data_sc_mini,
+                cn_data_bulk = cn_data_bulk_mini,
+                arm_level = arm_level,
+                cn_table = cn_table
+            )
+        }
+    } else if (sensitivity_variable_name == "n_simulations_sc") {
 
-#     } else if (sensitivity_variable_name == "N_data_dlp") {
-
-#     }
-# }
+    }
+}
