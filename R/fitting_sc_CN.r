@@ -577,8 +577,7 @@ get_statistics <- function(list_targets,
     }
     #-----------------------------------------Get statistics for fitting
     statistics <- vector("list", length(list_targets))
-    for (i in 1:length(list_targets)) {
-        stat <- list_targets[i]
+    for (stat in list_targets) {
         stat_details <- strsplit(stat, ";")[[1]]
         stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
         stat_data <- strsplit(stat_details[grep("data=", stat_details)], "=")[[1]][2]
@@ -587,15 +586,15 @@ get_statistics <- function(list_targets,
         stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
         if (stat_type == "mean") {
             if (stat_data == "sc") {
-                statistics[[i]] <- apply(simulations_statistics_sc[[stat_ID]], 2, mean)
+                statistics[[stat]] <- apply(simulations_statistics_sc[[stat_ID]], 2, mean)
             } else if (stat_data == "bulk") {
-                statistics[[i]] <- apply(simulations_statistics_bulk[[stat_ID]], 2, mean)
+                statistics[[stat]] <- apply(simulations_statistics_bulk[[stat_ID]], 2, mean)
             }
         } else if (stat_type == "var") {
             if (stat_data == "sc") {
-                statistics[[i]] <- apply(simulations_statistics_sc[[stat_ID]], 2, var)
+                statistics[[stat]] <- apply(simulations_statistics_sc[[stat_ID]], 2, var)
             } else if (stat_data == "bulk") {
-                statistics[[i]] <- apply(simulations_statistics_bulk[[stat_ID]], 2, var)
+                statistics[[stat]] <- apply(simulations_statistics_bulk[[stat_ID]], 2, var)
             }
         } else if (stat_type == "dist") {
             if (stat_target == "chromosome") {
@@ -604,7 +603,7 @@ get_statistics <- function(list_targets,
                     stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
                     if (is.null(cn_data_sc)) cn_data_sc <- simulations_statistics_sc
                     for (j in 1:length(stat_chromosome_ID)) {
-                        statistics[[i]][j] <- cohort_distance(
+                        statistics[[stat]][j] <- cohort_distance(
                             cohort_from = simulations_statistics_sc,
                             cohort_to = cn_data_sc,
                             metric = stat_metric,
@@ -615,7 +614,7 @@ get_statistics <- function(list_targets,
                     stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
                     if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
                     for (j in 1:length(stat_chromosome_ID)) {
-                        statistics[[i]][j] <- cohort_distance(
+                        statistics[[stat]][j] <- cohort_distance(
                             cohort_from = simulations_statistics_bulk,
                             cohort_to = cn_data_bulk,
                             metric = stat_metric,
@@ -628,7 +627,7 @@ get_statistics <- function(list_targets,
                     stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
                     if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
                     for (j in 1:length(stat_chromosome_ID)) {
-                        statistics[[i]][j] <- cohort_distance(
+                        statistics[[stat]][j] <- cohort_distance(
                             cohort_from = simulations_statistics_bulk,
                             cohort_to = cn_data_bulk,
                             metric = stat_metric,
@@ -642,7 +641,7 @@ get_statistics <- function(list_targets,
                 if (stat_variable == "clonal_CN" & stat_data == "sc") {
                     stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
                     if (is.null(cn_data_sc)) cn_data_sc <- simulations_statistics_sc
-                    statistics[[i]] <- cohort_distance(
+                    statistics[[stat]] <- cohort_distance(
                         cohort_from = simulations_statistics_sc,
                         cohort_to = cn_data_sc,
                         metric = stat_metric
@@ -650,7 +649,7 @@ get_statistics <- function(list_targets,
                 } else if (stat_variable == "average_CN" & stat_data == "bulk") {
                     stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
                     if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
-                    statistics[[i]] <- cohort_distance(
+                    statistics[[stat]] <- cohort_distance(
                         cohort_from = simulations_statistics_bulk,
                         cohort_to = cn_data_bulk,
                         metric = stat_metric,
@@ -660,7 +659,7 @@ get_statistics <- function(list_targets,
                 } else if (stat_variable == "maximal_CN" & stat_data == "bulk") {
                     stat_metric <- strsplit(stat_details[grepl("metric=", stat_details)], "=")[[1]][2]
                     if (is.null(cn_data_bulk)) cn_data_bulk <- simulations_statistics_bulk
-                    statistics[[i]] <- cohort_distance(
+                    statistics[[stat]] <- cohort_distance(
                         cohort_from = simulations_statistics_bulk,
                         cohort_to = cn_data_bulk,
                         metric = stat_metric,
@@ -759,9 +758,6 @@ func_stat <- function(parameters,
     return(output)
 }
 
-
-
-
 func_ABC <- function(parameters,
                      parameter_IDs,
                      model_variables,
@@ -816,23 +812,21 @@ func_ABC <- function(parameters,
 }
 
 #' @export
-library_sc_CN <- function(model_name,
-                          model_variables,
-                          list_parameters,
-                          list_targets_library,
-                          ABC_simcount_start = 0,
-                          ABC_simcount = 10000,
-                          arm_level = FALSE,
-                          cn_table = NULL,
-                          ##############################################
-                          cn_data_sc = NULL,
-                          cn_data_bulk = NULL,
-                          n_simulations_sc = 10,
-                          n_simulations_bulk = 10,
-                          save_sample_statistics = FALSE,
-                          ##############################################
-                          n_cores = NULL,
-                          library_name) {
+library_simulations <- function(library_name,
+                                model_variables,
+                                list_parameters,
+                                list_targets_library,
+                                ABC_simcount_start = 0,
+                                ABC_simcount = 10000,
+                                arm_level = FALSE,
+                                cn_table = NULL,
+                                ##############################################
+                                cn_data_sc = NULL,
+                                cn_data_bulk = NULL,
+                                n_simulations_sc = 10,
+                                n_simulations_bulk = 10,
+                                ##############################################
+                                n_cores = NULL) {
     library(parallel)
     library(pbapply)
     library(abcrf)
@@ -840,9 +834,7 @@ library_sc_CN <- function(model_name,
     library(gridExtra)
     library(ggplot2)
     library(signals)
-    if (is.null(n_cores)) {
-        n_cores <- max(detectCores() - 1, 1)
-    }
+    if (is.null(n_cores)) n_cores <- max(detectCores() - 1, 1)
     #---------------------------------List of parameter IDs to be fitted
     parameter_IDs <- list_parameters$Variable
     # =============================================CREATE REFERENCE DATA
@@ -864,13 +856,9 @@ library_sc_CN <- function(model_name,
     sim_param <<- sim_param
     parameter_IDs <<- parameter_IDs
     model_variables <<- model_variables
-    func_ABC <<- func_ABC
     func_stat <<- func_stat
     assign_paras <<- assign_paras
     list_targets_library <<- list_targets_library
-    ####
-    ####
-    ####
     cn_table <<- cn_table
     save_sample_statistics <<- save_sample_statistics
     arm_level <<- arm_level
@@ -878,12 +866,9 @@ library_sc_CN <- function(model_name,
     cn_data_bulk <<- cn_data_bulk
     n_simulations_sc <<- n_simulations_sc
     n_simulations_bulk <<- n_simulations_bulk
-    ####
-    ####
-    ####
     clusterExport(cl, varlist = c(
         "n_simulations_sc", "n_simulations_bulk", "save_sample_statistics", "list_targets_library", "sim_param", "parameter_IDs", "model_name", "model_variables", "cn_data_sc", "cn_data_sc", "cn_table", "arm_level",
-        "func_ABC", "func_stat", "assign_paras", "get_statistics", "get_each_clonal_CN_profiles", "save_sample_statistics", "get_cn_profile", "get_arm_CN_profiles",
+        "func_stat", "assign_paras", "get_statistics", "get_each_clonal_CN_profiles", "save_sample_statistics", "get_cn_profile", "get_arm_CN_profiles",
         "find_clonal_ancestry", "find_event_count", "cn_distance", "sample_distance", "cohort_distance", "get_each_statistics",
         "vec_CN_block_no", "vec_centromeres",
         "BUILD_driver_library", "simulator_full_program", "one_simulation",
@@ -907,7 +892,6 @@ library_sc_CN <- function(model_name,
         simulation_statistics <- func_stat(
             parameters = simulation_parameters, parameter_IDs = parameter_IDs, model_variables = model_variables, list_targets = list_targets_library, arm_level = arm_level
         )
-        # filename <- paste0(library_name, "_ABC_simulation_statistics_", iteration, ".rda")
         filename <- paste0(library_name, "/", library_name, "_ABC_simulation_statistics_", iteration, ".rda")
         save(simulation_statistics, file = filename)
         return(simulation_statistics)
@@ -915,25 +899,20 @@ library_sc_CN <- function(model_name,
     stopCluster(cl)
     end_time <- Sys.time()
     print(end_time - start_time)
-    #---------------------------Save the parameters and their statistics
-    # ABC_input <- list()
-    # ABC_input$model_variables <- model_variables
-    # ABC_input$parameter_IDs <- parameter_IDs
-    # ABC_input$sim_param <- sim_param
-    # filename <- paste0(library_name, "_ABC_input.rda")
-    # save(ABC_input, file = filename)
 }
+
 #' @export
-get_statistics_sensitivity <- function(library_name,
-                                       model_name,
-                                       sensitivity_variable_name = "",
-                                       list_targets_library,
-                                       ABC_simcount,
-                                       n_cores = NULL,
-                                       cn_data_sc = NULL,
-                                       cn_data_bulk = NULL,
-                                       cn_table = NULL,
-                                       arm_level = FALSE) {
+library_statistics <- function(library_name,
+                               model_variables,
+                               list_parameters,
+                               list_targets_library,
+                               ABC_simcount_start = NULL,
+                               ABC_simcount,
+                               n_cores = NULL,
+                               cn_data_sc = NULL,
+                               cn_data_bulk = NULL,
+                               cn_table = NULL,
+                               arm_level = FALSE) {
     library(parallel)
     library(pbapply)
     library(abcrf)
@@ -947,140 +926,22 @@ get_statistics_sensitivity <- function(library_name,
     if (is.null(n_cores)) {
         n_cores <- max(detectCores() - 1, 1)
     }
-    if (sensitivity_variable_name == "N_data_bulk") {
-        dir.create("sensitivity_stat_bulk")
-        # for (bulknum in seq(10, 100, by = 10)) {
-        for (bulknum in seq(2, 10, by = 2)) {
-            # n_simulations_sc <- 50
-            n_simulations_sc <- 5
-            n_simulations_bulk <- bulknum
-            #   Get statistics for each simulation w.r.t. data
-            cl <- makePSOCKcluster(n_cores)
-            cat("\nGetting statistics...\n")
-            library_name <<- library_name
-            model_name <<- model_name
-            ABC_simcount <<- ABC_simcount
-            get_statistics <<- get_statistics
-            cohort_distance <<- cohort_distance
-            cn_data_sc <<- cn_data_sc
-            cn_data_bulk <<- cn_data_bulk
-            n_simulations_sc <<- n_simulations_sc
-            n_simulations_bulk <<- n_simulations_bulk
-            arm_level <<- arm_level
-            cn_table <<- cn_table
-            clusterExport(cl, varlist = c(
-                "ABC_simcount", "get_statistics", "model_name", "list_targets_library", "library_name", "cn_data_sc",
-                "cn_data_bulk", "arm_level", "cn_table", "cohort_distance", "cn_distance", "sample_distance", "n_simulations_sc", "n_simulations_bulk"
-            ))
-            e <- new.env()
-            e$libs <- .libPaths()
-            clusterExport(cl, "libs", envir = e)
-            clusterEvalQ(cl, .libPaths(libs))
-            #   Create simulated results in parallel
-            pbo <- pboptions(type = "txt")
-            sim_output_list <- pblapply(cl = cl, X = 1:ABC_simcount, FUN = function(iteration) {
-                filename <- paste0(library_name, "/", library_name, "_ABC_simulation_statistics_", iteration, ".rda")
-                load(filename)
-                simulation_statistics_sensitivity <- list()
-                simulation_statistics_sensitivity$stats_sc <- list()
-                for (i in grep("data=sc", names(simulation_statistics[["stats_sc"]]))) {
-                    simulation_statistics_sensitivity$stats_sc[[names(simulation_statistics[["stats_sc"]])[i]]] <- matrix()
-                    simulation_statistics_sensitivity$stats_sc[[names(simulation_statistics[["stats_sc"]])[i]]] <- simulation_statistics[["stats_sc"]][[i]][1:n_simulations_sc, ]
-                }
-                simulation_statistics_sensitivity$stats_sc[["variable=clonal_CN_profiles"]] <- simulation_statistics[["stats_sc"]][["variable=clonal_CN_profiles"]][1:n_simulations_sc]
-                simulation_statistics_sensitivity$stats_sc[["variable=clonal_CN_populations"]] <- simulation_statistics[["stats_sc"]][["variable=clonal_CN_populations"]][1:n_simulations_sc]
-                stat <- get_statistics(
-                    simulations_statistics_sc = simulation_statistics_sensitivity$stats_sc,
-                    simulations_statistics_bulk = simulation_statistics$stats_bulk,
-                    cn_data_sc = cn_data_sc,
-                    cn_data_bulk = cn_data_bulk,
-                    list_targets = list_targets_library,
-                    arm_level = arm_level,
-                    cn_table = cn_table
-                )
-                parameters <- simulation_statistics$parameters
-                output <- list()
-                output$parameters <- parameters
-                output$stat <- stat
-                return(output)
-            })
-            stopCluster(cl)
-            #   Group simulated statistics into one table
-            # sim_param <- NULL
-            sim_stat <- vector("list", length = length(list_targets_library))
-            for (row in 1:ABC_simcount) {
-                for (i in 1:length(list_targets_library)) {
-                    sim_stat[[i]] <- rbind(sim_stat[[i]], sim_output_list[[row]]$stat$statistics[[i]])
-                }
-            }
-            file_name <- paste0("sensitivity_stat_bulk", "/", "sensitivity_stat_bulknum_", bulknum, ".rda")
-            save(sim_stat, file = file_name)
-        }
-    } else if (sensitivity_variable_name == "N_data_dlp") {
-        print("A")
-    }
-}
-
-
-#' @export
-fitting_sc_CN <- function(library_name,
-                          model_name,
-                          copynumber_DATA,
-                          parameters_truth = NULL,
-                          list_parameters,
-                          list_targets,
-                          n_simulations_sc = NULL,
-                          n_simulations_bulk = NULL,
-                          ABC_simcount,
-                          shuffle_num,
-                          n_cores = NULL,
-                          cn_data_sc = NULL,
-                          cn_data_bulk = NULL,
-                          cn_table = NULL,
-                          arm_level = FALSE) {
-    library(parallel)
-    library(pbapply)
-    library(abcrf)
-    library(grid)
-    library(gridExtra)
-    library(ggplot2)
-    library(signals)
-    library(data.table)
-    library(matrixStats)
-    library(combinat)
-    library(ehaGoF)
-    if (is.null(n_cores)) {
-        n_cores <- max(detectCores() - 1, 1)
-    }
-    #--------------------------------Find statistics for each CN heatmap
-    DATA_target <- copynumber_DATA$statistics
-    #--------------------------------Initialize the output csv
-    # list_parameters_output <- data.frame(matrix(ncol = 6, nrow = length(parameters_truth$Variable)))
-    # colnames(list_parameters_output) <- c("Variable", "Type", "Ground_truth_value", "Mean", "Median", "Mode")
-    # list_parameters_output$Variable <- parameters_truth$Variable
-    # list_parameters_output$Type <- parameters_truth$Type
-    # list_parameters_output$Ground_truth_value <- parameters_truth$Value
-
     # ================FIND STATISTICS FOR EACH SIMULATION IN THE LIBRARY
     #   Get statistics for each simulation w.r.t. data
     cl <- makePSOCKcluster(n_cores)
     cat("\nGetting statistics...\n")
-    library_name <<- library_name
-    model_name <<- model_name
-    ABC_simcount <<- ABC_simcount
     get_statistics <<- get_statistics
+    ABC_simcount <<- ABC_simcount
+    list_targets_library <<- list_targets_library
+    library_name <<- library_name
     cohort_distance <<- cohort_distance
     cn_data_sc <<- cn_data_sc
     cn_data_bulk <<- cn_data_bulk
     arm_level <<- arm_level
     cn_table <<- cn_table
-    simulation_trimming <<- simulation_trimming
-    n_simulations_sc <<- n_simulations_sc
-    n_simulations_bulk <<- n_simulations_bulk
     clusterExport(cl, varlist = c(
-        "ABC_simcount", "get_statistics", "model_name", "list_targets", "library_name", "cn_data_sc",
-        "cn_data_bulk", "arm_level", "cn_table", "cohort_distance", "cn_distance", "sample_distance",
-        "n_simulations_sc", "n_simulations_bulk"
+        "ABC_simcount", "get_statistics", "list_targets_library", "library_name", "cn_data_sc",
+        "cn_data_bulk", "arm_level", "cn_table", "cohort_distance", "cn_distance", "sample_distance"
     ))
     e <- new.env()
     e$libs <- .libPaths()
@@ -1088,174 +949,192 @@ fitting_sc_CN <- function(library_name,
     clusterEvalQ(cl, .libPaths(libs))
     #   Create simulated results in parallel
     pbo <- pboptions(type = "txt")
-    sim_output_list <- pblapply(cl = cl, X = 1:ABC_simcount, FUN = function(iteration) {
+    if (is.null(ABC_simcount_start)) {
+        ABC_simcount_start_real <- 1
+        ABC_simcount_end_real <- ABC_simcount
+    } else {
+        ABC_simcount_start_real <- ABC_simcount_start + 1
+        ABC_simcount_end_real <- ABC_simcount_start + ABC_simcount
+    }
+    sim_output_list <- pblapply(cl = cl, X = ABC_simcount_start_real:ABC_simcount_end_real, FUN = function(iteration) {
         filename <- paste0(library_name, "/", library_name, "_ABC_simulation_statistics_", iteration, ".rda")
         load(filename)
         stat <- get_statistics(
             simulations_statistics_sc = simulation_statistics$stats_sc,
             simulations_statistics_bulk = simulation_statistics$stats_bulk,
-            n_simulations_sc = n_simulations_sc,
-            n_simulations_bulk = n_simulations_bulk,
             cn_data_sc = cn_data_sc,
             cn_data_bulk = cn_data_bulk,
-            list_targets = colnames(list_targets)[-1],
+            list_targets = list_targets_library,
             arm_level = arm_level,
             cn_table = cn_table
         )
-        parameters <- simulation_statistics$parameters
         output <- list()
-        output$parameters <- parameters
+        output$parameters <- simulation_statistics$parameters
         output$stat <- stat
         return(output)
     })
     stopCluster(cl)
     #   Group simulated statistics into one table
-    # sim_param <- NULL
-    sim_stat <- vector("list", length = length(list_targets_library))
+    sim_param <- NULL
+    sim_stat <- list()
     for (row in 1:ABC_simcount) {
-        # sim_param <- rbind(sim_param, sim_output_list[[row]]$parameters)
-        for (i in 1:length(list_targets_library)) {
-            sim_stat[[i]] <- rbind(sim_stat[[i]], sim_output_list[[row]]$stat$statistics[[i]])
+        sim_param <- rbind(sim_param, sim_output_list[[row]]$parameters)
+        for (stat in list_targets_library) {
+            sim_stat[[stat]] <- rbind(sim_stat[[stat]], sim_output_list[[row]]$stat$statistics[[stat]])
         }
     }
-    # =====================================================================================
-    # =====================================================================================
-    # =====================================================================================
-    # # ================================PREPARE SIMULATION LIBRARY FOR ABC
-    # #   Find ID for each parameter in the prepared library
-    # sim_param_ID <- list_parameters$Variable
-    # sim_stat_ID <- colnames(list_targets)[-1]
-    # #   Prepare the simulation library
-    # df_sim_param <- data.frame(sim_param)
-    # colnames(df_sim_param) <- sim_param_ID
-    # # ====================================FITTING WITH ABC RANDOM FOREST
-    # #---Dataframe for prepared library of parameters
-    # all_paras <- df_sim_param
-    # #---Fit each parameter with ABC-rf
-    # layout <- matrix(NA, nrow = 7, ncol = ceiling(length(parameter_IDs) / 7))
-    # gs <- list()
-    # id <- 0
-    # for (para in 1:nrow(list_parameters)) {
-    #     start_time <- Sys.time()
-    #     para_ID <- list_parameters$Variable[para]
-    #     para_type <- list_parameters$Type[para]
-    #     cat(paste("\nABC for parameter ", para_ID, " [", para, "/", nrow(list_parameters), "]", "\n", sep = ""))
-    #     #   Prepare matrices of prepared statistics library & data observation
-    #     list_targets_para <- list_targets[para, -1]
-    #     mini_data <- NULL
-    #     mini_obs <- NULL
-    #     for (i in 1:length(list_targets_para)) {
-    #         if (list_targets_para[i] == 0) next
-    #         stat <- sim_stat_ID[i]
-    #         stat_details <- strsplit(stat, ";")[[1]]
-    #         stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
-    #         if (stat_target == "genome") {
-    #             mini_data <- cbind(mini_data, sim_stat[[i]])
-    #             mini_obs <- cbind(mini_obs, DATA_target[[i]])
-    #         } else if (stat_target == "chromosome") {
-    #             selected_chrom <- list_parameters$Chromosome[para]
-    #             stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")[[1]]
-    #             selected_column <- which(stat_chromosome_ID == selected_chrom)
-    #             mini_data <- cbind(mini_data, sim_stat[[i]][, selected_column])
-    #             mini_obs <- cbind(mini_obs, DATA_target[[i]][selected_column])
-    #         }
-    #     }
-    #     mini_data <- data.frame(mini_data)
-    #     colnames(mini_data) <- paste0("stat_", 1:ncol(mini_data))
-    #     mini_obs <- data.frame(matrix(mini_obs, nrow = 1))
-    #     colnames(mini_obs) <- paste0("stat_", 1:ncol(mini_obs))
-    #     #   Prepare library of parameters for this parameter
-    #     data_rf <- cbind(all_paras[para_ID], mini_data)
-    #     #   Train the random forest
-    #     colnames(data_rf)[1] <- "para"
-    #     f <- as.formula("para ~.")
-    #     model_rf <- regAbcrf(
-    #         formula = f, data_rf,
-    #         paral = TRUE, ncores = n_cores,
-    #         # ntree = ntree,
-    #         # sampsize = nrow(data_rf),
-    #         # save.memory = TRUE
-    #     )
-    #     #   Predict posterior distribution based on found random forest
-    #     post_rf <- predict(model_rf, mini_obs, data_rf, paral = TRUE, ncores = n_cores)
-    #     #   Choose best values from posterior distribution
-    #     df_dist <- densityPlot_df(model_rf, mini_obs, data_rf)
-    #     post_mean <- weighted.mean(df_dist$x, df_dist$y_posterior)
-    #     post_median <- weightedMedian(df_dist$x, df_dist$y_posterior)
-    #     post_mode <- df_dist$x[which(df_dist$y_posterior == max(df_dist$y_posterior))]
-    #     if (!is.null(parameters_truth)) cat("True value: ", parameters_truth$Value[which(parameters_truth$Variable == para_ID)], "\n")
-    #     cat("Posterior mean: ", post_mean, "\n")
-    #     cat("Posterior median: ", post_median, "\n")
-    #     cat("Posterior mode: ", post_mode, "\n")
-    #     #   Save the parameter output table
-    #     list_parameters_output$Mean[which(list_parameters_output$Variable == para_ID)] <- post_mean
-    #     list_parameters_output$Median[which(list_parameters_output$Variable == para_ID)] <- post_median
-    #     list_parameters_output$Mode[which(list_parameters_output$Variable == para_ID)] <- post_mode
-    #     #   Save results for fitting this parameter
-    #     ABC_output <- list()
-    #     ABC_output$para_ID <- para_ID
-    #     ABC_output$post_mode <- post_mode
-    #     ABC_output$post_mean <- post_mean
-    #     ABC_output$post_median <- post_median
-    #     filename <- paste0(model_name, "_ABC_output_", para_ID, ".rda")
-    #     save(ABC_output, file = filename)
-    #     #   Plot the prior, posterior and chosen best parameter for all variables
-    #     true_para <- NULL
-    #     if (!is.null(parameters_truth)) {
-    #         true_para <- parameters_truth$Value[which(parameters_truth$Variable == para_ID)]
-    #     }
-    #     id <- id + 1
-    #     row <- id %% 7
-    #     if (row == 0) row <- 7
-    #     col <- ceiling(id / 7)
-    #     layout[row, col] <- id
-    #     gs[[id]] <- plot_parameter_ABC(
-    #         model_rf, mini_obs, data_rf,
-    #         protocol = "arm",
-    #         ###
-    #         highlight_values = c(true_para, post_mode, post_mean, post_median),
-    #         highlight_colors = c("black", "#d03333", "#3939ae", "#3da53d"),
-    #         highlight_linetype = c("solid", "dashed", "dashed", "dashed"),
-    #         ###
-    #         fontsize = 20,
-    #         main = para_ID
-    #     )
-    #     end_time <- Sys.time()
-    #     cat(paste0("Best parameter: ", post_mode, "\n"))
-    #     print(end_time - start_time)
-    #     #   Clear memory
-    #     model_rf <- c()
-    #     data_rf <- c()
-    #     post_rf <- c()
-    #     post_mode <- c()
-    # }
-    # #   Output the csv of parameter values
-    # write.csv(list_parameters_output, "parameters_output_values.csv")
-    # #   Plot the prior, posterior and chosen best parameter for all variables
-    # filename <- paste0(model_name, "_ABC_all.jpeg")
-    # jpeg(filename, width = 3000, height = 1500)
-    # p <- grid.arrange(grobs = gs, layout_matrix = layout)
-    # print(p)
-    # dev.off()
-    # #-------------------------Output the errors compared to ground truth
-    # output <- list()
-    # output$inferred_para <- list_parameters_output
-    # if (!is.null(parameters_truth)) {
-    #     unique_parameter_types <- unique(list_parameters_output$Type)
-    #     for (parameter_type in unique_parameter_types) {
-    #         output[[paste0(parameter_type, "_Mean_rrmse")]] <- gofRRMSE(
-    #             list_parameters_output$Ground_truth_value(which(list_parameters_output$Type == parameter_type)),
-    #             list_parameters_output$Mean(which(list_parameters_output$Type == parameter_type))
-    #         )
-    #         output[[paste0(parameter_type, "_Median_rrmse")]] <- gofRRMSE(
-    #             list_parameters_output$Ground_truth_value(which(list_parameters_output$Type == parameter_type)),
-    #             list_parameters_output$Median(which(list_parameters_output$Type == parameter_type))
-    #         )
-    #         output[[paste0(parameter_type, "_Mode_rrmse")]] <- gofRRMSE(
-    #             list_parameters_output$Ground_truth_value(which(list_parameters_output$Type == parameter_type)),
-    #             list_parameters_output$Mode(which(list_parameters_output$Type == parameter_type))
-    #         )
-    #     }
-    # }
-    return(output)
+    sim_param <- data.frame(sim_param)
+    colnames(sim_param) <- list_parameters$Variable
+    # ======================SAVE RESULTS FROM GET STATISTICS TO LIBRARY
+    ABC_input <- list()
+    ABC_input$model_variables <- model_variables
+    ABC_input$sim_param <- sim_param
+    ABC_input$sim_stat <- sim_stat
+    if (is.null(ABC_simcount_start)) {
+        filename <- paste0(library_name, "_ABC_input.rda")
+    } else {
+        filename <- paste0(library_name, "_ABC_input_", (ABC_simcount_start + ABC_simcount) / ABC_simcount, ".rda")
+    }
+    save(ABC_input, file = filename)
+}
+
+#' @export
+fitting_parameters <- function(library_name,
+                               copynumber_DATA,
+                               parameters_truth = NULL,
+                               list_parameters,
+                               list_targets_by_parameter,
+                               n_cores = NULL) {
+    library(parallel)
+    library(pbapply)
+    library(abcrf)
+    library(grid)
+    library(gridExtra)
+    library(ggplot2)
+    library(signals)
+    library(data.table)
+    library(matrixStats)
+    library(combinat)
+    if (is.null(n_cores)) {
+        n_cores <- max(detectCores() - 1, 1)
+    }
+    # ======================================================LOAD LIBRARY
+    filename <- paste0(library_name, "_ABC_input.rda")
+    load(filename)
+    model_variables <- ABC_input$model_variables
+    sim_param <- ABC_input$sim_param
+    sim_stat <- ABC_input$sim_stat
+    # ====================================FITTING WITH ABC RANDOM FOREST
+    #---List of target statistics
+    list_target_statistics <- colnames(list_targets_by_parameter)[-1]
+    #---Fit each parameter with ABC-rf
+    list_parameters_output <- data.frame(matrix(ncol = 5, nrow = length(parameters_truth$Variable)))
+    colnames(list_parameters_output) <- c("Variable", "Ground_truth_value", "Mean", "Median", "Mode")
+    list_parameters_output$Variable <- parameters_truth$Variable
+    list_parameters_output$Ground_truth_value <- parameters_truth$Value
+    layout <- matrix(NA, nrow = 7, ncol = ceiling(nrow(list_parameters) / 7))
+    gs <- list()
+    id <- 0
+    for (para in 1:nrow(list_parameters)) {
+        start_time <- Sys.time()
+        para_ID <- list_parameters$Variable[para]
+        para_type <- list_parameters$Type[para]
+        cat(paste("\nABC for parameter ", para_ID, " [", para, "/", nrow(list_parameters), "]", "\n", sep = ""))
+        #   Prepare matrices of prepared statistics library & data observation
+        flags_targets <- list_targets_by_parameter[which(list_targets_by_parameter$Variable == para_ID), 2:ncol(list_targets_by_parameter)]
+        list_targets <- list_target_statistics[which(flags_targets == 1)]
+        mini_data <- NULL
+        mini_obs <- NULL
+        for (i in 1:length(list_targets)) {
+            stat <- list_targets[i]
+            stat_details <- strsplit(stat, ";")[[1]]
+            stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
+            if (stat_target == "genome") {
+                mini_data <- cbind(mini_data, sim_stat[[stat]])
+                mini_obs <- cbind(mini_obs, copynumber_DATA$statistics[[stat]])
+            } else if (stat_target == "chromosome") {
+                selected_chrom <- list_parameters$Chromosome[para]
+                stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")[[1]]
+                selected_column <- which(stat_chromosome_ID == selected_chrom)
+                mini_data <- cbind(mini_data, sim_stat[[stat]][, selected_column])
+                mini_obs <- cbind(mini_obs, copynumber_DATA$statistics[[stat]][selected_column])
+            }
+        }
+        mini_data <- data.frame(mini_data)
+        colnames(mini_data) <- paste0("stat_", 1:ncol(mini_data))
+        mini_obs <- data.frame(matrix(mini_obs, nrow = 1))
+        colnames(mini_obs) <- paste0("stat_", 1:ncol(mini_obs))
+        #   Prepare library of parameters for this parameter
+        data_rf <- cbind(sim_param[para_ID], mini_data)
+        #   Train the random forest
+        colnames(data_rf)[1] <- "para"
+        f <- as.formula("para ~.")
+        model_rf <- regAbcrf(
+            formula = f, data_rf,
+            paral = TRUE, ncores = n_cores,
+            # ntree = ntree,
+            # sampsize = nrow(data_rf),
+            # save.memory = TRUE
+        )
+        #   Predict posterior distribution based on found random forest
+        post_rf <- predict(model_rf, mini_obs, data_rf, paral = TRUE, ncores = n_cores)
+        #   Choose best values from posterior distribution
+        df_dist <- densityPlot_df(model_rf, mini_obs, data_rf)
+        post_mean <- weighted.mean(df_dist$x, df_dist$y_posterior)
+        post_median <- weightedMedian(df_dist$x, df_dist$y_posterior)
+        post_mode <- df_dist$x[which(df_dist$y_posterior == max(df_dist$y_posterior))]
+        if (!is.null(parameters_truth)) cat("True value: ", parameters_truth$Value[which(parameters_truth$Variable == para_ID)], "\n")
+        cat("Posterior mean: ", post_mean, "\n")
+        cat("Posterior median: ", post_median, "\n")
+        cat("Posterior mode: ", post_mode, "\n")
+        #   Save the parameter output table
+        list_parameters_output$Mean[which(list_parameters_output$Variable == para_ID)] <- post_mean
+        list_parameters_output$Median[which(list_parameters_output$Variable == para_ID)] <- post_median
+        list_parameters_output$Mode[which(list_parameters_output$Variable == para_ID)] <- post_mode
+        #   Save results for fitting this parameter
+        ABC_output <- list()
+        ABC_output$para_ID <- para_ID
+        ABC_output$post_mode <- post_mode
+        ABC_output$post_mean <- post_mean
+        ABC_output$post_median <- post_median
+        filename <- paste0(library_name, "_ABC_output_", para_ID, ".rda")
+        save(ABC_output, file = filename)
+        #   Plot the prior, posterior and chosen best parameter for all variables
+        true_para <- NULL
+        if (!is.null(parameters_truth)) {
+            true_para <- parameters_truth$Value[which(parameters_truth$Variable == para_ID)]
+        }
+        id <- id + 1
+        row <- id %% 7
+        if (row == 0) row <- 7
+        col <- ceiling(id / 7)
+        layout[row, col] <- id
+        gs[[id]] <- plot_parameter_ABC(
+            model_rf, mini_obs, data_rf,
+            protocol = "arm",
+            ###
+            highlight_values = c(true_para, post_mode, post_mean, post_median),
+            highlight_colors = c("black", "#d03333", "#3939ae", "#3da53d"),
+            highlight_linetype = c("solid", "dashed", "dashed", "dashed"),
+            ###
+            fontsize = 20,
+            main = para_ID
+        )
+        end_time <- Sys.time()
+        cat(paste0("Best parameter: ", post_mode, "\n"))
+        print(end_time - start_time)
+        #   Clear memory
+        model_rf <- c()
+        data_rf <- c()
+        post_rf <- c()
+        post_mode <- c()
+    }
+    #   Output the csv of parameter values
+    write.csv(list_parameters_output, "parameters_output_values.csv")
+    #   Plot the prior, posterior and chosen best parameter for all variables
+    filename <- paste0(library_name, "_ABC_all.jpeg")
+    jpeg(filename, width = 3000, height = 1500)
+    p <- grid.arrange(grobs = gs, layout_matrix = layout)
+    print(p)
+    dev.off()
 }
