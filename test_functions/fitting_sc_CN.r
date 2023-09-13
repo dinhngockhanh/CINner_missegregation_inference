@@ -1004,7 +1004,8 @@ fitting_parameters <- function(library_name,
                                parameters_truth = NULL,
                                list_parameters,
                                list_targets_by_parameter,
-                               n_cores = NULL) {
+                               n_cores = NULL,
+                               draw_rec_prior = FALSE) {
     library(parallel)
     library(pbapply)
     library(abcrf)
@@ -1039,6 +1040,8 @@ fitting_parameters <- function(library_name,
         start_time <- Sys.time()
         para_ID <- list_parameters$Variable[para]
         para_type <- list_parameters$Type[para]
+        para_lower_bound <- as.numeric(list_parameters$Lower_bound[para])
+        para_upper_bound <- as.numeric(list_parameters$Upper_bound[para])
         cat(paste("\nABC for parameter ", para_ID, " [", para, "/", nrow(list_parameters), "]", "\n", sep = ""))
         #   Prepare matrices of prepared statistics library & data observation
         flags_targets <- list_targets_by_parameter[which(list_targets_by_parameter$Variable == para_ID), 2:ncol(list_targets_by_parameter)]
@@ -1118,7 +1121,10 @@ fitting_parameters <- function(library_name,
             highlight_linetype = c("solid", "dashed", "dashed", "dashed"),
             ###
             fontsize = 20,
-            main = para_ID
+            main = para_ID,
+            draw_rec_prior = draw_rec_prior,
+            para_lower_bound = para_lower_bound,
+            para_upper_bound = para_upper_bound
         )
         end_time <- Sys.time()
         cat(paste0("Best parameter: ", post_mode, "\n"))
