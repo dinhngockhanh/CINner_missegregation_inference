@@ -1005,7 +1005,7 @@ fitting_parameters <- function(library_name,
                                list_parameters,
                                list_targets_by_parameter,
                                n_cores = NULL,
-                               plot_prior_uniform = FALSE) {
+                               plot_ABC_prior_as_uniform = FALSE) {
     library(parallel)
     library(pbapply)
     library(abcrf)
@@ -1029,10 +1029,16 @@ fitting_parameters <- function(library_name,
     #---List of target statistics
     list_target_statistics <- colnames(list_targets_by_parameter)[-1]
     #---Fit each parameter with ABC-rf
-    list_parameters_output <- data.frame(matrix(ncol = 5, nrow = length(parameters_truth$Variable)))
-    colnames(list_parameters_output) <- c("Variable", "Ground_truth_value", "Mean", "Median", "Mode")
-    list_parameters_output$Variable <- parameters_truth$Variable
-    list_parameters_output$Ground_truth_value <- parameters_truth$Value
+    list_parameters_output <- list_parameters
+    list_parameters_output$Mean <- 0
+    list_parameters_output$Median <- 0
+    list_parameters_output$Mode <- 0
+    if (!is.null(parameters_truth)) {
+        list_parameters_output$Ground_truth <- 0
+        for (i in 1:length(parameters_truth$Variable)) {
+            list_parameters_output$Ground_truth[which(list_parameters_output$Variable == parameters_truth$Variable[i])] <- parameters_truth$Value[i]
+        }
+    }
     layout <- matrix(NA, nrow = 7, ncol = ceiling(nrow(list_parameters) / 7))
     gs <- list()
     id <- 0
@@ -1082,6 +1088,11 @@ fitting_parameters <- function(library_name,
         #   Choose best values from posterior distribution
         df_dist <- densityPlot_df(model_rf, mini_obs, data_rf)
         post_mean <- weighted.mean(df_dist$x, df_dist$y_posterior)
+        # ...
+        # ...
+        # post_sd <- ???
+        # ...
+        # ...
         post_median <- weightedMedian(df_dist$x, df_dist$y_posterior)
         post_mode <- df_dist$x[which(df_dist$y_posterior == max(df_dist$y_posterior))]
         if (!is.null(parameters_truth)) cat("True value: ", parameters_truth$Value[which(parameters_truth$Variable == para_ID)], "\n")
@@ -1092,6 +1103,11 @@ fitting_parameters <- function(library_name,
         list_parameters_output$Mean[which(list_parameters_output$Variable == para_ID)] <- post_mean
         list_parameters_output$Median[which(list_parameters_output$Variable == para_ID)] <- post_median
         list_parameters_output$Mode[which(list_parameters_output$Variable == para_ID)] <- post_mode
+        # ...
+        # ...
+        # list_parameters_output$Sd[which(list_parameters_output$Variable == para_ID)] <- post_sd
+        # ...
+        # ...
         #   Save results for fitting this parameter
         ABC_output <- list()
         ABC_output$para_ID <- para_ID
@@ -1120,7 +1136,7 @@ fitting_parameters <- function(library_name,
             ###
             fontsize = 20,
             main = para_ID,
-            plot_prior_uniform = plot_prior_uniform,
+            plot_ABC_prior_as_uniform = plot_ABC_prior_as_uniform,
             para_lower_bound = as.numeric(list_parameters$Lower_bound[para]),
             para_upper_bound = as.numeric(list_parameters$Upper_bound[para])
         )
