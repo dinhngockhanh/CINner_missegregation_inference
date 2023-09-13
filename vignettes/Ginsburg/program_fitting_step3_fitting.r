@@ -515,5 +515,5 @@ fitting_parameters(
     parameters_truth = parameters_truth,
     list_parameters = list_parameters,
     list_targets_by_parameter = list_targets,
-    draw_rec_prior = TRUE
+    plot_prior_uniform = TRUE
 )

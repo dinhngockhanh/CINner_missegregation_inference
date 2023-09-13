@@ -435,6 +435,9 @@ plot_parameter_ABC <- function(object,
                                ylab = NULL,
                                paral = FALSE,
                                fontsize = 50,
+                               plot_prior_uniform = FALSE,
+                               para_lower_bound = NULL,
+                               para_upper_bound = NULL,
                                ncores = if (paral) max(detectCores() - 1, 1) else 1, ...) {
     df_plot <- densityPlot_df(
         object,
@@ -456,8 +459,20 @@ plot_parameter_ABC <- function(object,
         ncores
     )
 
-    p_plot <- ggplot(df_plot) +
-        geom_area(aes(x = x, y = y_prior), color = color_prior, fill = color_prior, alpha = 0.3) +
+    if (plot_prior_uniform) {
+        p_plot <- ggplot(df_plot) +
+            annotate("rect",
+                xmin = para_lower_bound, xmax = para_upper_bound,
+                ymin = 0, ymax = 1 / (para_upper_bound - para_lower_bound),
+                color = color_prior, fill = color_prior, alpha = 0.3
+            )
+    } else {
+        p_plot <- ggplot(df_plot) +
+            geom_area(aes(x = x, y = y_prior),
+                color = color_prior, fill = color_prior, alpha = 0.3
+            )
+    }
+    p_plot <- p_plot +
         geom_area(aes(x = x, y = y_posterior), color = color_posterior, fill = color_posterior, alpha = 0.3) +
         # geom_density(aes(x = dist_raw, kernel = "gaussian", weight = weight_prior), color = color_prior, fill = color_prior, alpha = 0.3) +
         # geom_density(aes(x = dist_raw, kernel = "gaussian", weight = weight_posterior), color = color_posterior, fill = color_posterior, alpha = 0.3) +
@@ -468,7 +483,6 @@ plot_parameter_ABC <- function(object,
         theme(text = element_text(size = fontsize)) +
         scale_x_continuous(expand = c(0, 0)) +
         scale_y_continuous(expand = c(0, 0))
-
     if (!is.null(highlight_values)) {
         p_plot <- p_plot +
             geom_vline(

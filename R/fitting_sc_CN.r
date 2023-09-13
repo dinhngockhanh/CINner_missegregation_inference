@@ -1004,7 +1004,8 @@ fitting_parameters <- function(library_name,
                                parameters_truth = NULL,
                                list_parameters,
                                list_targets_by_parameter,
-                               n_cores = NULL) {
+                               n_cores = NULL,
+                               plot_prior_uniform = FALSE) {
     library(parallel)
     library(pbapply)
     library(abcrf)
@@ -1118,7 +1119,10 @@ fitting_parameters <- function(library_name,
             highlight_linetype = c("solid", "dashed", "dashed", "dashed"),
             ###
             fontsize = 20,
-            main = para_ID
+            main = para_ID,
+            plot_prior_uniform = plot_prior_uniform,
+            para_lower_bound = as.numeric(list_parameters$Lower_bound[para]),
+            para_upper_bound = as.numeric(list_parameters$Upper_bound[para])
         )
         end_time <- Sys.time()
         cat(paste0("Best parameter: ", post_mode, "\n"))
