@@ -1093,27 +1093,30 @@ fitting_parameters <- function(library_name,
         # post_sd <- ???
         # ...
         # ...
+        post_sd <- weightedSd(df_dist$x, df_dist$y_posterior)
         post_median <- weightedMedian(df_dist$x, df_dist$y_posterior)
         post_mode <- df_dist$x[which(df_dist$y_posterior == max(df_dist$y_posterior))]
         if (!is.null(parameters_truth)) cat("True value: ", parameters_truth$Value[which(parameters_truth$Variable == para_ID)], "\n")
         cat("Posterior mean: ", post_mean, "\n")
         cat("Posterior median: ", post_median, "\n")
         cat("Posterior mode: ", post_mode, "\n")
+        cat("Posterior sd: ", post_sd, "\n")
         #   Save the parameter output table
         list_parameters_output$Mean[which(list_parameters_output$Variable == para_ID)] <- post_mean
         list_parameters_output$Median[which(list_parameters_output$Variable == para_ID)] <- post_median
         list_parameters_output$Mode[which(list_parameters_output$Variable == para_ID)] <- post_mode
         # ...
         # ...
-        # list_parameters_output$Sd[which(list_parameters_output$Variable == para_ID)] <- post_sd
+        list_parameters_output$Sd[which(list_parameters_output$Variable == para_ID)] <- post_sd
         # ...
-        # ...
+        # ..
         #   Save results for fitting this parameter
         ABC_output <- list()
         ABC_output$para_ID <- para_ID
         ABC_output$post_mode <- post_mode
         ABC_output$post_mean <- post_mean
         ABC_output$post_median <- post_median
+        ABC_output$post_sd <- post_sd
         filename <- paste0(library_name, "_ABC_output_", para_ID, ".rda")
         save(ABC_output, file = filename)
         #   Plot the prior, posterior and chosen best parameter for all variables

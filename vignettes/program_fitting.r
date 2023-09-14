@@ -19,9 +19,9 @@
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
+R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_4000"
 R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/test_functions"
+R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
 # R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
 # R_libPaths <- ""
@@ -50,9 +50,9 @@ setwd(R_workplace)
 # devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
 # ==================================================IMPORTANT PARAMETERS
 #   Number of single-cell samples in ground-truth data & ABC simulations
-N_data_sc <- 5
+N_data_sc <- 50
 #   Number of bulk samples in ground-truth data & ABC simulations
-N_data_bulk <- 7
+N_data_bulk <- 100
 #   Bounds for ground-truth selection rates (1/r -> r)
 bound_ground_truth_arm_s <- 1.2
 #   Bounds for prior distribution of log10(prob_CN_missegregation)
@@ -129,6 +129,7 @@ drivers <- list()
 model_variables <- BUILD_initial_population(model_variables = model_variables, cell_count = cell_count, CN_matrix = CN_matrix, drivers = drivers)
 #---Save model variables
 model_name <- "Fitting_whole_chroms"
+# model_name <- "Chromosome_missegregation"
 model_variables <- CHECK_model_variables(model_variables)
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 5, nrow = 0))
@@ -209,64 +210,64 @@ vec_centromeres <<- model_variables$cn_info$Centromere_location
 # ================================================MAKE GROUND-TRUTH DATA
 #---Make single-cell ground-truth simulations
 cat(paste0("\n\n\nMaking ", N_data_sc, " single-cell simulations...\n"))
-simulator_full_program(
-    model = model_variables, model_prefix = paste0(model_name, "_sc"),
-    n_simulations = N_data_sc,
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
-#---Make bulk ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
-simulator_full_program(
-    model = model_variables, model_prefix = paste0(model_name, "_bulk"),
-    n_simulations = N_data_bulk,
-    stage_final = 2,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "sample_genotype_unique_profile",
-        "sample_genotype_unique",
-        "sample_clone_ID"
-    ),
-    R_libPaths = R_libPaths
-)
+# simulator_full_program(
+#     model = model_variables, model_prefix = paste0(model_name, "_sc"),
+#     n_simulations = N_data_sc,
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# #---Make bulk ground-truth simulations
+# cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
+# simulator_full_program(
+#     model = model_variables, model_prefix = paste0(model_name, "_bulk"),
+#     n_simulations = N_data_bulk,
+#     stage_final = 2,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "sample_genotype_unique_profile",
+#         "sample_genotype_unique",
+#         "sample_clone_ID"
+#     ),
+#     R_libPaths = R_libPaths
+# )
 #---Print out ground-truth parameters
-list_parameters_ground_truth <- list_parameters
-list_parameters_ground_truth$Value <- 0
-for (row in 1:nrow(list_parameters)) {
-    parameter_ID_input <- list_parameters$Variable[row]
-    #   Convert parameter operator if necessary
-    if (grepl(":", parameter_ID_input)) {
-        parameter_ID <- sub(".*:", "", parameter_ID_input)
-        parameter_operator <- sub(":.*", "", parameter_ID_input)
-    } else {
-        parameter_ID <- parameter_ID_input
-        parameter_operator <- ""
-    }
-    if (parameter_ID %in% model_variables$general_variables$Variable) {
-        parameter_value_input <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)])
-    } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
-        parameter_value_input <- as.numeric(model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)])
-    }
-    if (parameter_operator == "") {
-        parameter_value <- parameter_value_input
-    } else if (parameter_operator == "10^") {
-        parameter_value <- log10(parameter_value_input)
-    } else {
-        simpleError("Parameter operator not recognized")
-    }
-    #   Assign parameter value
-    list_parameters_ground_truth$Value[row] <- parameter_value
-}
-write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
+# list_parameters_ground_truth <- list_parameters
+# list_parameters_ground_truth$Value <- 0
+# for (row in 1:nrow(list_parameters)) {
+#     parameter_ID_input <- list_parameters$Variable[row]
+#     #   Convert parameter operator if necessary
+#     if (grepl(":", parameter_ID_input)) {
+#         parameter_ID <- sub(".*:", "", parameter_ID_input)
+#         parameter_operator <- sub(":.*", "", parameter_ID_input)
+#     } else {
+#         parameter_ID <- parameter_ID_input
+#         parameter_operator <- ""
+#     }
+#     if (parameter_ID %in% model_variables$general_variables$Variable) {
+#         parameter_value_input <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)])
+#     } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
+#         parameter_value_input <- as.numeric(model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)])
+#     }
+#     if (parameter_operator == "") {
+#         parameter_value <- parameter_value_input
+#     } else if (parameter_operator == "10^") {
+#         parameter_value <- log10(parameter_value_input)
+#     } else {
+#         simpleError("Parameter operator not recognized")
+#     }
+#     #   Assign parameter value
+#     list_parameters_ground_truth$Value[row] <- parameter_value
+# }
+# write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 # ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
 #---Get single-cell statistics & CN profiles
 #   Get statistics & clonal CN profiles for each single-cell sample
@@ -373,31 +374,31 @@ for (simulation in 1:N_data_bulk) {
     names(ground_truth_statistics_bulk) <- names(ls_cn_bulk_ground_truth[[1]][[2]])
 }
 # ===============================================MAKE SIMULATION LIBRARY
-ABC_simcount <- 10
-library_simulations(
-    library_name = model_name,
-    model_variables = model_variables,
-    list_parameters = list_parameters,
-    list_targets_library = list_targets_library,
-    ####
-    ####
-    ####
-    ####
-    ####
-    ABC_simcount_start = 0,
-    ABC_simcount = ABC_simcount,
-    arm_level = TRUE,
-    cn_table = cn_table,
-    cn_data_sc = ground_truth_cn_data_sc,
-    cn_data_bulk = ground_truth_cn_data_bulk,
-    n_simulations_sc = N_data_sc,
-    n_simulations_bulk = N_data_bulk
-    ####
-    ####
-    ####
-    ####
-    ####
-)
+# ABC_simcount <- 10
+# library_simulations(
+#     library_name = model_name,
+#     model_variables = model_variables,
+#     list_parameters = list_parameters,
+#     list_targets_library = list_targets_library,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     ABC_simcount_start = 0,
+#     ABC_simcount = ABC_simcount,
+#     arm_level = TRUE,
+#     cn_table = cn_table,
+#     cn_data_sc = ground_truth_cn_data_sc,
+#     cn_data_bulk = ground_truth_cn_data_bulk,
+#     n_simulations_sc = N_data_sc,
+#     n_simulations_bulk = N_data_bulk
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+# )
 # ==================DEFINE LIST OF STATISTICS FOR FITTING EACH PARAMETER
 list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
 colnames(list_targets) <- c("Variable", list_targets_library)
@@ -485,18 +486,18 @@ for (row in 2:nrow(list_targets)) {
     list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
 }
 # =============================COMPUTE STATISTICS FOR SIMULATION LIBRARY
-library_statistics(
-    library_name = model_name,
-    model_variables = model_variables,
-    list_parameters = list_parameters,
-    list_targets_library = list_targets_library,
-    ABC_simcount_start = 0,
-    ABC_simcount = ABC_simcount,
-    cn_data_sc = ground_truth_cn_data_sc,
-    cn_data_bulk = ground_truth_cn_data_bulk,
-    arm_level = TRUE,
-    cn_table = cn_table
-)
+# library_statistics(
+#     library_name = model_name,
+#     model_variables = model_variables,
+#     list_parameters = list_parameters,
+#     list_targets_library = list_targets_library,
+#     ABC_simcount_start = 0,
+#     ABC_simcount = ABC_simcount,
+#     cn_data_sc = ground_truth_cn_data_sc,
+#     cn_data_bulk = ground_truth_cn_data_bulk,
+#     arm_level = TRUE,
+#     cn_table = cn_table
+# )
 # =========================GET FITTING STATISTICS FROM GROUND-TRUTH DATA
 DLP_stats <- get_statistics(
     simulations_statistics_sc = ground_truth_statistics_sc,
@@ -515,17 +516,17 @@ fitting_parameters(
     parameters_truth = parameters_truth,
     list_parameters = list_parameters,
     list_targets_by_parameter = list_targets,
-    plot_prior_uniform = TRUE
+    plot_ABC_prior_as_uniform = TRUE
 )
 # ===================PLOT CORRELATION BETWEEN INFERENCE AND GROUND TRUTH
 # ===================================================FOR SELECTION RATES
 parameters_inferred <- read.csv("parameters_output_values.csv", header = TRUE)
 parameters_inferred <- parameters_inferred[which(parameters_inferred$Type == "Arm_selection_rate"), ]
-plot_correlation(
+plot_sel_correlation(
     inference_result = parameters_inferred,
+    library_name = model_name,
     value_x = "Ground_truth",
     value_y = "Mean",
     error_y = "Sd",
     linear_regression = TRUE
 )
-# ===========PLOT CORRELATION BETWEEN EACH PARAMETER AND EACH STATISTICS

@@ -233,3 +233,30 @@ densityPlot_df <- function(object,
 
     return(df_plot)
 }
+
+#' @export
+plot_sel_correlation <- function(inference_result = parameters_inferred,
+                                 library_name = library_name,
+                                 value_x = "Ground_truth",
+                                 value_y = NULL,
+                                 error_y = "Sd",
+                                 linear_regression = FALSE) {
+    df <- parameters_inferred
+    xvalue <- df[[value_x]]
+    yvalue <- df[[value_y]]
+    error <- df[[error_y]]
+    corr_plot <- ggplot(df, mapping = aes(x = xvalue, y = yvalue)) +
+        geom_errorbar(aes(ymin = yvalue - error, ymax = yvalue + error), width = 0.01, size = 1, colour = "#ffbaab") +
+        geom_point(colour = "#839ade", size = 3) +
+        xlim(0.89, 1.21) +
+        ylim(0.89, 1.21) +
+        xlab(value_x) +
+        ylab(value_y) +
+        theme(aspect.ratio = 1)
+    if (linear_regression) {
+        corr_plot <- corr_plot + stat_smooth(method = "lm")
+    }
+    filename <- paste0(library_name, "_ABC_corr.jpeg")
+    jpeg(filename, width = 15, height = 15)
+    return(corr_plot)
+}
