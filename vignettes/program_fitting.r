@@ -18,10 +18,10 @@
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_4000"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_4000"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
 # R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
 # R_libPaths <- ""
@@ -31,9 +31,9 @@ R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -108,14 +108,12 @@ arm_end <- c(
     model_variables$cn_info$Bin_count
 )
 arm_s <- rep(1, length(arm_id))
+set.seed(1)
 for (i in 1:length(arm_s)) {
     if (grepl("q$", arm_id[i])) {
         arm_s[i] <- 1
-    }
-    if (grepl("p$", arm_id[i])) {
-        set.seed(i)
+    } else if (grepl("p$", arm_id[i])) {
         arm_s[i] <- runif(1, 1, 1.2)
-        set.seed(i)
         if (runif(1) < 0.5) arm_s[i] <- 1 / arm_s[i]
     }
 }
@@ -132,16 +130,16 @@ model_name <- "Fitting_whole_chroms"
 # model_name <- "Chromosome_missegregation"
 model_variables <- CHECK_model_variables(model_variables)
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
-list_parameters <- data.frame(matrix(ncol = 5, nrow = 0))
-colnames(list_parameters) <- c("Variable", "Chromosome", "Type", "Lower_bound", "Upper_bound")
+list_parameters <- data.frame(matrix(ncol = 6, nrow = 0))
+colnames(list_parameters) <- c("Variable", "Title", "Chromosome", "Type", "Lower_bound", "Upper_bound")
 list_parameters[nrow(list_parameters) + 1, ] <- c(
-    "10^:prob_CN_missegregation", NA, "CNA_probability",
+    "10^:prob_CN_missegregation", "log10(prob_misseg)", NA, "CNA_probability",
     bound_ABC_prob_CN_missegregation_left, bound_ABC_prob_CN_missegregation_right
 )
 for (i in 1:nrow(model_variables$chromosome_arm_library)) {
     if (grepl("p$", model_variables$chromosome_arm_library$Arm_ID[i])) {
         list_parameters[nrow(list_parameters) + 1, ] <- c(
-            model_variables$chromosome_arm_library$Arm_ID[i], model_variables$chromosome_arm_library$Chromosome[i], "Arm_selection_rate",
+            model_variables$chromosome_arm_library$Arm_ID[i], paste0("Sel. rate(chrom ", model_variables$chromosome_arm_library$Chromosome[i], ")"), model_variables$chromosome_arm_library$Chromosome[i], "Arm_selection_rate",
             1 / bound_ABC_arm_s, bound_ABC_arm_s
         )
     }
@@ -498,6 +496,8 @@ for (row in 2:nrow(list_targets)) {
 #     arm_level = TRUE,
 #     cn_table = cn_table
 # )
+# ==================PLOT CORRELATION OF STATISTICS IN SIMULATION LIBRARY
+plot_statistics_correlation()
 # =========================GET FITTING STATISTICS FROM GROUND-TRUTH DATA
 DLP_stats <- get_statistics(
     simulations_statistics_sc = ground_truth_statistics_sc,
@@ -522,11 +522,15 @@ fitting_parameters(
 # ===================================================FOR SELECTION RATES
 parameters_inferred <- read.csv("parameters_output_values.csv", header = TRUE)
 parameters_inferred <- parameters_inferred[which(parameters_inferred$Type == "Arm_selection_rate"), ]
-plot_sel_correlation(
+plot_ABC_correlation(
     inference_result = parameters_inferred,
     library_name = model_name,
     value_x = "Ground_truth",
     value_y = "Mean",
     error_y = "Sd",
+    title_x = "Ground truth",
+    title_y = "Posterior mean",
+    color_data = "red",
+    color_regression = "blue",
     linear_regression = TRUE
 )

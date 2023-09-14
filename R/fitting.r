@@ -1129,7 +1129,7 @@ fitting_parameters <- function(library_name,
         if (row == 0) row <- 7
         col <- ceiling(id / 7)
         layout[row, col] <- id
-        gs[[id]] <- plot_parameter_ABC(
+        gs[[id]] <- plot_ABC_inference(
             model_rf, mini_obs, data_rf,
             protocol = "arm",
             ###
@@ -1138,7 +1138,7 @@ fitting_parameters <- function(library_name,
             highlight_linetype = c("solid", "dashed", "dashed", "dashed"),
             ###
             fontsize = 20,
-            main = para_ID,
+            main = list_parameters$Title[para],
             plot_ABC_prior_as_uniform = plot_ABC_prior_as_uniform,
             para_lower_bound = as.numeric(list_parameters$Lower_bound[para]),
             para_upper_bound = as.numeric(list_parameters$Upper_bound[para])

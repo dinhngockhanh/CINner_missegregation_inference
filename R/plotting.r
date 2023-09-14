@@ -1,81 +1,3 @@
-plot_parameter_ABC <- function(object,
-                               obs,
-                               training,
-                               add = TRUE,
-                               main = "Posterior density",
-                               protocol,
-                               color_prior = "lightblue",
-                               color_posterior = "darkblue",
-                               highlight_values = NULL,
-                               highlight_colors = NULL,
-                               highlight_linetype = NULL,
-                               log = "",
-                               xlim = NULL,
-                               ylim = NULL,
-                               xlab = NULL,
-                               ylab = NULL,
-                               paral = FALSE,
-                               fontsize = 50,
-                               plot_ABC_prior_as_uniform = FALSE,
-                               para_lower_bound = NULL,
-                               para_upper_bound = NULL,
-                               ncores = if (paral) max(detectCores() - 1, 1) else 1, ...) {
-    df_plot <- densityPlot_df(
-        object,
-        obs,
-        training,
-        add,
-        main,
-        color_prior,
-        chosen_para,
-        color_posterior,
-        protocol,
-        color_vline,
-        log,
-        xlim,
-        ylim,
-        xlab,
-        ylab,
-        paral,
-        ncores
-    )
-
-    if (plot_ABC_prior_as_uniform) {
-        p_plot <- ggplot(df_plot) +
-            annotate("rect",
-                xmin = para_lower_bound, xmax = para_upper_bound,
-                ymin = 0, ymax = 1 / (para_upper_bound - para_lower_bound),
-                color = color_prior, fill = color_prior, alpha = 0.3
-            )
-    } else {
-        p_plot <- ggplot(df_plot) +
-            geom_area(aes(x = x, y = y_prior),
-                color = color_prior, fill = color_prior, alpha = 0.3
-            )
-    }
-    p_plot <- p_plot +
-        geom_area(aes(x = x, y = y_posterior), color = color_posterior, fill = color_posterior, alpha = 0.3) +
-        # geom_density(aes(x = dist_raw, kernel = "gaussian", weight = weight_prior), color = color_prior, fill = color_prior, alpha = 0.3) +
-        # geom_density(aes(x = dist_raw, kernel = "gaussian", weight = weight_posterior), color = color_posterior, fill = color_posterior, alpha = 0.3) +
-        xlab("") +
-        ylab("") +
-        ggtitle(main) +
-        theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
-        theme(text = element_text(size = fontsize)) +
-        scale_x_continuous(expand = c(0, 0)) +
-        scale_y_continuous(expand = c(0, 0))
-    if (!is.null(highlight_values)) {
-        p_plot <- p_plot +
-            geom_vline(
-                xintercept = highlight_values,
-                colour = highlight_colors,
-                linetype = highlight_linetype,
-                size = 2
-            )
-    }
-    return(p_plot)
-}
-
 densityPlot_df <- function(object,
                            obs,
                            training,
@@ -234,29 +156,120 @@ densityPlot_df <- function(object,
     return(df_plot)
 }
 
+plot_ABC_inference <- function(object,
+                               obs,
+                               training,
+                               add = TRUE,
+                               main = "Posterior density",
+                               protocol,
+                               color_prior = "lightblue",
+                               color_posterior = "darkblue",
+                               highlight_values = NULL,
+                               highlight_colors = NULL,
+                               highlight_linetype = NULL,
+                               log = "",
+                               xlim = NULL,
+                               ylim = NULL,
+                               xlab = NULL,
+                               ylab = NULL,
+                               paral = FALSE,
+                               fontsize = 50,
+                               plot_ABC_prior_as_uniform = FALSE,
+                               para_lower_bound = NULL,
+                               para_upper_bound = NULL,
+                               ncores = if (paral) max(detectCores() - 1, 1) else 1, ...) {
+    df_plot <- densityPlot_df(
+        object,
+        obs,
+        training,
+        add,
+        main,
+        color_prior,
+        chosen_para,
+        color_posterior,
+        protocol,
+        color_vline,
+        log,
+        xlim,
+        ylim,
+        xlab,
+        ylab,
+        paral,
+        ncores
+    )
+
+    if (plot_ABC_prior_as_uniform) {
+        p_plot <- ggplot(df_plot) +
+            annotate("rect",
+                xmin = para_lower_bound, xmax = para_upper_bound,
+                ymin = 0, ymax = 1 / (para_upper_bound - para_lower_bound),
+                color = color_prior, fill = color_prior, alpha = 0.3
+            )
+    } else {
+        p_plot <- ggplot(df_plot) +
+            geom_area(aes(x = x, y = y_prior),
+                color = color_prior, fill = color_prior, alpha = 0.3
+            )
+    }
+    p_plot <- p_plot +
+        geom_area(aes(x = x, y = y_posterior), color = color_posterior, fill = color_posterior, alpha = 0.3) +
+        # geom_density(aes(x = dist_raw, kernel = "gaussian", weight = weight_prior), color = color_prior, fill = color_prior, alpha = 0.3) +
+        # geom_density(aes(x = dist_raw, kernel = "gaussian", weight = weight_posterior), color = color_posterior, fill = color_posterior, alpha = 0.3) +
+        xlab("") +
+        ylab("") +
+        ggtitle(main) +
+        theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
+        theme(text = element_text(size = fontsize)) +
+        scale_x_continuous(expand = c(0, 0)) +
+        scale_y_continuous(expand = c(0, 0))
+    if (!is.null(highlight_values)) {
+        p_plot <- p_plot +
+            geom_vline(
+                xintercept = highlight_values,
+                colour = highlight_colors,
+                linetype = highlight_linetype,
+                size = 2
+            )
+    }
+    return(p_plot)
+}
+
 #' @export
-plot_sel_correlation <- function(inference_result = parameters_inferred,
+plot_statistics_correlation <- function() {
+
+}
+
+#' @export
+plot_ABC_correlation <- function(inference_result = parameters_inferred,
                                  library_name = library_name,
                                  value_x = "Ground_truth",
                                  value_y = NULL,
+                                 title_x = "",
+                                 title_y = "",
                                  error_y = "Sd",
+                                 color_data = "red",
+                                 color_regression = "blue",
+                                 fontsize = 50,
                                  linear_regression = FALSE) {
     df <- parameters_inferred
     xvalue <- df[[value_x]]
     yvalue <- df[[value_y]]
     error <- df[[error_y]]
     corr_plot <- ggplot(df, mapping = aes(x = xvalue, y = yvalue)) +
-        geom_errorbar(aes(ymin = yvalue - error, ymax = yvalue + error), width = 0.01, size = 1, colour = "#ffbaab") +
-        geom_point(colour = "#839ade", size = 3) +
+        geom_errorbar(aes(ymin = yvalue - error, ymax = yvalue + error), width = 0.01, size = 1, colour = color_data) +
+        geom_point(colour = color_data, size = 3) +
         xlim(0.89, 1.21) +
         ylim(0.89, 1.21) +
-        xlab(value_x) +
-        ylab(value_y) +
+        xlab(title_x) +
+        ylab(title_y) +
+        theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
+        theme(text = element_text(size = fontsize)) +
         theme(aspect.ratio = 1)
     if (linear_regression) {
-        corr_plot <- corr_plot + stat_smooth(method = "lm")
+        corr_plot <- corr_plot + stat_smooth(method = "lm", fill = color_regression, colour = color_regression)
     }
-    filename <- paste0(library_name, "_ABC_corr.jpeg")
-    jpeg(filename, width = 15, height = 15)
-    return(corr_plot)
+    filename <- paste0(library_name, "_ABC_correlation.jpeg")
+    jpeg(filename, width = 1500, height = 1500)
+    print(corr_plot)
+    dev.off()
 }
