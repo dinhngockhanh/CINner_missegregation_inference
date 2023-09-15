@@ -241,7 +241,7 @@ plot_statistics_correlation <- function() {
 
 #' @export
 plot_ABC_correlation <- function(inference_result = parameters_inferred,
-                                 library_name = library_name,
+                                 plot_name = "ABC_correlation_plot.jpg",
                                  value_x = "Ground_truth",
                                  value_y = NULL,
                                  title_x = "",
@@ -250,7 +250,6 @@ plot_ABC_correlation <- function(inference_result = parameters_inferred,
                                  error_y = NULL,
                                  title_plot = "",
                                  color_data = "red",
-                                 color_regression = "blue",
                                  fontsize = 50,
                                  plot_diagonal = FALSE) {
     library(ggplot2)
@@ -293,8 +292,7 @@ plot_ABC_correlation <- function(inference_result = parameters_inferred,
     if (plot_diagonal) {
         corr_plot <- corr_plot + geom_abline(intercept = 0)
     }
-    filename <- paste0(library_name, "_ABC_correlation.jpeg")
-    jpeg(filename, width = 1500, height = 1500)
+    jpeg(plot_name, width = 1500, height = 1500)
     print(corr_plot)
     dev.off()
 }

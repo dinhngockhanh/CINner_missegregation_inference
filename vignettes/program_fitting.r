@@ -524,14 +524,11 @@ parameters_inferred <- read.csv("parameters_output_values.csv", header = TRUE)
 parameters_inferred <- parameters_inferred[which(parameters_inferred$Type == "Arm_selection_rate"), ]
 plot_ABC_correlation(
     inference_result = parameters_inferred,
-    library_name = model_name,
-    value_x = "Ground_truth",
-    value_y = "Mean",
-    error_y = "Sd",
-    title_x = "Ground truth",
-    title_y = "Posterior mean +/- std",
+    plot_name = paste0(model_name, "_ABC_correlation.jpeg"),
     title_plot = "Inferred selection rates against ground truth",
+    value_x = "Ground_truth", title_x = "Ground truth",
+    value_y = "Mean", title_y = "Posterior mean +/- std",
+    error_y = "Sd",
     color_data = "red",
-    color_regression = "blue",
     plot_diagonal = TRUE
 )
