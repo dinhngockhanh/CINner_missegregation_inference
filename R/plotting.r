@@ -246,27 +246,52 @@ plot_ABC_correlation <- function(inference_result = parameters_inferred,
                                  value_y = NULL,
                                  title_x = "",
                                  title_y = "",
-                                 error_y = "Sd",
+                                 error_x = NULL,
+                                 error_y = NULL,
+                                 title_plot = "",
                                  color_data = "red",
                                  color_regression = "blue",
                                  fontsize = 50,
-                                 linear_regression = FALSE) {
-    df <- parameters_inferred
-    xvalue <- df[[value_x]]
-    yvalue <- df[[value_y]]
-    error <- df[[error_y]]
-    corr_plot <- ggplot(df, mapping = aes(x = xvalue, y = yvalue)) +
-        geom_errorbar(aes(ymin = yvalue - error, ymax = yvalue + error), width = 0.01, size = 1, colour = color_data) +
-        geom_point(colour = color_data, size = 3) +
-        xlim(0.89, 1.21) +
-        ylim(0.89, 1.21) +
+                                 plot_diagonal = FALSE) {
+    library(ggplot2)
+    if (!is.null(error_y)) {
+        parameters_inferred$value_y_min <- parameters_inferred[[value_y]] - parameters_inferred[[error_y]]
+        parameters_inferred$value_y_max <- parameters_inferred[[value_y]] + parameters_inferred[[error_y]]
+        y_min <- min(parameters_inferred$value_y_min)
+        y_max <- max(parameters_inferred$value_y_max)
+    } else {
+        y_min <- min(parameters_inferred[[value_y]])
+        y_max <- max(parameters_inferred[[value_y]])
+    }
+    if (!is.null(error_x)) {
+        parameters_inferred$value_x_min <- parameters_inferred[[value_x]] - parameters_inferred[[error_x]]
+        parameters_inferred$value_x_max <- parameters_inferred[[value_x]] + parameters_inferred[[error_x]]
+        x_min <- min(parameters_inferred$value_x_min)
+        x_max <- max(parameters_inferred$value_x_max)
+    } else {
+        x_min <- min(parameters_inferred[[value_x]])
+        x_max <- max(parameters_inferred[[value_x]])
+    }
+    corr_plot <- ggplot(parameters_inferred, mapping = aes_string(x = value_x, y = value_y)) +
+        geom_point(colour = color_data, size = 10) +
+        xlim(min(x_min, y_min), max(x_max, y_max)) +
+        ylim(min(x_min, y_min), max(x_max, y_max)) +
         xlab(title_x) +
         ylab(title_y) +
+        ggtitle(title_plot) +
         theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
         theme(text = element_text(size = fontsize)) +
         theme(aspect.ratio = 1)
-    if (linear_regression) {
-        corr_plot <- corr_plot + stat_smooth(method = "lm", fill = color_regression, colour = color_regression)
+    if (!is.null(error_x)) {
+        corr_plot <- corr_plot +
+            geom_errorbar(aes(ymin = value_x_min, ymax = value_x_max), width = 0, size = 1, colour = color_data)
+    }
+    if (!is.null(error_y)) {
+        corr_plot <- corr_plot +
+            geom_errorbar(aes(ymin = value_y_min, ymax = value_y_max), width = 0, size = 1, colour = color_data)
+    }
+    if (plot_diagonal) {
+        corr_plot <- corr_plot + geom_abline(intercept = 0)
     }
     filename <- paste0(library_name, "_ABC_correlation.jpeg")
     jpeg(filename, width = 1500, height = 1500)
