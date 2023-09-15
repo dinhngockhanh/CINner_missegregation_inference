@@ -1,0 +1,24 @@
+"","Variable","Title","Chromosome","Type","Lower_bound","Upper_bound","Value"
+"1","10^:prob_CN_missegregation","log10(prob_misseg)",NA,"CNA_probability","-5","-3",-3.69897000433602
+"2","1p","Sel. rate(chrom 1)","1","Arm_selection_rate","0.833333333333333","1.2",0.974135849293528
+"3","2p","Sel. rate(chrom 2)","2","Arm_selection_rate","0.833333333333333","1.2",1.05728533633519
+"4","3p","Sel. rate(chrom 3)","3","Arm_selection_rate","0.833333333333333","1.2",1.02016819310375
+"5","4p","Sel. rate(chrom 4)","4","Arm_selection_rate","0.833333333333333","1.2",1.09446752686054
+"6","5p","Sel. rate(chrom 5)","5","Arm_selection_rate","0.833333333333333","1.2",0.940812184223388
+"7","6p","Sel. rate(chrom 6)","6","Arm_selection_rate","0.833333333333333","1.2",0.979818235545493
+"8","7p","Sel. rate(chrom 7)","7","Arm_selection_rate","0.833333333333333","1.2",0.93571429045156
+"9","8p","Sel. rate(chrom 8)","8","Arm_selection_rate","0.833333333333333","1.2",0.928518778505964
+"10","9p","Sel. rate(chrom 9)","9","Arm_selection_rate","0.833333333333333","1.2",1.07176185082644
+"11","10p","Sel. rate(chrom 10)","10","Arm_selection_rate","0.833333333333333","1.2",1.03800351794343
+"12","11p","Sel. rate(chrom 11)","11","Arm_selection_rate","0.833333333333333","1.2",0.914519393861029
+"13","12p","Sel. rate(chrom 12)","12","Arm_selection_rate","0.833333333333333","1.2",0.938819590198044
+"14","13p","Sel. rate(chrom 13)","13","Arm_selection_rate","0.833333333333333","1.2",0.973973417212951
+"15","14p","Sel. rate(chrom 14)","14","Arm_selection_rate","0.833333333333333","1.2",0.998662757296642
+"16","15p","Sel. rate(chrom 15)","15","Arm_selection_rate","0.833333333333333","1.2",0.919989366941114
+"17","16p","Sel. rate(chrom 16)","16","Arm_selection_rate","0.833333333333333","1.2",1.0482080115471
+"18","17p","Sel. rate(chrom 17)","17","Arm_selection_rate","0.833333333333333","1.2",0.952967135440031
+"19","18p","Sel. rate(chrom 18)","18","Arm_selection_rate","0.833333333333333","1.2",1.0827373318607
+"20","19p","Sel. rate(chrom 19)","19","Arm_selection_rate","0.833333333333333","1.2",0.926420028554649
+"21","20p","Sel. rate(chrom 20)","20","Arm_selection_rate","0.833333333333333","1.2",0.932513012549312
+"22","21p","Sel. rate(chrom 21)","21","Arm_selection_rate","0.833333333333333","1.2",1.08209462941159
+"23","22p","Sel. rate(chrom 22)","22","Arm_selection_rate","0.833333333333333","1.2",1.07829327622894
