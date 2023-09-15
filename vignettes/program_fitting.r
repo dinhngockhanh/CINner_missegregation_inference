@@ -524,8 +524,7 @@ parameters_inferred <- read.csv("parameters_output_values.csv", header = TRUE)
 parameters_inferred <- parameters_inferred[which(parameters_inferred$Type == "Arm_selection_rate"), ]
 plot_ABC_correlation(
     inference_result = parameters_inferred,
-    # library_name = model_name,
-    library_name = "TEST",
+    library_name = model_name,
     value_x = "Ground_truth",
     value_y = "Mean",
     error_y = "Sd",
