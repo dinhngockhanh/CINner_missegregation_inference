@@ -14,12 +14,12 @@
 # ABC_input <- ABC_input_all
 # save(ABC_input, file = filename)
 
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
 R_workplace <- getwd()
 R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/simulation/DLP experiment_ch1&2"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_4000"
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
@@ -48,16 +48,13 @@ files_sources <- list.files(pattern = "*.r$")
 sapply(files_sources, source)
 setwd(R_workplace)
 # devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
-
-
-
 # ==================================================IMPORTANT PARAMETERS
 #   Number of single-cell samples in ground-truth data & ABC simulations
 N_data_sc <- 50
 #   Number of bulk samples in ground-truth data & ABC simulations
 N_data_bulk <- 100
 #   Bounds for ground-truth selection rates (1/r -> r)
-bound_ground_truth_arm_s <- 1.2
+bound_ground_truth_arm_s <- 1.1
 #   Bounds for prior distribution of log10(prob_CN_missegregation)
 bound_ABC_prob_CN_missegregation_left <- -5
 bound_ABC_prob_CN_missegregation_right <- -3
@@ -111,14 +108,12 @@ arm_end <- c(
     model_variables$cn_info$Bin_count
 )
 arm_s <- rep(1, length(arm_id))
+set.seed(1)
 for (i in 1:length(arm_s)) {
     if (grepl("q$", arm_id[i])) {
         arm_s[i] <- 1
-    }
-    if (grepl("p$", arm_id[i])) {
-        set.seed(i)
-        arm_s[i] <- runif(1, 1, 1.2)
-        set.seed(i)
+    } else if (grepl("p$", arm_id[i])) {
+        arm_s[i] <- runif(1, 1, 1.1)
         if (runif(1) < 0.5) arm_s[i] <- 1 / arm_s[i]
     }
 }
@@ -132,18 +127,19 @@ drivers <- list()
 model_variables <- BUILD_initial_population(model_variables = model_variables, cell_count = cell_count, CN_matrix = CN_matrix, drivers = drivers)
 #---Save model variables
 model_name <- "Fitting_whole_chroms"
+# model_name <- "Chromosome_missegregation"
 model_variables <- CHECK_model_variables(model_variables)
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
-list_parameters <- data.frame(matrix(ncol = 5, nrow = 0))
-colnames(list_parameters) <- c("Variable", "Chromosome", "Type", "Lower_bound", "Upper_bound")
+list_parameters <- data.frame(matrix(ncol = 6, nrow = 0))
+colnames(list_parameters) <- c("Variable", "Title", "Chromosome", "Type", "Lower_bound", "Upper_bound")
 list_parameters[nrow(list_parameters) + 1, ] <- c(
-    "10^:prob_CN_missegregation", NA, "CNA_probability",
+    "10^:prob_CN_missegregation", "log10(prob_misseg)", NA, "CNA_probability",
     bound_ABC_prob_CN_missegregation_left, bound_ABC_prob_CN_missegregation_right
 )
 for (i in 1:nrow(model_variables$chromosome_arm_library)) {
     if (grepl("p$", model_variables$chromosome_arm_library$Arm_ID[i])) {
         list_parameters[nrow(list_parameters) + 1, ] <- c(
-            model_variables$chromosome_arm_library$Arm_ID[i], model_variables$chromosome_arm_library$Chromosome[i], "Arm_selection_rate",
+            model_variables$chromosome_arm_library$Arm_ID[i], paste0("Sel. rate(chrom ", model_variables$chromosome_arm_library$Chromosome[i], ")"), model_variables$chromosome_arm_library$Chromosome[i], "Arm_selection_rate",
             1 / bound_ABC_arm_s, bound_ABC_arm_s
         )
     }
@@ -241,7 +237,7 @@ simulator_full_program(
     ),
     R_libPaths = R_libPaths
 )
-#---Print out ground-truth parameters
+# ---Print out ground-truth parameters
 list_parameters_ground_truth <- list_parameters
 list_parameters_ground_truth$Value <- 0
 for (row in 1:nrow(list_parameters)) {
@@ -270,9 +266,9 @@ for (row in 1:nrow(list_parameters)) {
     list_parameters_ground_truth$Value[row] <- parameter_value
 }
 write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
-# ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
-#---Get single-cell statistics & CN profiles
-#   Get statistics & clonal CN profiles for each single-cell sample
+# # ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
+# #---Get single-cell statistics & CN profiles
+# #   Get statistics & clonal CN profiles for each single-cell sample
 # list_targets_library_sc <- list_targets_library[grepl("data=sc", list_targets_library)]
 # cat(paste0("Loading ", N_data_sc, " single-cell DNA-seq data sets...\n"))
 # n_cores <- max(detectCores() - 1, 1)
@@ -376,32 +372,32 @@ write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 #     names(ground_truth_statistics_bulk) <- names(ls_cn_bulk_ground_truth[[1]][[2]])
 # }
 # # ===============================================MAKE SIMULATION LIBRARY
-# ABC_simcount <- 10
-# library_simulations(
-#     library_name = model_name,
-#     model_variables = model_variables,
-#     list_parameters = list_parameters,
-#     list_targets_library = list_targets_library,
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-#     ABC_simcount_start = 0,
-#     ABC_simcount = ABC_simcount,
-#     arm_level = TRUE,
-#     cn_table = cn_table,
-#     cn_data_sc = ground_truth_cn_data_sc,
-#     cn_data_bulk = ground_truth_cn_data_bulk,
-#     n_simulations_sc = N_data_sc,
-#     n_simulations_bulk = N_data_bulk
-#     ####
-#     ####
-#     ####
-#     ####
-#     ####
-# )
-# ==================DEFINE LIST OF STATISTICS FOR FITTING EACH PARAMETER
+# # ABC_simcount <- 500
+# # library_simulations(
+# #     library_name = model_name,
+# #     model_variables = model_variables,
+# #     list_parameters = list_parameters,
+# #     list_targets_library = list_targets_library,
+# #     ####
+# #     ####
+# #     ####
+# #     ####
+# #     ####
+# #     ABC_simcount_start = 0,
+# #     ABC_simcount = ABC_simcount,
+# #     arm_level = TRUE,
+# #     cn_table = cn_table,
+# #     cn_data_sc = ground_truth_cn_data_sc,
+# #     cn_data_bulk = ground_truth_cn_data_bulk,
+# #     n_simulations_sc = N_data_sc,
+# #     n_simulations_bulk = N_data_bulk
+# #     ####
+# #     ####
+# #     ####
+# #     ####
+# #     ####
+# # )
+# # ==================DEFINE LIST OF STATISTICS FOR FITTING EACH PARAMETER
 # list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
 # colnames(list_targets) <- c("Variable", list_targets_library)
 # list_targets[, 1] <- list_parameters$Variable
@@ -487,35 +483,54 @@ write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 # for (row in 2:nrow(list_targets)) {
 #     list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
 # }
-# =============================COMPUTE STATISTICS FOR SIMULATION LIBRARY
-# library_statistics(
-#     library_name = model_name,
-#     model_variables = model_variables,
-#     list_parameters = list_parameters,
-#     list_targets_library = list_targets_library,
-#     ABC_simcount_start = 0,
-#     ABC_simcount = ABC_simcount,
-#     cn_data_sc = ground_truth_cn_data_sc,
-#     cn_data_bulk = ground_truth_cn_data_bulk,
-#     arm_level = TRUE,
-#     cn_table = cn_table
-# )
+# # =============================COMPUTE STATISTICS FOR SIMULATION LIBRARY
+# # library_statistics(
+# #     library_name = model_name,
+# #     model_variables = model_variables,
+# #     list_parameters = list_parameters,
+# #     list_targets_library = list_targets_library,
+# #     ABC_simcount_start = 0,
+# #     ABC_simcount = ABC_simcount,
+# #     cn_data_sc = ground_truth_cn_data_sc,
+# #     cn_data_bulk = ground_truth_cn_data_bulk,
+# #     arm_level = TRUE,
+# #     cn_table = cn_table
+# # )
+# # ==================PLOT CORRELATION OF STATISTICS IN SIMULATION LIBRARY
+# # plot_statistics_correlation()
 # # =========================GET FITTING STATISTICS FROM GROUND-TRUTH DATA
-# DLP_stats <- get_statistics(
-#     simulations_statistics_sc = ground_truth_statistics_sc,
-#     simulations_statistics_bulk = ground_truth_statistics_bulk,
-#     list_targets = list_targets_library,
-#     cn_data_sc = ground_truth_cn_data_sc,
-#     cn_data_bulk = ground_truth_cn_data_bulk,
-#     arm_level = TRUE,
-#     cn_table = cn_table
-# )
+# # DLP_stats <- get_statistics(
+# #     simulations_statistics_sc = ground_truth_statistics_sc,
+# #     simulations_statistics_bulk = ground_truth_statistics_bulk,
+# #     list_targets = list_targets_library,
+# #     cn_data_sc = ground_truth_cn_data_sc,
+# #     cn_data_bulk = ground_truth_cn_data_bulk,
+# #     arm_level = TRUE,
+# #     cn_table = cn_table
+# # )
 # # ==============================================FIT PARAMETERS USING ABC
-# parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
-# fitting_parameters(
-#     library_name = model_name,
-#     copynumber_DATA = DLP_stats,
-#     parameters_truth = parameters_truth,
-#     list_parameters = list_parameters,
-#     list_targets_by_parameter = list_targets
-# )
+# # parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
+# # fitting_parameters(
+# #     library_name = model_name,
+# #     copynumber_DATA = DLP_stats,
+# #     parameters_truth = parameters_truth,
+# #     list_parameters = list_parameters,
+# #     list_targets_by_parameter = list_targets,
+# #     plot_ABC_prior_as_uniform = TRUE
+# # )
+# # ===================PLOT CORRELATION BETWEEN INFERENCE AND GROUND TRUTH
+# # ===================================================FOR SELECTION RATES
+# # parameters_inferred <- read.csv("parameters_output_values.csv", header = TRUE)
+# # parameters_inferred <- parameters_inferred[which(parameters_inferred$Type == "Arm_selection_rate"), ]
+# # plot_ABC_correlation(
+# #     inference_result = parameters_inferred,
+# #     library_name = model_name,
+# #     value_x = "Ground_truth",
+# #     value_y = "Mean",
+# #     error_y = "Sd",
+# #     title_x = "Ground truth",
+# #     title_y = "Posterior mean",
+# #     color_data = "red",
+# #     color_regression = "blue",
+# #     linear_regression = TRUE
+# # )

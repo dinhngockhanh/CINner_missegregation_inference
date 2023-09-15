@@ -19,9 +19,9 @@
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_4000"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_1point1"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
 # R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
 # R_libPaths <- ""
@@ -31,9 +31,9 @@
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+# R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 
 
 
@@ -54,7 +54,7 @@ N_data_sc <- 50
 #   Number of bulk samples in ground-truth data & ABC simulations
 N_data_bulk <- 100
 #   Bounds for ground-truth selection rates (1/r -> r)
-bound_ground_truth_arm_s <- 1.2
+bound_ground_truth_arm_s <- 1.1
 #   Bounds for prior distribution of log10(prob_CN_missegregation)
 bound_ABC_prob_CN_missegregation_left <- -5
 bound_ABC_prob_CN_missegregation_right <- -3
@@ -113,7 +113,7 @@ for (i in 1:length(arm_s)) {
     if (grepl("q$", arm_id[i])) {
         arm_s[i] <- 1
     } else if (grepl("p$", arm_id[i])) {
-        arm_s[i] <- runif(1, 1, 1.2)
+        arm_s[i] <- runif(1, 1, 1.1)
         if (runif(1) < 0.5) arm_s[i] <- 1 / arm_s[i]
     }
 }
@@ -207,7 +207,7 @@ vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 # ================================================MAKE GROUND-TRUTH DATA
 #---Make single-cell ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_sc, " single-cell simulations...\n"))
+# cat(paste0("\n\n\nMaking ", N_data_sc, " single-cell simulations...\n"))
 # simulator_full_program(
 #     model = model_variables, model_prefix = paste0(model_name, "_sc"),
 #     n_simulations = N_data_sc,
@@ -497,7 +497,7 @@ for (row in 2:nrow(list_targets)) {
 #     cn_table = cn_table
 # )
 # ==================PLOT CORRELATION OF STATISTICS IN SIMULATION LIBRARY
-plot_statistics_correlation()
+# plot_statistics_correlation()
 # =========================GET FITTING STATISTICS FROM GROUND-TRUTH DATA
 DLP_stats <- get_statistics(
     simulations_statistics_sc = ground_truth_statistics_sc,
