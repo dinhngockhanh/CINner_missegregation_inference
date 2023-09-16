@@ -251,8 +251,10 @@ plot_ABC_correlation <- function(inference_result = parameters_inferred,
                                  title_plot = "",
                                  color_data = "red",
                                  fontsize = 50,
-                                 plot_diagonal = FALSE) {
+                                 plot_diagonal = FALSE,
+                                 plot_RRMSE = FALSE) {
     library(ggplot2)
+    library(ehaGoF)
     if (!is.null(error_y)) {
         parameters_inferred$value_y_min <- parameters_inferred[[value_y]] - parameters_inferred[[error_y]]
         parameters_inferred$value_y_max <- parameters_inferred[[value_y]] + parameters_inferred[[error_y]]
@@ -291,6 +293,20 @@ plot_ABC_correlation <- function(inference_result = parameters_inferred,
     }
     if (plot_diagonal) {
         corr_plot <- corr_plot + geom_abline(intercept = 0)
+    }
+    if (plot_RRMSE) {
+        actual <- parameters_inferred[[value_x]]
+        predicted <- parameters_inferred[[value_y]]
+        RRMSE <- gofRRMSE(actual, predicted, dgt = 3)
+        text_x <- min(x_min, y_min) + 0.05 * (max(x_max, y_max) - min(x_min, y_min))
+        text_y <- min(x_min, y_min) + 0.95 * (max(x_max, y_max) - min(x_min, y_min))
+        corr_plot <- corr_plot +
+            annotate(
+                "text",
+                x = text_x, y = text_y,
+                label = paste("RRMSE=", RRMSE),
+                size = unit(fontsize / 2, "pt"), color = color_data, hjust = 0
+            )
     }
     jpeg(plot_name, width = 1500, height = 1500)
     print(corr_plot)
