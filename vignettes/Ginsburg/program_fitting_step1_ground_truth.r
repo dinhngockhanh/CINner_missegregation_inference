@@ -19,7 +19,7 @@ R_workplace <- getwd()
 R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_4000"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_1point1_8500"
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
@@ -139,7 +139,7 @@ list_parameters[nrow(list_parameters) + 1, ] <- c(
 for (i in 1:nrow(model_variables$chromosome_arm_library)) {
     if (grepl("p$", model_variables$chromosome_arm_library$Arm_ID[i])) {
         list_parameters[nrow(list_parameters) + 1, ] <- c(
-            model_variables$chromosome_arm_library$Arm_ID[i], paste0("Sel. rate(chrom ", model_variables$chromosome_arm_library$Chromosome[i], ")"), model_variables$chromosome_arm_library$Chromosome[i], "Arm_selection_rate",
+            model_variables$chromosome_arm_library$Arm_ID[i], paste0("Selection rate - chromosome ", model_variables$chromosome_arm_library$Chromosome[i]), model_variables$chromosome_arm_library$Chromosome[i], "Arm_selection_rate",
             1 / bound_ABC_arm_s, bound_ABC_arm_s
         )
     }
@@ -372,7 +372,7 @@ write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 #     names(ground_truth_statistics_bulk) <- names(ls_cn_bulk_ground_truth[[1]][[2]])
 # }
 # # ===============================================MAKE SIMULATION LIBRARY
-# # ABC_simcount <- 500
+# # ABC_simcount <- 10
 # # library_simulations(
 # #     library_name = model_name,
 # #     model_variables = model_variables,
@@ -458,27 +458,27 @@ write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 #     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
 #     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
 #     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
-#     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
-#     #---Single-cell DNA: phylo stats for tips
-#     "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
-#     "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
-#     "data=sc;target=genome;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
-#     "data=sc;target=genome;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
-#     "data=sc;target=genome;statistic=var;variable=cherries",
-#     "data=sc;target=genome;statistic=var;variable=pitchforks",
-#     "data=sc;target=genome;statistic=var;variable=IL_number",
-#     "data=sc;target=genome;statistic=var;variable=avgLadder",
-#     #---Single-cell DNA: phylo stats for balance
-#     "data=sc;target=genome;statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
-#     "data=sc;target=genome;statistic=mean;variable=colless", # balance index of phylogeny tree
-#     "data=sc;target=genome;statistic=mean;variable=sackin", # balance index of phylogeny tree
-#     "data=sc;target=genome;statistic=mean;variable=B2", # balance index of phylogeny tree
-#     "data=sc;target=genome;statistic=mean;variable=maxDepth", # height of phylogeny tree
-#     "data=sc;target=genome;statistic=var;variable=stairs",
-#     "data=sc;target=genome;statistic=var;variable=colless",
-#     "data=sc;target=genome;statistic=var;variable=sackin",
-#     "data=sc;target=genome;statistic=var;variable=B2",
-#     "data=sc;target=genome;statistic=var;variable=maxDepth"
+#     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes)
+#     # #---Single-cell DNA: phylo stats for tips
+#     # "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
+#     # "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
+#     # "data=sc;target=genome;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
+#     # "data=sc;target=genome;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
+#     # "data=sc;target=genome;statistic=var;variable=cherries",
+#     # "data=sc;target=genome;statistic=var;variable=pitchforks",
+#     # "data=sc;target=genome;statistic=var;variable=IL_number",
+#     # "data=sc;target=genome;statistic=var;variable=avgLadder",
+#     # #---Single-cell DNA: phylo stats for balance
+#     # "data=sc;target=genome;statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
+#     # "data=sc;target=genome;statistic=mean;variable=colless", # balance index of phylogeny tree
+#     # "data=sc;target=genome;statistic=mean;variable=sackin", # balance index of phylogeny tree
+#     # "data=sc;target=genome;statistic=mean;variable=B2", # balance index of phylogeny tree
+#     # "data=sc;target=genome;statistic=mean;variable=maxDepth", # height of phylogeny tree
+#     # "data=sc;target=genome;statistic=var;variable=stairs",
+#     # "data=sc;target=genome;statistic=var;variable=colless",
+#     # "data=sc;target=genome;statistic=var;variable=sackin",
+#     # "data=sc;target=genome;statistic=var;variable=B2",
+#     # "data=sc;target=genome;statistic=var;variable=maxDepth"
 # )
 # for (row in 2:nrow(list_targets)) {
 #     list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
@@ -499,38 +499,36 @@ write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 # # ==================PLOT CORRELATION OF STATISTICS IN SIMULATION LIBRARY
 # # plot_statistics_correlation()
 # # =========================GET FITTING STATISTICS FROM GROUND-TRUTH DATA
-# # DLP_stats <- get_statistics(
-# #     simulations_statistics_sc = ground_truth_statistics_sc,
-# #     simulations_statistics_bulk = ground_truth_statistics_bulk,
-# #     list_targets = list_targets_library,
-# #     cn_data_sc = ground_truth_cn_data_sc,
-# #     cn_data_bulk = ground_truth_cn_data_bulk,
-# #     arm_level = TRUE,
-# #     cn_table = cn_table
-# # )
+# DLP_stats <- get_statistics(
+#     simulations_statistics_sc = ground_truth_statistics_sc,
+#     simulations_statistics_bulk = ground_truth_statistics_bulk,
+#     list_targets = list_targets_library,
+#     cn_data_sc = ground_truth_cn_data_sc,
+#     cn_data_bulk = ground_truth_cn_data_bulk,
+#     arm_level = TRUE,
+#     cn_table = cn_table
+# )
 # # ==============================================FIT PARAMETERS USING ABC
-# # parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
-# # fitting_parameters(
-# #     library_name = model_name,
-# #     copynumber_DATA = DLP_stats,
-# #     parameters_truth = parameters_truth,
-# #     list_parameters = list_parameters,
-# #     list_targets_by_parameter = list_targets,
-# #     plot_ABC_prior_as_uniform = TRUE
-# # )
+# parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
+# fitting_parameters(
+#     library_name = model_name,
+#     copynumber_DATA = DLP_stats,
+#     parameters_truth = parameters_truth,
+#     list_parameters = list_parameters,
+#     list_targets_by_parameter = list_targets,
+#     plot_ABC_prior_as_uniform = TRUE
+# )
 # # ===================PLOT CORRELATION BETWEEN INFERENCE AND GROUND TRUTH
 # # ===================================================FOR SELECTION RATES
-# # parameters_inferred <- read.csv("parameters_output_values.csv", header = TRUE)
-# # parameters_inferred <- parameters_inferred[which(parameters_inferred$Type == "Arm_selection_rate"), ]
-# # plot_ABC_correlation(
-# #     inference_result = parameters_inferred,
-# #     library_name = model_name,
-# #     value_x = "Ground_truth",
-# #     value_y = "Mean",
-# #     error_y = "Sd",
-# #     title_x = "Ground truth",
-# #     title_y = "Posterior mean",
-# #     color_data = "red",
-# #     color_regression = "blue",
-# #     linear_regression = TRUE
-# # )
+# parameters_inferred <- read.csv("parameters_output_values.csv", header = TRUE)
+# parameters_inferred <- parameters_inferred[which(parameters_inferred$Type == "Arm_selection_rate"), ]
+# plot_ABC_correlation(
+#     inference_result = parameters_inferred,
+#     plot_name = paste0(model_name, "_ABC_correlation.jpeg"),
+#     title_plot = "Inferred selection rates against ground truth",
+#     value_x = "Ground_truth", title_x = "Ground truth",
+#     value_y = "Mean", title_y = "Posterior mean +/- std",
+#     error_y = "Sd",
+#     color_data = "red",
+#     plot_diagonal = TRUE
+# )

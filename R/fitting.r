@@ -1088,11 +1088,6 @@ fitting_parameters <- function(library_name,
         #   Choose best values from posterior distribution
         df_dist <- densityPlot_df(model_rf, mini_obs, data_rf)
         post_mean <- weighted.mean(df_dist$x, df_dist$y_posterior)
-        # ...
-        # ...
-        # post_sd <- ???
-        # ...
-        # ...
         post_sd <- weightedSd(df_dist$x, df_dist$y_posterior)
         post_median <- weightedMedian(df_dist$x, df_dist$y_posterior)
         post_mode <- df_dist$x[which(df_dist$y_posterior == max(df_dist$y_posterior))]
@@ -1105,11 +1100,7 @@ fitting_parameters <- function(library_name,
         list_parameters_output$Mean[which(list_parameters_output$Variable == para_ID)] <- post_mean
         list_parameters_output$Median[which(list_parameters_output$Variable == para_ID)] <- post_median
         list_parameters_output$Mode[which(list_parameters_output$Variable == para_ID)] <- post_mode
-        # ...
-        # ...
         list_parameters_output$Sd[which(list_parameters_output$Variable == para_ID)] <- post_sd
-        # ...
-        # ..
         #   Save results for fitting this parameter
         ABC_output <- list()
         ABC_output$para_ID <- para_ID
