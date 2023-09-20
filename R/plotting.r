@@ -237,140 +237,49 @@ plot_ABC_inference <- function(object,
 #' @export
 plot_statistics_correlation <- function(filename,
                                         list_targets_library,
-                                        list_parameters,
-                                        ABC_simcount) {
+                                        list_parameters) {
     library("ggcorrplot")
     load(file = filename)
-    # =====================================================================Initialize stats names
-    misseg_stat_names <- c(
-        #-----bulk
-        "Wasserstein_dist_bulk_genome",
-        "Mean_Clonal_misseg_count_bulk_genome",
-        "Var_Clonal_misseg_count_bulk_genome",
-        "Wasserstein_dist_bulk_chr",
-        "Mean_Clonal_misseg_count_bulk_chr",
-        "Var_Clonal_misseg_count_bulk_chr",
-        #-----sc_subclonal CN
-        "Wasserstein_dist_sc_genome",
-        "Mean_Shannon_genome",
-        "Mean_Clonal_misseg_count_sc_genome",
-        "Mean_Subclonal_misseg_count_sc_genome",
-        "Mean_Clonal_armmisseg_count_sc_genome",
-        "Mean_Subclonal_armmisseg_count_sc_genome",
-        "Var_Shannon_genome",
-        "Var_Clonal_misseg_count_sc_genome",
-        "Var_Subclonal_misseg_count_sc_genome",
-        "Var_Clonal_armmisseg_count_sc_genome",
-        "Var_Subclonal_armmisseg_count_sc_genome",
-        "Wasserstein_dist_sc_chr",
-        "Mean_Shannon_chr",
-        "Mean_Clonal_misseg_count_sc_chr",
-        "Mean_Subclonal_misseg_count_sc_chr",
-        "Mean_Clonal_armmisseg_count_sc_chr",
-        "Mean_Subclonal_armmisseg_count_sc_chr",
-        "Var_Shannon_chr",
-        "Var_Clonal_misseg_count_sc_chr",
-        "Var_Subclonal_misseg_count_sc_chr",
-        "Var_Clonal_armmisseg_count_sc_chr",
-        "Var_Subclonal_armmisseg_count_sc_chr",
-        #-----sc_Phylo Stats
-        "Mean_Cherries_genome",
-        "Mean_Pitchforks_genome",
-        "Mean_IL_number_genome",
-        "Mean_AvgLadder_genome",
-        "Var_Cherries_genome",
-        "Var_Pitchforks_genome",
-        "Var_IL_number_genome",
-        "Var_AvgLadder_genome",
-        # balance
-        "Mean_Stairs_genome",
-        "Mean_Colless_genome",
-        "Mean_Sackin_genome",
-        "Mean_B2_genome",
-        "Mean_MaxDepth_genome",
-        "Var_Stairs_genome",
-        "Var_Colless_genome",
-        "Var_Sackin_genome",
-        "Var_B2_genome",
-        "Var_MaxDepth_genome"
-    )
-    sel_stat_names <- c(
-        #-----bulk
-        "Wasserstein_dist_bulk_chr",
-        "Mean_Clonal_misseg_count_bulk_chr",
-        "Var_Clonal_misseg_count_bulk_chr",
-        #-----sc_subclonal CN
-        "Wasserstein_dist_sc_chr",
-        "Mean_Shannon_chr",
-        "Mean_Clonal_misseg_count_sc_chr",
-        "Mean_Subclonal_misseg_count_sc_chr",
-        "Mean_Clonal_armmisseg_count_sc_chr",
-        "Mean_Subclonal_armmisseg_count_sc_chr",
-        "Var_Shannon_chr",
-        "Var_Clonal_misseg_count_sc_chr",
-        "Var_Subclonal_misseg_count_sc_chr",
-        "Var_Clonal_armmisseg_count_sc_chr",
-        "Var_Subclonal_armmisseg_count_sc_chr",
-        #-----sc_Phylo Stats
-        "Mean_Cherries_genome",
-        "Mean_Pitchforks_genome",
-        "Mean_IL_number_genome",
-        "Mean_AvgLadder_genome",
-        "Var_Cherries_genome",
-        "Var_Pitchforks_genome",
-        "Var_IL_number_genome",
-        "Var_AvgLadder_genome",
-        # balance
-        "Mean_Stairs_genome",
-        "Mean_Colless_genome",
-        "Mean_Sackin_genome",
-        "Mean_B2_genome",
-        "Mean_MaxDepth_genome",
-        "Var_Stairs_genome",
-        "Var_Colless_genome",
-        "Var_Sackin_genome",
-        "Var_B2_genome",
-        "Var_MaxDepth_genome"
-    )
-    stat_names <- c(
-        #-----bulk
-        "Wasserstein_dist_bulk",
-        "Mean_Clonal_misseg_count_bulk",
-        "Var_Clonal_misseg_count_bulk",
-        #-----sc_subclonal CN
-        "Wasserstein_dist_sc",
-        "Mean_Shannon",
-        "Mean_Clonal_misseg_count_sc",
-        "Mean_Subclonal_misseg_count_sc",
-        "Mean_Clonal_armmisseg_count_sc",
-        "Mean_Subclonal_armmisseg_count_sc",
-        "Var_Shannon",
-        "Var_Clonal_misseg_count_sc",
-        "Var_Subclonal_misseg_count_sc",
-        "Var_Clonal_armmisseg_count_sc",
-        "Var_Subclonal_armmisseg_count_sc",
-        #-----sc_Phylo Stats
-        "Mean_Cherries",
-        "Mean_Pitchforks",
-        "Mean_IL_number",
-        "Mean_AvgLadder",
-        "Var_Cherries",
-        "Var_Pitchforks",
-        "Var_IL_number",
-        "Var_AvgLadder",
-        # balance
-        "Mean_Stairs",
-        "Mean_Colless",
-        "Mean_Sackin",
-        "Mean_B2",
-        "Mean_MaxDepth",
-        "Var_Stairs",
-        "Var_Colless",
-        "Var_Sackin",
-        "Var_B2",
-        "Var_MaxDepth"
-    )
-    # =====================================================================Initialize the parameters
+    # =========================================Get list of parameter IDs
+    parameter_IDs <- list_parameters$Title
+    parameter_types <- list_parameters$Type
+    # =========================================Get list of statistic IDs
+    statistic_IDs <- c()
+    statistic_groups <- c()
+    for (stat in list_targets_library) {
+        stat_details <- strsplit(stat, ";")[[1]]
+        stat_ID <- strsplit(stat_details[grep("statistic_ID=", stat_details)], "=")[[1]][2]
+        stat_group <- strsplit(stat_details[grep("statistic_group=", stat_details)], "=")[[1]][2]
+        statistic_IDs <- c(statistic_IDs, stat_ID)
+        statistic_groups <- c(statistic_groups, stat_group)
+    }
+    unique_statistic_IDs <- unique(statistic_IDs)
+    unique_statistic_groups <- unique(statistic_groups)
+
+
+
+
+
+
+
+
+    # ====================================Compute the correlation matrix
+    correlation_matrix <- data.frame(matrix(nrow = 0, ncol = length(parameter_IDs)))
+    colnames(correlation_matrix) <- parameter_IDs
+    for (i_stat in 1:length(unique_statistic_IDs)) {
+        statistic_ID <- unique_statistic_IDs[i_stat]
+        statistic_group <- unique_statistic_groups[i_stat]
+        for (i_para in 1:length(list_parameters)) {
+            parameter_ID <- parameter_IDs[i_para]
+            parameter_type <- parameter_types[i_para]
+            sim_stat_loc <- which(grepl(statistic_ID, statistic_IDs))
+            print(sim_stat_loc)
+        }
+    }
+
+
+
+    # =========================================Initialize the parameters
     parameters <- ABC_input$sim_param
     param_names <- list_parameters$Title
     colnames(parameters) <- param_names
