@@ -19,7 +19,7 @@
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_1point15_4000"
+R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_1point15_26000"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
@@ -530,5 +530,6 @@ plot_ABC_correlation(
     value_y = "Mean", title_y = "Posterior mean +/- std",
     error_y = "Sd",
     color_data = "red",
+    plot_RRMSE = TRUE,
     plot_diagonal = TRUE
 )
