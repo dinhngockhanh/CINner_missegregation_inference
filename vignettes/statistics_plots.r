@@ -1,44 +1,45 @@
 #----------------------------------------------------Load the rda
-# Paths <- "/Users/xiangzijin/Downloads/"
+Paths <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_1point15_26000"
+setwd(Paths)
+rda_name <- "Fitting_whole_chroms_ABC_input.rda"
+load(file = rda_name)
+# Paths <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
 # setwd(Paths)
 # rda_name <- "Simpler_DLP&BULK_DNA_ABC_input_10000.rda"
 # load(file = rda_name)
-Paths <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
-setwd(Paths)
-rda_name <- "Simpler_DLP&BULK_DNA_ABC_input_10000.rda"
-load(file = rda_name)
 #---------------------------------------------------Get parameters
 parameters <- ABC_input$sim_param
-param_names <- c(
-  "prob_misseg",
-  "1p",
-  "2p",
-  "3p",
-  "4p",
-  "5p",
-  "6p",
-  "7p",
-  "8p",
-  "9p",
-  "10p",
-  "11p",
-  "12p",
-  "13p",
-  "14p",
-  "15p",
-  "16p",
-  "17p",
-  "18p",
-  "19p",
-  "20p",
-  "21p",
-  "22p",
-  "Xp"
-)
+param_names <- list_parameters$Title
+#  c(
+#   "prob_misseg",
+#   "1p",
+#   "2p",
+#   "3p",
+#   "4p",
+#   "5p",
+#   "6p",
+#   "7p",
+#   "8p",
+#   "9p",
+#   "10p",
+#   "11p",
+#   "12p",
+#   "13p",
+#   "14p",
+#   "15p",
+#   "16p",
+#   "17p",
+#   "18p",
+#   "19p",
+#   "20p",
+#   "21p",
+#   "22p",
+#   "Xp"
+# )
 # get rid of last column of parameters
 colnames(parameters) <- param_names
 # prob_armmisseg <- parameters[, "prob_armmisseg"]
-prob_misseg <- parameters[, "prob_misseg"]
+prob_misseg <- parameters[, 1]
 #---------------------------------------------------Get statistics
 
 misseg_stat_names <- c(
@@ -132,6 +133,40 @@ sel_stat_names <- c(
   "Var_MaxDepth_genome"
 )
 stat_names <- c(
+  "Bulk CN distance",
+  "Mean(misseg. count in bulk)",
+  "Var(misseg. count in bulk)",
+  "Single-cell CN distance",
+  "Mean(sc Shannon index)",
+  "Mean(clonal misseg. count in sc)",
+  "Mean(subclonal misseg. count in sc)",
+  "NA",
+  "NA",
+  "Var(sc Shannon index)",
+  "Var(clonal misseg. count in sc)",
+  "Var(subclonal misseg. count in sc)",
+  "NA",
+  "NA",
+  "Mean(cherry count)",
+  "Mean(pitchfork count)",
+  "Mean(IL number)",
+  "Mean(average ladder)",
+  "Var(cherry count)",
+  "Var(pitchfork count)",
+  "Var(IL number)",
+  "Var(average ladder)",
+  "Mean(stairs)",
+  "Mean(Colless index)",
+  "Mean(Sackin index)",
+  "Mean(B2 index)",
+  "Mean(max depth)",
+  "Var(stairs)",
+  "Var(Colless index)",
+  "Var(Sackin index)",
+  "Var(B2 index)",
+  "Var(max depth)"
+)
+stat_names <- c(
   #-----bulk
   "Wasserstein_dist_bulk",
   "Mean_Clonal_misseg_count_bulk",
@@ -171,7 +206,7 @@ stat_names <- c(
 )
 
 #-------------------------------------------Get correlation matrix (misseg)
-statistics_misseg <- data.frame(matrix(ncol = 0, nrow = 10000))
+statistics_misseg <- data.frame(matrix(ncol = 0, nrow = 27000))
 for (i in 1:length(which(grepl("genome", misseg_stat_names)))) {
   statistics_misseg[, i] <- ABC_input$sim_stat[which(grepl("genome", misseg_stat_names))[i]]
 }
@@ -180,10 +215,10 @@ colnames(statistics_misseg) <- misseg_stat_names[which(grepl("genome", misseg_st
 corr_mtx_misseg <- cor(y = prob_misseg, x = statistics_misseg)
 
 #-------------------------------------------Get correlation matrix (selection)
-which(grepl(sel_stat_names[10], stat_names))
+
 corr_mtx_sel_mix <- NULL
 for (i in 2:length(param_names)) {
-  statistics_sel <- data.frame(matrix(ncol = 0, nrow = 10000))
+  statistics_sel <- data.frame(matrix(ncol = 0, nrow = 27000))
   for (j in 1:length(sel_stat_names)) {
     if (grepl("genome", sel_stat_names[j])) {
       statistics_sel[, j] <- ABC_input$sim_stat[[which(grepl(sel_stat_names[j], misseg_stat_names))]]
@@ -208,14 +243,14 @@ colnames(corr_mtx) <- param_names
 # Correlation Plot=================================================
 # =================================================================
 #-------------------------------------------Get correlation matrix
-corr_mtx <- cor(y = parameters[, 1], x = statistics_misseg)
+# corr_mtx <- cor(y = parameters[, 1], x = statistics_misseg)
 # mean(corr_mtx[, ])
 # sort(mean(abs(corr_mtx[, 1])), TRUE)
 # sort(abs(corr_mtx[, 1]), TRUE)
 
 #--------------------------------------------Plot correlation plot
 
-corr_mtx <- cor(y = prob_misseg, x = statistics_misseg)
+# corr_mtx <- cor(y = prob_misseg, x = statistics_misseg)
 corr_plot <- function(corr_mtx) {
   library("ggcorrplot")
   plot <- ggcorrplot(corr_mtx, ggtheme = ggplot2::theme_gray) +
@@ -226,7 +261,7 @@ corr_plot <- function(corr_mtx) {
       "#619CFF", "#619CFF", "#619CFF", "#619CFF",
       "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
       "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
-    )), plot.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "in"))
+    ), angle = 45), plot.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "in"))
   # scale_fill_gradient2(limit = c(-0.3, 0.3), low = "blue", high = "red", )
   ggsave(file = "correlation_plot.png", width = 10, height = 10, units = "in", plot = plot, dpi = 300, limitsize = TRUE)
   return(plot)
