@@ -936,7 +936,8 @@ library_statistics <- function(library_name,
     if (compute_parallel == FALSE) {
         sim_output_list <- vector("list", ABC_simcount)
         for (iteration in ABC_simcount_start_real:ABC_simcount_end_real) {
-            print(iteration)
+            print(paste0("iteration: ", iteration))
+            start_time <- Sys.time()
             filename <- paste0(library_name, "/", library_name, "_ABC_simulation_statistics_", iteration, ".rda")
             load(filename)
             stat <- get_statistics(
@@ -951,7 +952,9 @@ library_statistics <- function(library_name,
             output <- list()
             output$parameters <- simulation_statistics$parameters
             output$stat <- stat
-            sim_output_list[[iteration]] <- output
+            sim_output_list[[iteration - ABC_simcount_start]] <- output
+            end_time <- Sys.time()
+            print(end_time - start_time)
         }
     } else {
         if (is.null(n_cores)) {
