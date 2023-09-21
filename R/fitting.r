@@ -908,6 +908,7 @@ library_statistics <- function(library_name,
                                list_targets_library,
                                ABC_simcount_start = NULL,
                                ABC_simcount,
+                               compute_parallel = TRUE,
                                n_cores = NULL,
                                cn_data_sc = NULL,
                                cn_data_bulk = NULL,
@@ -923,32 +924,7 @@ library_statistics <- function(library_name,
     library(data.table)
     library(matrixStats)
     library(combinat)
-    if (is.null(n_cores)) {
-        n_cores <- max(detectCores() - 1, 1)
-    }
     # ================FIND STATISTICS FOR EACH SIMULATION IN THE LIBRARY
-    #   Get statistics for each simulation w.r.t. data
-    cl <- makePSOCKcluster(n_cores)
-    cat("\nGetting statistics...\n")
-    get_statistics <<- get_statistics
-    ABC_simcount <<- ABC_simcount
-    list_targets_library <<- list_targets_library
-    library_name <<- library_name
-    cohort_distance <<- cohort_distance
-    cn_data_sc <<- cn_data_sc
-    cn_data_bulk <<- cn_data_bulk
-    arm_level <<- arm_level
-    cn_table <<- cn_table
-    clusterExport(cl, varlist = c(
-        "ABC_simcount", "get_statistics", "list_targets_library", "library_name", "cn_data_sc",
-        "cn_data_bulk", "arm_level", "cn_table", "cohort_distance", "cn_distance", "sample_distance"
-    ))
-    e <- new.env()
-    e$libs <- .libPaths()
-    clusterExport(cl, "libs", envir = e)
-    clusterEvalQ(cl, .libPaths(libs))
-    #   Create simulated results in parallel
-    pbo <- pboptions(type = "txt")
     if (is.null(ABC_simcount_start)) {
         ABC_simcount_start_real <- 1
         ABC_simcount_end_real <- ABC_simcount
@@ -956,24 +932,71 @@ library_statistics <- function(library_name,
         ABC_simcount_start_real <- ABC_simcount_start + 1
         ABC_simcount_end_real <- ABC_simcount_start + ABC_simcount
     }
-    sim_output_list <- pblapply(cl = cl, X = ABC_simcount_start_real:ABC_simcount_end_real, FUN = function(iteration) {
-        filename <- paste0(library_name, "/", library_name, "_ABC_simulation_statistics_", iteration, ".rda")
-        load(filename)
-        stat <- get_statistics(
-            simulations_statistics_sc = simulation_statistics$stats_sc,
-            simulations_statistics_bulk = simulation_statistics$stats_bulk,
-            cn_data_sc = cn_data_sc,
-            cn_data_bulk = cn_data_bulk,
-            list_targets = list_targets_library,
-            arm_level = arm_level,
-            cn_table = cn_table
-        )
-        output <- list()
-        output$parameters <- simulation_statistics$parameters
-        output$stat <- stat
-        return(output)
-    })
-    stopCluster(cl)
+    #   Get statistics for each simulation w.r.t. data
+    if (compute_parallel == FALSE) {
+        sim_output_list <- vector("list", ABC_simcount)
+        for (iteration in ABC_simcount_start_real:ABC_simcount_end_real) {
+            print(iteration)
+            filename <- paste0(library_name, "/", library_name, "_ABC_simulation_statistics_", iteration, ".rda")
+            load(filename)
+            stat <- get_statistics(
+                simulations_statistics_sc = simulation_statistics$stats_sc,
+                simulations_statistics_bulk = simulation_statistics$stats_bulk,
+                cn_data_sc = cn_data_sc,
+                cn_data_bulk = cn_data_bulk,
+                list_targets = list_targets_library,
+                arm_level = arm_level,
+                cn_table = cn_table
+            )
+            output <- list()
+            output$parameters <- simulation_statistics$parameters
+            output$stat <- stat
+            sim_output_list[[iteration]] <- output
+        }
+    } else {
+        if (is.null(n_cores)) {
+            n_cores <- max(detectCores() - 1, 1)
+        }
+        cl <- makePSOCKcluster(n_cores)
+        cat("\nGetting statistics...\n")
+        get_statistics <<- get_statistics
+        ABC_simcount <<- ABC_simcount
+        list_targets_library <<- list_targets_library
+        library_name <<- library_name
+        cohort_distance <<- cohort_distance
+        cn_data_sc <<- cn_data_sc
+        cn_data_bulk <<- cn_data_bulk
+        arm_level <<- arm_level
+        cn_table <<- cn_table
+        clusterExport(cl, varlist = c(
+            "ABC_simcount", "get_statistics", "list_targets_library", "library_name", "cn_data_sc",
+            "cn_data_bulk", "arm_level", "cn_table", "cohort_distance", "cn_distance", "sample_distance"
+        ))
+        e <- new.env()
+        e$libs <- .libPaths()
+        clusterExport(cl, "libs", envir = e)
+        clusterEvalQ(cl, .libPaths(libs))
+        #   Create simulated results in parallel
+        pbo <- pboptions(type = "txt")
+        sim_output_list <- pblapply(cl = cl, X = ABC_simcount_start_real:ABC_simcount_end_real, FUN = function(iteration) {
+            filename <- paste0(library_name, "/", library_name, "_ABC_simulation_statistics_", iteration, ".rda")
+            load(filename)
+            stat <- get_statistics(
+                simulations_statistics_sc = simulation_statistics$stats_sc,
+                simulations_statistics_bulk = simulation_statistics$stats_bulk,
+                cn_data_sc = cn_data_sc,
+                cn_data_bulk = cn_data_bulk,
+                list_targets = list_targets_library,
+                arm_level = arm_level,
+                cn_table = cn_table
+            )
+            output <- list()
+            output$parameters <- simulation_statistics$parameters
+            output$stat <- stat
+            return(output)
+        })
+        stopCluster(cl)
+    }
     #   Group simulated statistics into one table
     sim_param <- NULL
     sim_stat <- list()
