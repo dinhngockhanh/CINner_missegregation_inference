@@ -381,9 +381,10 @@ plot_ABC_correlation <- function(inference_result = parameters_inferred,
         corr_plot <- corr_plot + geom_abline(intercept = 0)
     }
     if (plot_RRMSE) {
-        actual <- parameters_inferred[[value_x]]
-        predicted <- parameters_inferred[[value_y]]
-        RRMSE <- gofRRMSE(actual, predicted, dgt = 3)
+        RRMSE <- compute_RRMSE(
+            results = parameters_inferred,
+            ID_actual = value_x, ID_predicted = value_y
+        )
         text_x <- min(x_min, y_min) + 0.05 * (max(x_max, y_max) - min(x_min, y_min))
         text_y <- min(x_min, y_min) + 0.95 * (max(x_max, y_max) - min(x_min, y_min))
         corr_plot <- corr_plot +

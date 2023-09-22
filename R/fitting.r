@@ -1,3 +1,8 @@
+compute_RRMSE <- function(results, ID_actual, ID_predicted) {
+    RRMSE <- gofRRMSE(results[[actual]], results[[predicted]], dgt = 3)
+    return(RRMSE)
+}
+
 #---Function to get arm-level CN profiles
 #---from bin-level CN profiles
 get_arm_CN_profiles <- function(clonal_CN_profiles) {
@@ -1170,11 +1175,122 @@ fitting_parameters <- function(library_name,
         post_mode <- c()
     }
     #   Output the csv of parameter values
-    write.csv(list_parameters_output, "parameters_output_values.csv")
+    write.csv(list_parameters_output, paste0(library_name, "_parameters_output_values.csv"))
     #   Plot the prior, posterior and chosen best parameter for all variables
     filename <- paste0(library_name, "_ABC_all.jpeg")
     jpeg(filename, width = 3000, height = 1500)
     p <- grid.arrange(grobs = gs, layout_matrix = layout)
+    print(p)
+    dev.off()
+}
+
+#' @export
+sensitivity_library_statistics <- function(library_name,
+                                           library_sensitivity_name,
+                                           model_variables,
+                                           sensitivity_parameter,
+                                           sensitivity_values,
+                                           list_parameters,
+                                           list_targets_library,
+                                           ABC_simcount_start = NULL,
+                                           ABC_simcount,
+                                           compute_parallel = TRUE,
+                                           n_cores = NULL,
+                                           cn_data_sc = NULL,
+                                           cn_data_bulk = NULL,
+                                           cn_table = NULL,
+                                           arm_level = FALSE) {
+    if (sensitivity_parameter == "ABC_simcount") {
+        #   Load large rda with all simulations
+        load(paste0(library_name, "_ABC_input.rda"))
+        #   Save smaller rda with requested simulation counts
+        for (ABC_simcount in sensitivity_values) {
+            ABC_input_mini$model_variables <- ABC_input$model_variables
+            ABC_input_mini$sim_param <- ABC_input$sim_param[1:ABC_simcount, ]
+            stat_IDs <- names(ABC_input$sim_stat)
+            ABC_input_mini$sim_stat <- list()
+            for (stat in stat_IDs) {
+                ABC_input_mini$sim_stat[[stat]] <- ABC_input$sim_stat[[stat]][1:ABC_simcount, ]
+            }
+            filename <- paste0(library_sensitivity_name, "_", ABC_simcount, "_ABC_input.rda")
+            save(ABC_input_mini, file = filename)
+        }
+    } else if (sensitivity_parameter == "N_data_sc") {
+
+    } else if (sensitivity_parameter == "N_data_bulk") {
+
+    }
+}
+
+#' @export
+sensitivity_fitting_and_plotting <- function(library_name,
+                                             library_sensitivity_name,
+                                             sensitivity_title,
+                                             sensitivity_values,
+                                             RRMSE_targets = c("all", "CNA_probability", "Selection_rate"),
+                                             RRMSE_titles = c("All parameters", "Prob(misseg)", "Sel. rates"),
+                                             copynumber_DATA,
+                                             parameters_truth = NULL,
+                                             list_parameters,
+                                             list_targets_by_parameter,
+                                             n_cores = NULL,
+                                             plot_ABC_prior_as_uniform = FALSE,
+                                             fontsize = 50) {
+    library(ggplot2)
+    #   Compute matrix of RRMSE
+    list_RRMSE <- data.frame(Value = sensitivity_values)
+    for (RRMSE_target in RRMSE_targets) {
+        list_RRMSE[[RRMSE_target]] <- NA
+    }
+    for (sensitivity_value in sensitivity_values) {
+        #   ABC fitting for each sensitivity value
+        library_name_mini <- paste0(library_sensitivity_name, "_", sensitivity_value)
+        fitting_parameters(
+            library_name = library_name_mini,
+            copynumber_DATA = copynumber_DATA,
+            parameters_truth = parameters_truth,
+            list_parameters = list_parameters,
+            list_targets_by_parameter = list_targets_by_parameter,
+            n_cores = n_cores,
+            plot_ABC_prior_as_uniform = plot_ABC_prior_as_uniform
+        )
+        #   Input the csv of parameter values
+        filename <- paste0(library_name_mini, "_parameters_output_values.csv")
+        list_parameters_output_mini <- read.csv(filename, header = TRUE)
+        #   Compute RRMSE
+        for (RRMSE_target in RRMSE_targets) {
+            if (RRMSE_targets[j] == "all") {
+                list_RRMSE[[j]][which(list_RRMSE$Value == sensitivity_value)] <- compute_RRMSE(
+                    results = list_parameters_output_mini,
+                    ID_actual = "Ground_truth",
+                    ID_predicted = "Mean"
+                )
+            } else {
+                list_RRMSE[[j]][which(list_RRMSE$Value == sensitivity_value)] <- compute_RRMSE(
+                    results = list_parameters_output_mini[which(list_parameters_output_mini$Type == RRMSE_targets[j]), ],
+                    ID_actual = "Ground_truth",
+                    ID_predicted = "Mean"
+                )
+            }
+            # list_RRMSE[[RRMSE_target]][which(list_RRMSE$Value == sensitivity_value)] <- runif(1)
+        }
+    }
+    #   Plot RRMSE with respect to sensitivity parameter
+    filename <- paste0(library_sensitivity_name, ".jpeg")
+    jpeg(filename, width = 3000, height = 1500)
+    p <- ggplot(list_RRMSE) +
+        xlab(sensitivity_title) +
+        ylab("RRMSE") +
+        theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
+        theme(text = element_text(size = fontsize))
+    for (i in 1:length(RRMSE_targets)) {
+        RRMSE_target <- RRMSE_targets[i]
+        p <- p + geom_line(
+            aes(x = .data[["Value"]], y = .data[[RRMSE_target]]),
+            color = as.character(i),
+            size = 1
+        )
+    }
     print(p)
     dev.off()
 }

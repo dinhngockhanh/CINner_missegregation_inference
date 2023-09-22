@@ -18,10 +18,10 @@
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_1point15_4000"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_1point15_4000"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
 # R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
 # R_libPaths <- ""
@@ -127,7 +127,6 @@ drivers <- list()
 model_variables <- BUILD_initial_population(model_variables = model_variables, cell_count = cell_count, CN_matrix = CN_matrix, drivers = drivers)
 #---Save model variables
 model_name <- "Fitting_whole_chroms"
-# model_name <- "Chromosome_missegregation"
 model_variables <- CHECK_model_variables(model_variables)
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 6, nrow = 0))
@@ -139,7 +138,7 @@ list_parameters[nrow(list_parameters) + 1, ] <- c(
 for (i in 1:nrow(model_variables$chromosome_arm_library)) {
     if (grepl("p$", model_variables$chromosome_arm_library$Arm_ID[i])) {
         list_parameters[nrow(list_parameters) + 1, ] <- c(
-            model_variables$chromosome_arm_library$Arm_ID[i], paste0("Selection rate - chromosome ", model_variables$chromosome_arm_library$Chromosome[i]), model_variables$chromosome_arm_library$Chromosome[i], "Arm_selection_rate",
+            model_variables$chromosome_arm_library$Arm_ID[i], paste0("Selection rate - chromosome ", model_variables$chromosome_arm_library$Chromosome[i]), model_variables$chromosome_arm_library$Chromosome[i], "Selection_rate",
             1 / bound_ABC_arm_s, bound_ABC_arm_s
         )
     }
@@ -548,3 +547,33 @@ list_targets_library <- c(
 #     color_data = "red",
 #     plot_diagonal = TRUE
 # )
+# =============================SENSITIVITY ANALYSIS FOR SIMULATION COUNT
+sensitivity_parameter <- "ABC_simcount"
+sensitivity_title <- "Simulation count in ABC library"
+sensitivity_values <- c(1000, 5000, 10000, 50000)
+sensitivity_library_statistics(
+    library_name = model_name,
+    library_sensitivity_name = paste0(model_name, "_sensitivity_wrt_simcount"),
+    model_variables = model_variables,
+    sensitivity_parameter = sensitivity_parameter,
+    sensitivity_values = sensitivity_values,
+    list_parameters = list_parameters,
+    list_targets_library = list_targets_library,
+    ABC_simcount_start = 0,
+    ABC_simcount = ABC_simcount,
+    cn_data_sc = ground_truth_cn_data_sc,
+    cn_data_bulk = ground_truth_cn_data_bulk,
+    arm_level = TRUE,
+    cn_table = cn_table
+)
+sensitivity_fitting_and_plotting(
+    library_name = model_name,
+    library_sensitivity_name = paste0(model_name, "_sensitivity_wrt_simcount"),
+    sensitivity_title = sensitivity_title,
+    sensitivity_values = sensitivity_values,
+    copynumber_DATA = DLP_stats,
+    parameters_truth = parameters_truth,
+    list_parameters = list_parameters,
+    list_targets_by_parameter = list_targets,
+    plot_ABC_prior_as_uniform = TRUE
+)
