@@ -1,5 +1,5 @@
 compute_RRMSE <- function(results, ID_actual, ID_predicted) {
-    RRMSE <- gofRRMSE(results[[actual]], results[[predicted]], dgt = 3)
+    RRMSE <- gofRRMSE(results[[ID_actual]], results[[ID_predicted]], dgt = 3)
     return(RRMSE)
 }
 
@@ -1175,7 +1175,7 @@ fitting_parameters <- function(library_name,
         post_mode <- c()
     }
     #   Output the csv of parameter values
-    write.csv(list_parameters_output, paste0(library_name, "_parameters_output_values.csv"))
+    write.csv(list_parameters_output, "parameters_output_values.csv")
     #   Plot the prior, posterior and chosen best parameter for all variables
     filename <- paste0(library_name, "_ABC_all.jpeg")
     jpeg(filename, width = 3000, height = 1500)

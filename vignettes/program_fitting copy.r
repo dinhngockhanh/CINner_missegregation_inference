@@ -19,7 +19,7 @@
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_1point15_26000"
+R_workplace <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_4000"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
@@ -54,7 +54,7 @@ N_data_sc <- 50
 #   Number of bulk samples in ground-truth data & ABC simulations
 N_data_bulk <- 100
 #   Bounds for ground-truth selection rates (1/r -> r)
-bound_ground_truth_arm_s <- 1.15
+bound_ground_truth_arm_s <- 1.2
 #   Bounds for prior distribution of log10(prob_CN_missegregation)
 bound_ABC_prob_CN_missegregation_left <- -5
 bound_ABC_prob_CN_missegregation_right <- -3
