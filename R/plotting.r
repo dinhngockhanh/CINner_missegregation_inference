@@ -146,14 +146,14 @@ densityPlot_df <- function(object,
     }
     dist_prior <- density(resp, weights = rep(1 / length(resp), length(resp)))
 
-    # if (cutbound == TRUE) {
-    #     print(lower)
-    #     dist_posterior <- density(resp, weights = weights.std[, i], from = as.numeric(lower), to = as.numeric(upper))
-    # } else if (cutbound == FALSE) {
-    dist_posterior <- density(resp, weights = weights.std[, i])
-    # }
+    if (cutbound == TRUE) {
+        print(lower)
+        dist_posterior <- density(resp, weights = weights.std[, i], from = as.numeric(lower), to = as.numeric(upper))
+    } else if (cutbound == FALSE) {
+        dist_posterior <- density(resp, weights = weights.std[, i])
+    }
     df_plot_prior <- data.frame(x = dist_prior$x, y = dist_prior$y)
-    df_plot_posterior <- data.frame(x = dist_posterior$x, y = dist_posterior$y)
+    # df_plot_posterior <- data.frame(x = dist_posterior$x, y = dist_posterior$y)
 
     df_plot <- data.frame(x = dist_prior$x, y_prior = dist_prior$y, y_posterior = dist_posterior$y)
 

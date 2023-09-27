@@ -1120,7 +1120,7 @@ fitting_parameters <- function(library_name,
         #   Predict posterior distribution based on found random forest
         post_rf <- predict(model_rf, mini_obs, data_rf, paral = TRUE, ncores = n_cores)
         #   Choose best values from posterior distribution
-        df_dist <- densityPlot_df(object = model_rf, obs = mini_obs, training = data_rf, cutbound = FALSE, lower = lowerbound, upper = upperbound)
+        df_dist <- densityPlot_df(object = model_rf, obs = mini_obs, training = data_rf, cutbound = TRUE, lower = as.numeric(list_parameters$Lower_bound[para]), upper = as.numeric(list_parameters$Upper_bound[para]))
         post_mean <- weighted.mean(df_dist$x, df_dist$y_posterior)
         post_sd <- weightedSd(df_dist$x, df_dist$y_posterior)
         post_median <- weightedMedian(df_dist$x, df_dist$y_posterior)
