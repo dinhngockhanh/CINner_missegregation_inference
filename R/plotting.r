@@ -14,6 +14,9 @@ densityPlot_df <- function(object,
                            xlab = NULL,
                            ylab = NULL,
                            paral = FALSE,
+                           cutbound = FALSE,
+                           lower = NULL,
+                           upper = NULL,
                            ncores = if (paral) max(detectCores() - 1, 1) else 1, ...) {
     findweights <- getFromNamespace("findweights", "abcrf")
     ### Checking arguments
@@ -142,8 +145,13 @@ densityPlot_df <- function(object,
         resp <- 1 / resp
     }
     dist_prior <- density(resp, weights = rep(1 / length(resp), length(resp)))
-    dist_posterior <- density(resp, weights = weights.std[, i])
 
+    # if (cutbound == TRUE) {
+    #     print(lower)
+    #     dist_posterior <- density(resp, weights = weights.std[, i], from = as.numeric(lower), to = as.numeric(upper))
+    # } else if (cutbound == FALSE) {
+    dist_posterior <- density(resp, weights = weights.std[, i])
+    # }
     df_plot_prior <- data.frame(x = dist_prior$x, y = dist_prior$y)
     df_plot_posterior <- data.frame(x = dist_posterior$x, y = dist_posterior$y)
 

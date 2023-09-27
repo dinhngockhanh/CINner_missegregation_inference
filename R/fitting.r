@@ -1077,6 +1077,9 @@ fitting_parameters <- function(library_name,
         start_time <- Sys.time()
         para_ID <- list_parameters$Variable[para]
         para_type <- list_parameters$Type[para]
+        lowerbound <- list_parameters$Lower_bound[para]
+        print(lowerbound)
+        upperbound <- list_parameters$Upper_bound[para]
         cat(paste("\nABC for parameter ", para_ID, " [", para, "/", nrow(list_parameters), "]", "\n", sep = ""))
         #   Prepare matrices of prepared statistics library & data observation
         flags_targets <- list_targets_by_parameter[which(list_targets_by_parameter$Variable == para_ID), 2:ncol(list_targets_by_parameter)]
@@ -1117,7 +1120,7 @@ fitting_parameters <- function(library_name,
         #   Predict posterior distribution based on found random forest
         post_rf <- predict(model_rf, mini_obs, data_rf, paral = TRUE, ncores = n_cores)
         #   Choose best values from posterior distribution
-        df_dist <- densityPlot_df(model_rf, mini_obs, data_rf)
+        df_dist <- densityPlot_df(object = model_rf, obs = mini_obs, training = data_rf, cutbound = FALSE, lower = lowerbound, upper = upperbound)
         post_mean <- weighted.mean(df_dist$x, df_dist$y_posterior)
         post_sd <- weightedSd(df_dist$x, df_dist$y_posterior)
         post_median <- weightedMedian(df_dist$x, df_dist$y_posterior)

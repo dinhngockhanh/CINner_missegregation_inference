@@ -1,5 +1,5 @@
 #----------------------------------------------------Load the rda
-Paths <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_1point15_26000"
+Paths <- "/Users/xiangzijin/Documents/simulation/Fitting_experiment_1point15_100000"
 setwd(Paths)
 rda_name <- "Fitting_whole_chroms_ABC_input.rda"
 load(file = rda_name)
@@ -9,7 +9,7 @@ load(file = rda_name)
 # load(file = rda_name)
 #---------------------------------------------------Get parameters
 parameters <- ABC_input$sim_param
-param_names <- list_parameters$Title
+# param_names <- list_parameters$Title
 param_names <- c(
   "log10(prob_misseg)",
   "Sel.rate(Chrom 1)",
@@ -43,16 +43,16 @@ prob_misseg <- parameters[, 1]
 correct_misseg_stat_names <- c(
   #-----bulk
   "Wasserstein_dist_bulk_genome",
-  "Mean_Clonal_misseg_count_bulk_genome",
-  "Var_Clonal_misseg_count_bulk_genome",
-  #-----sc_subclonal CN
   "Wasserstein_dist_sc_genome",
   "Mean_Shannon_genome",
+  "Mean_Clonal_misseg_count_bulk_genome",
   "Mean_Clonal_misseg_count_sc_genome",
   "Mean_Subclonal_misseg_count_sc_genome",
   "Mean_Clonal_armmisseg_count_sc_genome",
   "Mean_Subclonal_armmisseg_count_sc_genome",
+  #-----sc_subclonal CN
   "Var_Shannon_genome",
+  "Var_Clonal_misseg_count_bulk_genome",
   "Var_Clonal_misseg_count_sc_genome",
   "Var_Subclonal_misseg_count_sc_genome",
   "Var_Clonal_armmisseg_count_sc_genome",
@@ -130,19 +130,20 @@ misseg_stat_names <- c(
   "Var_B2_genome",
   "Var_MaxDepth_genome"
 )
+
 sel_stat_names <- c(
   #-----bulk
   "Wasserstein_dist_bulk_chr",
-  "Mean_Clonal_misseg_count_bulk_chr",
-  "Var_Clonal_misseg_count_bulk_chr",
-  #-----sc_subclonal CN
   "Wasserstein_dist_sc_chr",
   "Mean_Shannon_chr",
+  "Mean_Clonal_misseg_count_bulk_chr",
+  #-----sc_subclonal CN
   "Mean_Clonal_misseg_count_sc_chr",
   "Mean_Subclonal_misseg_count_sc_chr",
   "Mean_Clonal_armmisseg_count_sc_chr",
   "Mean_Subclonal_armmisseg_count_sc_chr",
   "Var_Shannon_chr",
+  "Var_Clonal_misseg_count_bulk_chr",
   "Var_Clonal_misseg_count_sc_chr",
   "Var_Subclonal_misseg_count_sc_chr",
   "Var_Clonal_armmisseg_count_sc_chr",
@@ -170,15 +171,15 @@ sel_stat_names <- c(
 )
 stat_names <- c(
   "Bulk CN distance",
-  "Mean(misseg. count in bulk)",
-  "Var(misseg. count in bulk)",
   "Single-cell CN distance",
   "Mean(sc Shannon index)",
+  "Mean(misseg. count in bulk)",
   "Mean(clonal misseg. count in sc)",
   "Mean(subclonal misseg. count in sc)",
   "NA",
   "NA",
   "Var(sc Shannon index)",
+  "Var(misseg. count in bulk)",
   "Var(clonal misseg. count in sc)",
   "Var(subclonal misseg. count in sc)",
   "NA",
@@ -242,19 +243,22 @@ stat_names <- c(
 # )
 
 #-------------------------------------------Get correlation matrix (misseg)
-statistics_misseg <- data.frame(matrix(ncol = 0, nrow = 27000))
-for (i in 1:length(which(grepl("genome", misseg_stat_names)))) {
-  statistics_misseg[, i] <- ABC_input$sim_stat[which(grepl("genome", misseg_stat_names))[i]]
+statistics_misseg <- data.frame(matrix(ncol = 0, nrow = 100000))
+for (i in 1:length(correct_misseg_stat_names)) {
+  statistics_misseg[, i] <- ABC_input$sim_stat[[which(grepl(correct_misseg_stat_names[i], misseg_stat_names))]]
 }
+# for (i in 1:length(which(grepl("genome", misseg_stat_names)))) {
+#   statistics_misseg[, i] <- ABC_input$sim_stat[which(grepl("genome", misseg_stat_names))[i]]
+# }
 prob_misseg <- data.frame(ABC_input$sim_param[, 1])
-colnames(statistics_misseg) <- misseg_stat_names[which(grepl("genome", misseg_stat_names))]
+# colnames(statistics_misseg) <- misseg_stat_names[which(grepl("genome", misseg_stat_names))]
 corr_mtx_misseg <- cor(y = prob_misseg, x = statistics_misseg)
 
 #-------------------------------------------Get correlation matrix (selection)
 
 corr_mtx_sel_mix <- NULL
 for (i in 2:length(param_names)) {
-  statistics_sel <- data.frame(matrix(ncol = 0, nrow = 27000))
+  statistics_sel <- data.frame(matrix(ncol = 0, nrow = 100000))
   for (j in 1:length(sel_stat_names)) {
     if (grepl("genome", sel_stat_names[j])) {
       statistics_sel[, j] <- ABC_input$sim_stat[[which(grepl(sel_stat_names[j], misseg_stat_names))]]
