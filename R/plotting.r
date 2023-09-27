@@ -144,12 +144,12 @@ densityPlot_df <- function(object,
     if (protocol == "TSG") {
         resp <- 1 / resp
     }
-    dist_prior <- density(resp, weights = rep(1 / length(resp), length(resp)))
 
     if (cutbound == TRUE) {
-        print(lower)
-        dist_posterior <- density(resp, weights = weights.std[, i], from = as.numeric(lower), to = as.numeric(upper))
+        dist_prior <- density(resp, weights = rep(1 / length(resp), length(resp)), from = lower, to = upper)
+        dist_posterior <- density(resp, weights = weights.std[, i], from = lower, to = upper)
     } else if (cutbound == FALSE) {
+        dist_prior <- density(resp, weights = rep(1 / length(resp), length(resp)))
         dist_posterior <- density(resp, weights = weights.std[, i])
     }
     df_plot_prior <- data.frame(x = dist_prior$x, y = dist_prior$y)
@@ -183,27 +183,31 @@ plot_ABC_inference <- function(object,
                                paral = FALSE,
                                fontsize = 50,
                                plot_ABC_prior_as_uniform = FALSE,
+                               cutbound = FALSE,
                                para_lower_bound = NULL,
                                para_upper_bound = NULL,
                                ncores = if (paral) max(detectCores() - 1, 1) else 1, ...) {
     df_plot <- densityPlot_df(
-        object,
-        obs,
-        training,
-        add,
-        main,
-        color_prior,
-        chosen_para,
-        color_posterior,
-        protocol,
-        color_vline,
-        log,
-        xlim,
-        ylim,
-        xlab,
-        ylab,
-        paral,
-        ncores
+        object = object,
+        obs = obs,
+        training = training,
+        add = add,
+        main = main,
+        color_prior = color_prior,
+        chosen_para = chosen_para,
+        color_posterior = color_posterior,
+        protocol = protocol,
+        color_vline = color_vline,
+        log = log,
+        xlim = xlim,
+        ylim = ylim,
+        xlab = xlab,
+        ylab = ylab,
+        paral = paral,
+        ncores = ncores,
+        cutbound = cutbound,
+        lower = para_lower_bound,
+        upper = para_upper_bound
     )
 
     if (plot_ABC_prior_as_uniform) {
@@ -228,6 +232,7 @@ plot_ABC_inference <- function(object,
         ggtitle(main) +
         theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
         theme(text = element_text(size = fontsize)) +
+        theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm")) +
         scale_x_continuous(expand = c(0, 0)) +
         scale_y_continuous(expand = c(0, 0))
     if (!is.null(highlight_values)) {

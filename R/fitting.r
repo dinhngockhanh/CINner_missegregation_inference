@@ -1070,16 +1070,14 @@ fitting_parameters <- function(library_name,
             list_parameters_output$Ground_truth[which(list_parameters_output$Variable == parameters_truth$Variable[i])] <- parameters_truth$Value[i]
         }
     }
-    layout <- matrix(NA, nrow = 7, ncol = ceiling(nrow(list_parameters) / 7))
+    nrow_plot <- 6
+    layout <- matrix(NA, nrow = nrow_plot, ncol = ceiling(nrow(list_parameters) / nrow_plot))
     gs <- list()
     id <- 0
     for (para in 1:nrow(list_parameters)) {
         start_time <- Sys.time()
         para_ID <- list_parameters$Variable[para]
         para_type <- list_parameters$Type[para]
-        lowerbound <- list_parameters$Lower_bound[para]
-        print(lowerbound)
-        upperbound <- list_parameters$Upper_bound[para]
         cat(paste("\nABC for parameter ", para_ID, " [", para, "/", nrow(list_parameters), "]", "\n", sep = ""))
         #   Prepare matrices of prepared statistics library & data observation
         flags_targets <- list_targets_by_parameter[which(list_targets_by_parameter$Variable == para_ID), 2:ncol(list_targets_by_parameter)]
@@ -1120,7 +1118,9 @@ fitting_parameters <- function(library_name,
         #   Predict posterior distribution based on found random forest
         post_rf <- predict(model_rf, mini_obs, data_rf, paral = TRUE, ncores = n_cores)
         #   Choose best values from posterior distribution
-        df_dist <- densityPlot_df(object = model_rf, obs = mini_obs, training = data_rf, cutbound = TRUE, lower = as.numeric(list_parameters$Lower_bound[para]), upper = as.numeric(list_parameters$Upper_bound[para]))
+        df_dist <- densityPlot_df(
+            object = model_rf, obs = mini_obs, training = data_rf
+        )
         post_mean <- weighted.mean(df_dist$x, df_dist$y_posterior)
         post_sd <- weightedSd(df_dist$x, df_dist$y_posterior)
         post_median <- weightedMedian(df_dist$x, df_dist$y_posterior)
@@ -1150,9 +1150,9 @@ fitting_parameters <- function(library_name,
             true_para <- parameters_truth$Value[which(parameters_truth$Variable == para_ID)]
         }
         id <- id + 1
-        row <- id %% 7
-        if (row == 0) row <- 7
-        col <- ceiling(id / 7)
+        row <- id %% nrow_plot
+        if (row == 0) row <- nrow_plot
+        col <- ceiling(id / nrow_plot)
         layout[row, col] <- id
         gs[[id]] <- plot_ABC_inference(
             model_rf, mini_obs, data_rf,
@@ -1165,6 +1165,7 @@ fitting_parameters <- function(library_name,
             fontsize = 20,
             main = list_parameters$Title[para],
             plot_ABC_prior_as_uniform = plot_ABC_prior_as_uniform,
+            cutbound = TRUE,
             para_lower_bound = as.numeric(list_parameters$Lower_bound[para]),
             para_upper_bound = as.numeric(list_parameters$Upper_bound[para])
         )

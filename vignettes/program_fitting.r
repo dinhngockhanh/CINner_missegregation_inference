@@ -19,9 +19,9 @@
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/Output_experiment"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/Output_experiment"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
 # R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
 # R_libPaths <- ""
@@ -31,9 +31,9 @@ R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
 library(readxl)
@@ -49,7 +49,7 @@ setwd(R_workplace)
 #   Number of single-cell samples in ground-truth data & ABC simulations
 N_data_sc <- 2
 #   Number of bulk samples in ground-truth data & ABC simulations
-N_data_bulk <- 3
+N_data_bulk <- 2
 #   Bounds for ground-truth selection rates (1/r -> r)
 bound_ground_truth_arm_s <- 1.15
 #   Bounds for prior distribution of log10(prob_CN_missegregation)
@@ -527,21 +527,21 @@ fitting_parameters(
     list_targets_by_parameter = list_targets,
     plot_ABC_prior_as_uniform = TRUE
 )
-# ===================PLOT CORRELATION BETWEEN INFERENCE AND GROUND TRUTH
-# ===================================================FOR SELECTION RATES
-parameters_inferred <- read.csv("parameters_output_values.csv", header = TRUE)
-parameters_inferred <- parameters_inferred[which(parameters_inferred$Type == "Selection_rate"), ]
-plot_ABC_correlation(
-    inference_result = parameters_inferred,
-    plot_name = paste0(model_name, "_ABC_correlation.jpeg"),
-    title_plot = "Inferred selection rates against ground truth",
-    value_x = "Ground_truth", title_x = "Ground truth",
-    value_y = "Mean", title_y = "Posterior mean +/- std",
-    error_y = "Sd",
-    color_data = "red",
-    plot_RRMSE = TRUE,
-    plot_diagonal = TRUE
-)
+# # ===================PLOT CORRELATION BETWEEN INFERENCE AND GROUND TRUTH
+# # ===================================================FOR SELECTION RATES
+# parameters_inferred <- read.csv("parameters_output_values.csv", header = TRUE)
+# parameters_inferred <- parameters_inferred[which(parameters_inferred$Type == "Selection_rate"), ]
+# plot_ABC_correlation(
+#     inference_result = parameters_inferred,
+#     plot_name = paste0(model_name, "_ABC_correlation.jpeg"),
+#     title_plot = "Inferred selection rates against ground truth",
+#     value_x = "Ground_truth", title_x = "Ground truth",
+#     value_y = "Mean", title_y = "Posterior mean +/- std",
+#     error_y = "Sd",
+#     color_data = "red",
+#     plot_RRMSE = TRUE,
+#     plot_diagonal = TRUE
+# )
 # =============================SENSITIVITY ANALYSIS FOR SIMULATION COUNT
 # sensitivity_parameter <- "ABC_simcount"
 # sensitivity_title <- "Simulation count in ABC library"
