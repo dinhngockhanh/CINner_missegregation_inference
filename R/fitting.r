@@ -1,4 +1,5 @@
 compute_RRMSE <- function(results, ID_actual, ID_predicted) {
+    library(ehaGoF)
     RRMSE <- gofRRMSE(results[[ID_actual]], results[[ID_predicted]], dgt = 3)
     return(RRMSE)
 }
@@ -1056,6 +1057,7 @@ fitting_parameters <- function(library_name,
     model_variables <- ABC_input$model_variables
     sim_param <- ABC_input$sim_param
     sim_stat <- ABC_input$sim_stat
+    ABC_input <- list()
     # ====================================FITTING WITH ABC RANDOM FOREST
     #---List of target statistics
     list_target_statistics <- colnames(list_targets_by_parameter)[-1]
@@ -1179,7 +1181,7 @@ fitting_parameters <- function(library_name,
         post_mode <- c()
     }
     #   Output the csv of parameter values
-    write.csv(list_parameters_output, "parameters_output_values.csv")
+    write.csv(list_parameters_output, paste0(library_name, "_para_output.csv"))
     #   Plot the prior, posterior and chosen best parameter for all variables
     filename <- paste0(library_name, "_ABC_all.jpeg")
     jpeg(filename, width = 3000, height = 1500)
@@ -1206,9 +1208,10 @@ sensitivity_library_statistics <- function(library_name,
                                            arm_level = FALSE) {
     if (sensitivity_parameter == "ABC_simcount") {
         #   Load large rda with all simulations
-        load(paste0(library_name, "_ABC_input.rda"))
         #   Save smaller rda with requested simulation counts
+        ABC_input_mini <- list()
         for (ABC_simcount in sensitivity_values) {
+            load(paste0(library_name, "_ABC_input.rda"))
             ABC_input_mini$model_variables <- ABC_input$model_variables
             ABC_input_mini$sim_param <- ABC_input$sim_param[1:ABC_simcount, ]
             stat_IDs <- names(ABC_input$sim_stat)
@@ -1216,8 +1219,11 @@ sensitivity_library_statistics <- function(library_name,
             for (stat in stat_IDs) {
                 ABC_input_mini$sim_stat[[stat]] <- ABC_input$sim_stat[[stat]][1:ABC_simcount, ]
             }
+            ABC_input <- ABC_input_mini
+            ABC_input_mini <- list()
             filename <- paste0(library_sensitivity_name, "_", ABC_simcount, "_ABC_input.rda")
-            save(ABC_input_mini, file = filename)
+            save(ABC_input, file = filename)
+            ABC_input <- list()
         }
     } else if (sensitivity_parameter == "N_data_sc") {
 
@@ -1259,18 +1265,18 @@ sensitivity_fitting_and_plotting <- function(library_name,
             plot_ABC_prior_as_uniform = plot_ABC_prior_as_uniform
         )
         #   Input the csv of parameter values
-        filename <- paste0(library_name_mini, "_parameters_output_values.csv")
+        filename <- paste0(library_name_mini, "_para_output.csv")
         list_parameters_output_mini <- read.csv(filename, header = TRUE)
         #   Compute RRMSE
-        for (RRMSE_target in RRMSE_targets) {
+        for (j in 1:length(RRMSE_targets)) {
             if (RRMSE_targets[j] == "all") {
-                list_RRMSE[[j]][which(list_RRMSE$Value == sensitivity_value)] <- compute_RRMSE(
+                list_RRMSE[[RRMSE_targets[j]]][which(list_RRMSE$Value == sensitivity_value)] <- compute_RRMSE(
                     results = list_parameters_output_mini,
                     ID_actual = "Ground_truth",
                     ID_predicted = "Mean"
                 )
             } else {
-                list_RRMSE[[j]][which(list_RRMSE$Value == sensitivity_value)] <- compute_RRMSE(
+                list_RRMSE[[RRMSE_targets[j]]][which(list_RRMSE$Value == sensitivity_value)] <- compute_RRMSE(
                     results = list_parameters_output_mini[which(list_parameters_output_mini$Type == RRMSE_targets[j]), ],
                     ID_actual = "Ground_truth",
                     ID_predicted = "Mean"
@@ -1279,22 +1285,31 @@ sensitivity_fitting_and_plotting <- function(library_name,
             # list_RRMSE[[RRMSE_target]][which(list_RRMSE$Value == sensitivity_value)] <- runif(1)
         }
     }
+    print(list_RRMSE)
     #   Plot RRMSE with respect to sensitivity parameter
-    filename <- paste0(library_sensitivity_name, ".jpeg")
-    jpeg(filename, width = 3000, height = 1500)
+
     p <- ggplot(list_RRMSE) +
+        # geom_point(colour = "red", size = 10) +
         xlab(sensitivity_title) +
         ylab("RRMSE") +
         theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
         theme(text = element_text(size = fontsize))
+    colors <- c("red", "blue", "black")
     for (i in 1:length(RRMSE_targets)) {
         RRMSE_target <- RRMSE_targets[i]
-        p <- p + geom_line(
-            aes(x = .data[["Value"]], y = .data[[RRMSE_target]]),
-            color = as.character(i),
-            size = 1
-        )
+        p <- p +
+            geom_point(aes(x = .data[["Value"]], y = .data[[RRMSE_target]]), colour = as.character(i), size = 10) +
+            geom_line(
+                aes(x = .data[["Value"]], y = .data[[RRMSE_target]]),
+                color = as.character(i),
+                size = 1
+            ) +
+            scale_color_manual(values = c("1"= "red", "2" = "blue", "3" = "black")) +
+            guides(color = guide_legend(title = "whatever title I want"))
     }
+    print(p)
+    filename <- paste0(library_sensitivity_name, ".jpeg")
+    jpeg(filename, width = 3000, height = 1500)
     print(p)
     dev.off()
 }

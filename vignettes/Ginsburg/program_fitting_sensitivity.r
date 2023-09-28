@@ -15,13 +15,13 @@
 # save(ABC_input, file = filename)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+R_workplace <- getwd()
+R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/Output_experiment"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/Output_experiment"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
 # R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
 # R_libPaths <- ""
@@ -47,9 +47,9 @@ setwd(R_workplace)
 # devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
 # ==================================================IMPORTANT PARAMETERS
 #   Number of single-cell samples in ground-truth data & ABC simulations
-N_data_sc <- 2
+N_data_sc <- 50
 #   Number of bulk samples in ground-truth data & ABC simulations
-N_data_bulk <- 2
+N_data_bulk <- 100
 #   Bounds for ground-truth selection rates (1/r -> r)
 bound_ground_truth_arm_s <- 1.15
 #   Bounds for prior distribution of log10(prob_CN_missegregation)
@@ -545,8 +545,8 @@ parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 # =============================SENSITIVITY ANALYSIS FOR SIMULATION COUNT
 sensitivity_parameter <- "ABC_simcount"
 sensitivity_title <- "Simulation count in ABC library"
-# sensitivity_values <- c(1000, seq(10000, 100000, by = 10000))
-sensitivity_values <- c(100, 200)
+sensitivity_values <- c(1000, seq(10000, 100000, by = 10000))
+# sensitivity_values <- c(100,200)
 sensitivity_library_statistics(
     library_name = model_name,
     library_sensitivity_name = paste0(model_name, "_simcount"),
