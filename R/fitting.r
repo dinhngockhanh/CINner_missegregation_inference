@@ -1,7 +1,7 @@
-compute_RRMSE <- function(results, ID_actual, ID_predicted) {
-    library(ehaGoF)
-    RRMSE <- gofRRMSE(results[[ID_actual]], results[[ID_predicted]], dgt = 3)
-    return(RRMSE)
+compute_Error <- function(results, ID_actual, ID_predicted) {
+    library(Metrics)
+    error <- rmse(results[[ID_actual]], results[[ID_predicted]])
+    return(error)
 }
 
 #---Function to get arm-level CN profiles
@@ -828,11 +828,6 @@ library_simulations <- function(library_name,
                                 arm_level = FALSE,
                                 cn_table = NULL,
                                 ##############################################
-                                cn_data_sc = NULL,
-                                cn_data_bulk = NULL,
-                                n_simulations_sc = 10,
-                                n_simulations_bulk = 10,
-                                ##############################################
                                 n_cores = NULL) {
     library(parallel)
     library(pbapply)
@@ -868,12 +863,8 @@ library_simulations <- function(library_name,
     list_targets_library <<- list_targets_library
     cn_table <<- cn_table
     arm_level <<- arm_level
-    cn_data_sc <<- cn_data_sc
-    cn_data_bulk <<- cn_data_bulk
-    n_simulations_sc <<- n_simulations_sc
-    n_simulations_bulk <<- n_simulations_bulk
     clusterExport(cl, varlist = c(
-        "n_simulations_sc", "n_simulations_bulk", "list_targets_library", "sim_param", "parameter_IDs", "model_name", "model_variables", "cn_data_sc", "cn_data_sc", "cn_table", "arm_level",
+        "list_targets_library", "sim_param", "parameter_IDs", "model_name", "model_variables", "cn_table", "arm_level",
         "func_stat", "assign_paras", "get_statistics", "get_each_clonal_CN_profiles", "get_cn_profile", "get_arm_CN_profiles",
         "find_clonal_ancestry", "find_event_count", "cn_distance", "sample_distance", "cohort_distance", "get_each_statistics",
         "vec_CN_block_no", "vec_centromeres",
@@ -909,6 +900,7 @@ library_simulations <- function(library_name,
 
 #' @export
 library_statistics <- function(library_name,
+                               library_sensitivity_name = NULL,
                                model_variables,
                                list_parameters,
                                list_targets_library,
@@ -937,6 +929,9 @@ library_statistics <- function(library_name,
     } else {
         ABC_simcount_start_real <- ABC_simcount_start + 1
         ABC_simcount_end_real <- ABC_simcount_start + ABC_simcount
+    }
+    if (is.null(library_sensitivity_name)) {
+        library_sensitivity_name <- library_name
     }
     #   Get statistics for each simulation w.r.t. data
     if (compute_parallel == FALSE) {
@@ -1018,14 +1013,15 @@ library_statistics <- function(library_name,
     sim_param <- data.frame(sim_param)
     colnames(sim_param) <- list_parameters$Variable
     # ======================SAVE RESULTS FROM GET STATISTICS TO LIBRARY
+    dir.create(library_sensitivity_name)
     ABC_input <- list()
     ABC_input$model_variables <- model_variables
     ABC_input$sim_param <- sim_param
     ABC_input$sim_stat <- sim_stat
     if (is.null(ABC_simcount_start)) {
-        filename <- paste0(library_name, "_ABC_input.rda")
+        filename <- paste0(library_sensitivity_name, "/", library_sensitivity_name, "_ABC_input.rda")
     } else {
-        filename <- paste0(library_name, "_ABC_input_", (ABC_simcount_start + ABC_simcount) / ABC_simcount, ".rda")
+        filename <- paste0(library_sensitivity_name, "/", library_sensitivity_name, "_ABC_input_", (ABC_simcount_start + ABC_simcount) / ABC_simcount, ".rda")
     }
     save(ABC_input, file = filename)
 }
@@ -1226,9 +1222,49 @@ sensitivity_library_statistics <- function(library_name,
             ABC_input <- list()
         }
     } else if (sensitivity_parameter == "N_data_sc") {
-
+        N_data_bulk <- as.numeric(names(ground_truth_cn_data_bulk_whole[-1]))
+        for (N_data_sc in sensitivity_values) {
+            cn_data_sc <- ground_truth_cn_data_sc_whole[[as.character(N_data_sc)]]
+            cn_data_bulk <- ground_truth_cn_data_bulk_whole[[-1]]
+            each_library_sensitivity_name <- paste0(library_sensitivity_name, "_", as.character(N_data_sc))
+            library_statistics(
+                library_name = library_name,
+                library_sensitivity_name = each_library_sensitivity_name,
+                model_variables = model_variables,
+                list_parameters = list_parameters,
+                list_targets_library = list_targets_library,
+                ABC_simcount_start = ABC_simcount_start,
+                ABC_simcount = ABC_simcount,
+                compute_parallel = compute_parallel,
+                n_cores = n_cores,
+                cn_data_sc = cn_data_sc,
+                cn_data_bulk = cn_data_bulk,
+                cn_table = cn_table,
+                arm_level = arm_level
+            )
+        }
     } else if (sensitivity_parameter == "N_data_bulk") {
-
+        N_data_sc <- as.numeric(names(ground_truth_cn_data_sc_whole[-1]))
+        for (N_data_bulk in sensitivity_values) {
+            cn_data_bulk <- ground_truth_cn_data_bulk_whole[[as.character(N_data_bulk)]]
+            cn_data_sc <- ground_truth_cn_data_sc_whole[[-1]]
+            each_library_sensitivity_name <- paste0(library_sensitivity_name, "_", as.character(N_data_bulk))
+            library_statistics(
+                library_name = library_name,
+                library_sensitivity_name = each_library_sensitivity_name,
+                model_variables = model_variables,
+                list_parameters = list_parameters,
+                list_targets_library = list_targets_library,
+                ABC_simcount_start = ABC_simcount_start,
+                ABC_simcount = ABC_simcount,
+                compute_parallel = compute_parallel,
+                n_cores = n_cores,
+                cn_data_sc = cn_data_sc,
+                cn_data_bulk = cn_data_bulk,
+                cn_table = cn_table,
+                arm_level = arm_level
+            )
+        }
     }
 }
 
@@ -1237,8 +1273,8 @@ sensitivity_fitting_and_plotting <- function(library_name,
                                              library_sensitivity_name,
                                              sensitivity_title,
                                              sensitivity_values,
-                                             RRMSE_targets = c("all", "CNA_probability", "Selection_rate"),
-                                             RRMSE_titles = c("All parameters", "Prob(misseg)", "Sel. rates"),
+                                             Error_targets = c("CNA_probability", "Selection_rate"),
+                                             Error_titles = c("All parameters", "Prob(misseg)", "Sel. rates"),
                                              copynumber_DATA,
                                              parameters_truth = NULL,
                                              list_parameters,
@@ -1247,10 +1283,10 @@ sensitivity_fitting_and_plotting <- function(library_name,
                                              plot_ABC_prior_as_uniform = FALSE,
                                              fontsize = 50) {
     library(ggplot2)
-    #   Compute matrix of RRMSE
-    list_RRMSE <- data.frame(Value = sensitivity_values)
-    for (RRMSE_target in RRMSE_targets) {
-        list_RRMSE[[RRMSE_target]] <- NA
+    #   Compute matrix of Error
+    list_Error <- data.frame(Value = sensitivity_values)
+    for (Error_target in Error_targets) {
+        list_Error[[Error_target]] <- NA
     }
     for (sensitivity_value in sensitivity_values) {
         #   ABC fitting for each sensitivity value
@@ -1267,45 +1303,34 @@ sensitivity_fitting_and_plotting <- function(library_name,
         #   Input the csv of parameter values
         filename <- paste0(library_name_mini, "_para_output.csv")
         list_parameters_output_mini <- read.csv(filename, header = TRUE)
-        #   Compute RRMSE
-        for (j in 1:length(RRMSE_targets)) {
-            if (RRMSE_targets[j] == "all") {
-                list_RRMSE[[RRMSE_targets[j]]][which(list_RRMSE$Value == sensitivity_value)] <- compute_RRMSE(
-                    results = list_parameters_output_mini,
-                    ID_actual = "Ground_truth",
-                    ID_predicted = "Mean"
-                )
-            } else {
-                list_RRMSE[[RRMSE_targets[j]]][which(list_RRMSE$Value == sensitivity_value)] <- compute_RRMSE(
-                    results = list_parameters_output_mini[which(list_parameters_output_mini$Type == RRMSE_targets[j]), ],
-                    ID_actual = "Ground_truth",
-                    ID_predicted = "Mean"
-                )
-            }
-            # list_RRMSE[[RRMSE_target]][which(list_RRMSE$Value == sensitivity_value)] <- runif(1)
+        #   Compute Error
+        for (j in 1:length(Error_targets)) {
+            list_Error[[Error_targets[j]]][which(list_Error$Value == sensitivity_value)] <- compute_Error(
+                results = list_parameters_output_mini[which(list_parameters_output_mini$Type == Error_targets[j]), ],
+                ID_actual = "Ground_truth",
+                ID_predicted = "Mean"
+            )
+            # list_Error[[Error_target]][which(list_Error$Value == sensitivity_value)] <- runif(1)
         }
     }
-    print(list_RRMSE)
-    #   Plot RRMSE with respect to sensitivity parameter
+    print(list_Error)
+    #   Plot Error with respect to sensitivity parameter
 
-    p <- ggplot(list_RRMSE) +
+    p <- ggplot(list_Error) +
         # geom_point(colour = "red", size = 10) +
         xlab(sensitivity_title) +
-        ylab("RRMSE") +
+        ylab("RMSE") +
         theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
         theme(text = element_text(size = fontsize))
-    colors <- c("red", "blue", "black")
-    for (i in 1:length(RRMSE_targets)) {
-        RRMSE_target <- RRMSE_targets[i]
+    for (i in 1:length(Error_targets)) {
+        Error_target <- Error_targets[i]
         p <- p +
-            geom_point(aes(x = .data[["Value"]], y = .data[[RRMSE_target]]), colour = as.character(i), size = 10) +
+            geom_point(aes(x = .data[["Value"]], y = .data[[Error_target]]), colour = as.character(i), size = 10) +
             geom_line(
-                aes(x = .data[["Value"]], y = .data[[RRMSE_target]]),
+                aes(x = .data[["Value"]], y = .data[[Error_target]]),
                 color = as.character(i),
                 size = 1
-            ) +
-            scale_color_manual(values = c("1"= "red", "2" = "blue", "3" = "black")) +
-            guides(color = guide_legend(title = "whatever title I want"))
+            )
     }
     print(p)
     filename <- paste0(library_sensitivity_name, ".jpeg")
