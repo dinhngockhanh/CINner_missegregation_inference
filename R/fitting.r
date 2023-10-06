@@ -1050,6 +1050,7 @@ fitting_parameters <- function(library_name,
     # ======================================================LOAD LIBRARY
     filename <- paste0(library_name, "_ABC_input.rda")
     load(filename)
+
     model_variables <- ABC_input$model_variables
     sim_param <- ABC_input$sim_param
     sim_stat <- ABC_input$sim_stat
@@ -1222,10 +1223,10 @@ sensitivity_library_statistics <- function(library_name,
             ABC_input <- list()
         }
     } else if (sensitivity_parameter == "N_data_sc") {
-        N_data_bulk <- as.numeric(names(ground_truth_cn_data_bulk_whole[-1]))
+        N_data_bulk <- as.numeric(names(ground_truth_cn_data_bulk_whole))
         for (N_data_sc in sensitivity_values) {
             cn_data_sc <- ground_truth_cn_data_sc_whole[[as.character(N_data_sc)]]
-            cn_data_bulk <- ground_truth_cn_data_bulk_whole[[-1]]
+            cn_data_bulk <- ground_truth_cn_data_bulk_whole[[1]]
             each_library_sensitivity_name <- paste0(library_sensitivity_name, "_", as.character(N_data_sc))
             library_statistics(
                 library_name = library_name,
@@ -1244,10 +1245,10 @@ sensitivity_library_statistics <- function(library_name,
             )
         }
     } else if (sensitivity_parameter == "N_data_bulk") {
-        N_data_sc <- as.numeric(names(ground_truth_cn_data_sc_whole[-1]))
+        N_data_sc <- as.numeric(names(ground_truth_cn_data_sc_whole))
         for (N_data_bulk in sensitivity_values) {
             cn_data_bulk <- ground_truth_cn_data_bulk_whole[[as.character(N_data_bulk)]]
-            cn_data_sc <- ground_truth_cn_data_sc_whole[[-1]]
+            cn_data_sc <- ground_truth_cn_data_sc_whole[[1]]
             each_library_sensitivity_name <- paste0(library_sensitivity_name, "_", as.character(N_data_bulk))
             library_statistics(
                 library_name = library_name,
@@ -1272,6 +1273,7 @@ sensitivity_library_statistics <- function(library_name,
 sensitivity_fitting_and_plotting <- function(library_name,
                                              library_sensitivity_name,
                                              sensitivity_title,
+                                             sensitivity_parameter,
                                              sensitivity_values,
                                              Error_targets = c("CNA_probability", "Selection_rate"),
                                              Error_titles = c("All parameters", "Prob(misseg)", "Sel. rates"),
@@ -1289,11 +1291,16 @@ sensitivity_fitting_and_plotting <- function(library_name,
         list_Error[[Error_target]] <- NA
     }
     for (sensitivity_value in sensitivity_values) {
+        if (sensitivity_parameter == "ABC_simcount") {
+            copynumber_DATA_to_use <- copynumber_DATA
+        } else {
+            copynumber_DATA_to_use <- copynumber_DATA[[as.character(sensitivity_value)]]
+        }
         #   ABC fitting for each sensitivity value
         library_name_mini <- paste0(library_sensitivity_name, "_", sensitivity_value)
         fitting_parameters(
             library_name = library_name_mini,
-            copynumber_DATA = copynumber_DATA,
+            copynumber_DATA = copynumber_DATA_to_use,
             parameters_truth = parameters_truth,
             list_parameters = list_parameters,
             list_targets_by_parameter = list_targets_by_parameter,
@@ -1310,7 +1317,6 @@ sensitivity_fitting_and_plotting <- function(library_name,
                 ID_actual = "Ground_truth",
                 ID_predicted = "Mean"
             )
-            # list_Error[[Error_target]][which(list_Error$Value == sensitivity_value)] <- runif(1)
         }
     }
     print(list_Error)
