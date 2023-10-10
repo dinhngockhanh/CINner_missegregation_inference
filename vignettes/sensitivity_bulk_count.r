@@ -329,7 +329,7 @@ for (i in 1:length(sensitivity_values_bulk)) {
     ground_truth_cn_data_bulk_whole[[as.character(N_data_bulk)]] <- ground_truth_cn_data_bulk
 }
 # =============================SENSITIVITY ANALYSIS FOR SIMULATION COUNT
-ABC_simcount <- 100
+ABC_simcount <- 200
 sensitivity_parameter <- "N_data_bulk"
 sensitivity_title <- "Bulk sample count in ABC library"
 sensitivity_library_statistics(

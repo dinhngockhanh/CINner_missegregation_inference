@@ -24,7 +24,7 @@ for (i in sensitivity_values_sc) {
     filename <- paste0("Fitting_whole_chroms_N_data_sc_", i, "_ABC_input_1.rda")
     load(filename)
     ABC_input_all <- ABC_input
-    for (batch in 2:5) {
+    for (batch in 2:250) {
         filename <- paste0("Fitting_whole_chroms_N_data_sc_", i, "_ABC_input_", batch, ".rda")
         load(filename)
         ABC_input_all$sim_param <- rbind(ABC_input_all$sim_param, ABC_input$sim_param)
