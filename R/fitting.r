@@ -1294,15 +1294,16 @@ sensitivity_fitting_and_plotting <- function(library_name,
                                              fontsize = 50,
                                              fitting = FALSE) {
     library(ggplot2)
-    a <- c("Selection_rate_Var", "Value", "CNA_probability_Sd", "CNA_probability_RMSE")
-    grep("CNA_probability", a)
+    library(tidyr)
     #   Compute matrix of Error
-    list_Error <- data.frame(Value = sensitivity_values)
+    list_Error <- list()
     for (Error_target in Error_targets) {
+        list_Error[[Error_target]] <- data.frame(Value = sensitivity_values)
         for (Error_metric in Error_metrics) {
-            list_Error[[paste0(Error_target, "_", Error_metric)]] <- NA
+            list_Error[[Error_target]][[Error_metric]] <- NA
         }
     }
+
     for (sensitivity_value in sensitivity_values) {
         if (sensitivity_parameter == "ABC_simcount") {
             copynumber_DATA_to_use <- copynumber_DATA
@@ -1325,69 +1326,68 @@ sensitivity_fitting_and_plotting <- function(library_name,
         #   Input the csv of parameter values
         filename <- paste0(library_name_mini, "_para_output.csv")
         list_parameters_output_mini <- read.csv(filename, header = TRUE)
+        print(list_parameters_output_mini)
         #   Compute Error
         for (j in 1:length(Error_targets)) {
             for (k in 1:length(Error_metrics)) {
                 if (Error_metrics[k] == "Sd") {
-                    list_Error[[paste0(Error_targets, "_", Error_metrics[k])[j]]][which(list_Error$Value == sensitivity_value)] <-
+                    list_Error[[Error_targets[j]]][[Error_metrics[k]]][which(list_Error[[Error_targets[j]]]$Value == sensitivity_value)] <-
                         mean(list_parameters_output_mini$Sd[which(list_parameters_output_mini$Type == Error_targets[j])])
+                    print(list_Error[[Error_targets[j]]][[paste0(Error_targets[j], "_", Error_metrics[k])]])
                 } else if (Error_metrics[k] == "RMSE") {
-                    list_Error[[paste0(Error_targets, "_", Error_metrics[k])[j]]][which(list_Error$Value == sensitivity_value)] <- compute_Error(
+                    list_Error[[Error_targets[j]]][[Error_metrics[k]]][which(list_Error[[Error_targets[j]]]$Value == sensitivity_value)] <- compute_Error(
                         results = list_parameters_output_mini[which(list_parameters_output_mini$Type == Error_targets[j]), ],
                         ID_actual = "Ground_truth",
                         ID_predicted = "Mean"
                     )
                 } else if (Error_metrics[k] == "Var") {
-                    list_Error[[paste0(Error_targets, "_", Error_metrics[k])[j]]][which(list_Error$Value == sensitivity_value)] <-
+                    list_Error[[Error_targets[j]]][[Error_metrics[k]]][which(list_Error[[Error_targets[j]]]$Value == sensitivity_value)] <-
                         (mean(list_parameters_output_mini$Sd[which(list_parameters_output_mini$Type == Error_targets[j])]))^2
                 }
             }
         }
     }
     print(list_Error)
+
     #   Plot Error with respect to sensitivity parameter
     for (i in 1:length(Error_targets)) {
         Error_target <- Error_targets[i]
-        p <- ggplot(list_Error) +
-            # geom_point(colour = "red", size = 10) +
+        # Define a custom color palette
+        custom_colors <- c("Var" = "blue", "Sd" = "green", "RMSE" = "red")
+        # Reshape the DataFrame into long format
+        df_long <- pivot_longer(list_Error[[Error_target]], cols = -Value, names_to = "Variable", values_to = "Value2")
+        # Create the ggplot and map the colors using scale_color_manual
+        p <- ggplot(df_long, aes(x = Value, y = Value2, color = Variable)) +
             xlab(paste0(strsplit(sensitivity_title, " ")[[1]][1], " Sample Cohort Size")) +
             ylab("") +
             theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
             theme(text = element_text(size = fontsize)) +
-            geom_point(aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[1])]], colour = "Var"), size = 10) +
-            geom_line(aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[1])]], colour = "Var"), size = 1) +
-            geom_point(aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[2])]], colour = "Sd"), size = 10) +
-            geom_line(aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[2])]], colour = "Sd"), size = 1) +
-            geom_point(aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[3])]], colour = "RMSE"), size = 10) +
-            geom_line(aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[3])]], colour = "RMSE"), size = 1) +
-            scale_color_manual(
-                values = c(Var = "blue", Sd = "green", RMSE = "red"),
-                labels = c(Var = "Var", Sd = "Sd", RMSE = "RMSE"),
-                limits = c("Var", "Sd", "RMSE")
-            ) +
-            theme(legend.position = "right", legend.title = element_blank(), legend.text = element_text(size = fontsize))
+            geom_line(size = 1) +
+            geom_point(size = 10) +
+            scale_color_manual(values = custom_colors) +
+            theme(legend.position = "right", legend.title = element_blank(), legend.text = element_text(size = fontsize / 2))
         filename <- paste0(library_sensitivity_name, "_", Error_target, ".jpeg")
         jpeg(filename, width = 2000, height = 1500)
         print(p)
         dev.off()
+
         # for (j in 1:length(Error_metrics)) {
         #     p <- p +
-        #         # geom_point(aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[j])]]), size = 10, colour = error_metric_colors[j]) +
-        #         # geom_line(
-        #         #     aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[j])]]),
-        #         #     size = 1, colour = error_metric_colors[j]
-        #         # )
-        #         geom_point(aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[j])]], group = Error_metrics), size = 10) +
+        #         geom_point(aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[j])]], colour = Error_metrics[j]), size = 10) +
         #         geom_line(
-        #             aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[j])]], group = Error_metrics),
+        #             aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[j])]], colour = Error_metrics[j]),
         #             size = 1
         #         )
-        #     # ) +
-        #     # scale_color_manual(
-        #     #     values = c(Var = "blue", Sd = "green", RMSE = "red"),
-        #     #     labels = c(Var = "Var", Sd = "Sd", RMSE = "RMSE"),
-        #     #     limits = c("Var", "Sd", "RMSE")
-        #     # )
         # }
+        # p <- p +
+        #     scale_color_manual(
+        #         values = c(Var = "blue", Sd = "green", RMSE = "red"),
+        #         labels = c(Var = "Var", Sd = "Sd", RMSE = "RMSE"),
+        #         limits = c("Var", "Sd", "RMSE")
+        #     )
+        # filename <- paste0(library_sensitivity_name, "_", Error_target, ".jpeg")
+        # jpeg(filename, width = 2000, height = 1500)
+        # print(p)
+        # dev.off()
     }
 }

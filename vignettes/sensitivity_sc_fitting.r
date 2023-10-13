@@ -406,7 +406,7 @@ list_targets_selection <- c(
     paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=var;variable=shannon;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
+    paste0("data=sc;target=chromosome;statistsic=var;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes)
     # #---Single-cell DNA: phylo stats for tips
