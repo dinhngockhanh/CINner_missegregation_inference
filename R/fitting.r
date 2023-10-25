@@ -1,6 +1,8 @@
-compute_Error <- function(results, ID_actual, ID_predicted) {
+compute_error <- function(results, ID_actual, ID_predicted) {
     library(Metrics)
     error <- rmse(results[[ID_actual]], results[[ID_predicted]])
+    # library(ehaGoF)
+    # error <- gofRRMSE(results[[ID_actual]], results[[ID_predicted]], dgt = 3)
     return(error)
 }
 
@@ -1353,7 +1355,7 @@ sensitivity_fitting_and_plotting <- function(library_name,
     for (i in 1:length(Error_targets)) {
         Error_target <- Error_targets[i]
         # Define a custom color palette
-        custom_colors <- c("Var" = "blue", "Sd" = "green", "RMSE" = "red")
+        custom_colors <- c("Var" = "blue", "Sd" = "#0084ff", "RMSE" = "#ff8c00")
         # Reshape the DataFrame into long format
         df_long <- pivot_longer(list_Error[[Error_target]], cols = -Value, names_to = "Variable", values_to = "Value2")
         # Create the ggplot and map the colors using scale_color_manual
@@ -1367,7 +1369,7 @@ sensitivity_fitting_and_plotting <- function(library_name,
             scale_color_manual(values = custom_colors) +
             theme(legend.position = "right", legend.title = element_blank(), legend.text = element_text(size = fontsize / 2))
         filename <- paste0(library_sensitivity_name, "_", Error_target, ".jpeg")
-        jpeg(filename, width = 2000, height = 1500)
+        jpeg(filename, width = 2000, height = 1000)
         print(p)
         dev.off()
 
