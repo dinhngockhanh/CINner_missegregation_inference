@@ -1032,6 +1032,7 @@ library_statistics <- function(library_name,
 fitting_parameters <- function(library_name,
                                copynumber_DATA,
                                parameters_truth = NULL,
+                               rda_name = NULL,
                                list_parameters,
                                list_targets_by_parameter,
                                n_cores = NULL,
@@ -1050,7 +1051,10 @@ fitting_parameters <- function(library_name,
         n_cores <- max(detectCores() - 1, 1)
     }
     # ======================================================LOAD LIBRARY
-    filename <- paste0(library_name, "_ABC_input.rda")
+    if (is.null(rda_name)) {
+        rda_name <- library_name
+    }
+    filename <- paste0(rda_name, "_ABC_input.rda")
     load(filename)
 
     model_variables <- ABC_input$model_variables
@@ -1286,7 +1290,7 @@ sensitivity_fitting_and_plotting <- function(library_name,
                                              sensitivity_values,
                                              Error_targets = c("CNA_probability", "Selection_rate"),
                                              Error_metrics = c("Var", "Sd", "RMSE"),
-                                             Error_titles = c("All parameters", "Prob(misseg)", "Sel. rates"),
+                                             #  Error_titles = c("All parameters", "Prob(misseg)", "Sel. rates"),
                                              copynumber_DATA = NULL,
                                              parameters_truth = NULL,
                                              list_parameters,
@@ -1392,4 +1396,87 @@ sensitivity_fitting_and_plotting <- function(library_name,
         # print(p)
         # dev.off()
     }
+}
+
+#' @export
+statistics_fitting_and_plotting <- function(library_name,
+                                            library_statistics_name,
+                                            statistics_title,
+                                            statistics_values,
+                                            Error_targets = c("CNA_probability", "Selection_rate"),
+                                            #  Error_metrics = c("Var", "Sd", "RMSE"),
+                                            #  Error_titles = c("All parameters", "Prob(misseg)", "Sel. rates"),
+                                            copynumber_DATA = NULL,
+                                            parameters_truth = NULL,
+                                            list_parameters,
+                                            list_targets_library = NULL,
+                                            list_targets_misseg = NULL,
+                                            list_targets_selection = NULL,
+                                            n_cores = NULL,
+                                            plot_ABC_prior_as_uniform = FALSE,
+                                            fontsize = 50,
+                                            fitting = FALSE) {
+    library(ggplot2)
+    library(tidyr)
+    list_Error <- data.frame(Value = statistics_values)
+
+    for (i in 1) {
+        stat_value <- statistics_values[i]
+        if (fitting == TRUE) {
+            library_name_mini <- paste0(library_statistics_name, "_", stat_value)
+            list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
+            colnames(list_targets) <- c("Variable", list_targets_library)
+            list_targets[, 1] <- list_parameters$Variable
+            for (row in 1:nrow(list_targets)) {
+                if (any(grep("Green", stat_value))) {
+                    list_targets[row, which(colnames(list_targets) %in%
+                        list_targets_library[grep(
+                            "variable=(average_CN|clonal_CN|event_count|shannon)",
+                            list_targets_library
+                        )])] <- 1
+                } else if (any(grep("Blue", stat_value))) {
+                    list_targets[row, which(colnames(list_targets) %in%
+                        list_targets_library[grep(
+                            "variable=(cherries|pitchforks|IL_number|avgLadder)",
+                            list_targets_library
+                        )])] <- 1
+                } else if (any(grep("Red", stat_value))) {
+                    list_targets[row, which(colnames(list_targets) %in%
+                        list_targets_library[grep(
+                            "variable=(stairs|colless|sackin|B2)",
+                            list_targets_library
+                        )])] <- 1
+                } else if (stat_value == "all") {
+                    list_targets[row, which(colnames(list_targets) %in%
+                        list_targets_library)] <- 1
+                }
+            }
+            print(list_targets)
+            fitting_parameters(
+                rda_name = library_name,
+                library_name = library_name_mini,
+                copynumber_DATA = copynumber_DATA,
+                parameters_truth = parameters_truth,
+                list_parameters = list_parameters,
+                list_targets_by_parameter = list_targets,
+                n_cores = n_cores,
+                plot_ABC_prior_as_uniform = plot_ABC_prior_as_uniform
+            )
+        }
+        #   Input the csv of parameter values
+        filename <- paste0(library_name_mini, "_para_output.csv")
+        list_parameters_output_mini <- read.csv(filename, header = TRUE)
+        print(list_parameters_output_mini)
+        #   Compute Error
+        for (Error_target in Error_targets) {
+            list_Error$Error_target[which(list_Error$Value == stat_value)] <- compute_Error(
+                results = list_parameters_output_mini[which(list_parameters_output_mini$Type == Error_target), ],
+                ID_actual = "Ground_truth",
+                ID_predicted = "Mean"
+            )
+        }
+    }
+    print("=======================================")
+    print(list_Error)
+    print("=======================================")
 }
