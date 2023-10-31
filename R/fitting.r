@@ -1297,7 +1297,7 @@ sensitivity_fitting_and_plotting <- function(library_name,
                                              list_targets_by_parameter = NULL,
                                              n_cores = NULL,
                                              plot_ABC_prior_as_uniform = FALSE,
-                                             fontsize = 50,
+                                             fontsize = 20,
                                              fitting = FALSE) {
     library(ggplot2)
     library(tidyr)
@@ -1371,30 +1371,11 @@ sensitivity_fitting_and_plotting <- function(library_name,
             geom_line(size = 1) +
             geom_point(size = 10) +
             scale_color_manual(values = custom_colors) +
-            theme(legend.position = "right", legend.title = element_blank(), legend.text = element_text(size = fontsize / 2))
+            theme(legend.position = , legend.title = element_blank(), legend.text = element_text(size = fontsize / 2))
         filename <- paste0(library_sensitivity_name, "_", Error_target, ".jpeg")
         jpeg(filename, width = 2000, height = 1000)
         print(p)
         dev.off()
-
-        # for (j in 1:length(Error_metrics)) {
-        #     p <- p +
-        #         geom_point(aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[j])]], colour = Error_metrics[j]), size = 10) +
-        #         geom_line(
-        #             aes(x = .data[["Value"]], y = .data[[paste0(Error_target, "_", Error_metrics[j])]], colour = Error_metrics[j]),
-        #             size = 1
-        #         )
-        # }
-        # p <- p +
-        #     scale_color_manual(
-        #         values = c(Var = "blue", Sd = "green", RMSE = "red"),
-        #         labels = c(Var = "Var", Sd = "Sd", RMSE = "RMSE"),
-        #         limits = c("Var", "Sd", "RMSE")
-        #     )
-        # filename <- paste0(library_sensitivity_name, "_", Error_target, ".jpeg")
-        # jpeg(filename, width = 2000, height = 1500)
-        # print(p)
-        # dev.off()
     }
 }
 
@@ -1414,16 +1395,17 @@ statistics_fitting_and_plotting <- function(library_name,
                                             list_targets_selection = NULL,
                                             n_cores = NULL,
                                             plot_ABC_prior_as_uniform = FALSE,
-                                            fontsize = 50,
-                                            fitting = FALSE) {
+                                            fontsize = 40,
+                                            fitting = FALSE,
+                                            plot_name) {
     library(ggplot2)
     library(tidyr)
-    list_Error <- data.frame(Value = statistics_values)
-
-    for (i in 1) {
-        stat_value <- statistics_values[i]
+    list_Error <- data.frame(matrix(ncol = 3, nrow = 0))
+    colnames(list_Error) <- c("Error_Targets", "Statistics_values", "Error")
+    for (stat_value in statistics_values) {
+        library_name_mini <- paste0(library_statistics_name, "_", stat_value)
+        # stat_value <- statistics_values[i]
         if (fitting == TRUE) {
-            library_name_mini <- paste0(library_statistics_name, "_", stat_value)
             list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
             colnames(list_targets) <- c("Variable", list_targets_library)
             list_targets[, 1] <- list_parameters$Variable
@@ -1446,12 +1428,11 @@ statistics_fitting_and_plotting <- function(library_name,
                             "variable=(stairs|colless|sackin|B2)",
                             list_targets_library
                         )])] <- 1
-                } else if (stat_value == "all") {
+                } else if (stat_value == "All") {
                     list_targets[row, which(colnames(list_targets) %in%
                         list_targets_library)] <- 1
                 }
             }
-            print(list_targets)
             fitting_parameters(
                 rda_name = library_name,
                 library_name = library_name_mini,
@@ -1466,17 +1447,25 @@ statistics_fitting_and_plotting <- function(library_name,
         #   Input the csv of parameter values
         filename <- paste0(library_name_mini, "_para_output.csv")
         list_parameters_output_mini <- read.csv(filename, header = TRUE)
-        print(list_parameters_output_mini)
         #   Compute Error
         for (Error_target in Error_targets) {
-            list_Error$Error_target[which(list_Error$Value == stat_value)] <- compute_Error(
+            list_Error[nrow(list_Error) + 1, ] <- c(Error_target, stat_value, round(compute_error(
                 results = list_parameters_output_mini[which(list_parameters_output_mini$Type == Error_target), ],
                 ID_actual = "Ground_truth",
                 ID_predicted = "Mean"
-            )
+            ), digits = 3))
         }
     }
-    print("=======================================")
-    print(list_Error)
-    print("=======================================")
+    p <- ggplot(data = list_Error, aes(x = Statistics_values, y = Error, fill = Error_Targets)) +
+        geom_bar(stat = "identity", position = position_dodge(), width = 0.6) +
+        scale_fill_manual(values = c("CNA_probability" = "#dd4751", "Selection_rate" = "darkblue", alpha = 0.3))
+    p <- p +
+        xlab(statistics_title) +
+        ylab("RMSE") +
+        theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
+        theme(text = element_text(size = fontsize)) +
+        theme(legend.position = "top", legend.title = element_blank(), legend.text = element_text(size = fontsize / 2)) +
+        jpeg(plot_name, width = 1500, height = 1500)
+    print(p)
+    dev.off()
 }

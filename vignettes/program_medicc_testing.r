@@ -87,7 +87,7 @@ list_targets_library <- c(
     "data=sc;target=genome;statistic=mean;variable=colless", # balance index of phylogeny tree
     "data=sc;target=genome;statistic=mean;variable=sackin", # balance index of phylogeny tree
     "data=sc;target=genome;statistic=mean;variable=B2", # balance index of phylogeny tree
-    "data=sc;target=genome;statistic=mean;variable=maxDepth", # height of phylogeny tree
+    "data=sc;target=genome;statistic=mean;variable=maxDepth" # height of phylogeny tree
     # "data=sc;target=genome;statistic=var;variable=stairs",
     # "data=sc;target=genome;statistic=var;variable=colless",
     # "data=sc;target=genome;statistic=var;variable=sackin",
