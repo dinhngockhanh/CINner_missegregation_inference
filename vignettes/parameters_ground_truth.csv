@@ -1,0 +1,24 @@
+"","Variable","Title","Chromosome","Type","Lower_bound","Upper_bound","Value"
+"1","10^:prob_CN_missegregation","log10(prob_misseg)",NA,"CNA_probability","-5","-3",-3.69897000433602
+"2","1p","Selection rate - chromosome 1","1","Arm_selection_rate","0.833333333333333","1.2",0.961699084268628
+"3","2p","Selection rate - chromosome 2","2","Arm_selection_rate","0.833333333333333","1.2",1.08592800450278
+"4","3p","Selection rate - chromosome 3","3","Arm_selection_rate","0.833333333333333","1.2",1.03025228965562
+"5","4p","Selection rate - chromosome 4","4","Arm_selection_rate","0.833333333333333","1.2",1.1417012902908
+"6","5p","Selection rate - chromosome 5","5","Arm_selection_rate","0.833333333333333","1.2",0.913770154441756
+"7","6p","Selection rate - chromosome 6","6","Arm_selection_rate","0.833333333333333","1.2",0.970029779285792
+"8","7p","Selection rate - chromosome 7","7","Arm_selection_rate","0.833333333333333","1.2",0.906574401133888
+"9","8p","Selection rate - chromosome 8","8","Arm_selection_rate","0.833333333333333","1.2",0.896478103563284
+"10","9p","Selection rate - chromosome 9","9","Arm_selection_rate","0.833333333333333","1.2",1.10764277623966
+"11","10p","Selection rate - chromosome 10","10","Arm_selection_rate","0.833333333333333","1.2",1.05700527691515
+"12","11p","Selection rate - chromosome 11","11","Arm_selection_rate","0.833333333333333","1.2",0.877034666415966
+"13","12p","Selection rate - chromosome 12","12","Arm_selection_rate","0.833333333333333","1.2",0.910953340846325
+"14","13p","Selection rate - chromosome 13","13","Arm_selection_rate","0.833333333333333","1.2",0.961461636769969
+"15","14p","Selection rate - chromosome 14","14","Arm_selection_rate","0.833333333333333","1.2",0.997995476212367
+"16","15p","Selection rate - chromosome 15","15","Arm_selection_rate","0.833333333333333","1.2",0.884600638399784
+"17","16p","Selection rate - chromosome 16","16","Arm_selection_rate","0.833333333333333","1.2",1.07231201732066
+"18","17p","Selection rate - chromosome 17","17","Arm_selection_rate","0.833333333333333","1.2",0.931071651988236
+"19","18p","Selection rate - chromosome 18","18","Arm_selection_rate","0.833333333333333","1.2",1.12410599779105
+"20","19p","Selection rate - chromosome 19","19","Arm_selection_rate","0.833333333333333","1.2",0.893546466798583
+"21","20p","Selection rate - chromosome 20","20","Arm_selection_rate","0.833333333333333","1.2",0.902073887970773
+"22","21p","Selection rate - chromosome 21","21","Arm_selection_rate","0.833333333333333","1.2",1.12314194411738
+"23","22p","Selection rate - chromosome 22","22","Arm_selection_rate","0.833333333333333","1.2",1.11743991434341

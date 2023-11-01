@@ -1384,7 +1384,9 @@ statistics_fitting_and_plotting <- function(library_name,
                                             library_statistics_name,
                                             statistics_title,
                                             statistics_values,
+                                            statistics_IDs,
                                             Error_targets = c("CNA_probability", "Selection_rate"),
+                                            Error_IDs = c("CNA probability", "Selection rate"),
                                             #  Error_metrics = c("Var", "Sd", "RMSE"),
                                             #  Error_titles = c("All parameters", "Prob(misseg)", "Sel. rates"),
                                             copynumber_DATA = NULL,
@@ -1400,71 +1402,85 @@ statistics_fitting_and_plotting <- function(library_name,
                                             plot_name) {
     library(ggplot2)
     library(tidyr)
-    list_Error <- data.frame(matrix(ncol = 3, nrow = 0))
-    colnames(list_Error) <- c("Error_Targets", "Statistics_values", "Error")
+    list_Error <- data.frame(matrix(ncol = 5, nrow = 0))
+    colnames(list_Error) <- c("Error_Targets", "Statistics_values", "Error", "Error_Titles", "Target_Titles")
     for (stat_value in statistics_values) {
         library_name_mini <- paste0(library_statistics_name, "_", stat_value)
-        # stat_value <- statistics_values[i]
-        if (fitting == TRUE) {
-            list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
-            colnames(list_targets) <- c("Variable", list_targets_library)
-            list_targets[, 1] <- list_parameters$Variable
-            for (row in 1:nrow(list_targets)) {
-                if (any(grep("Green", stat_value))) {
-                    list_targets[row, which(colnames(list_targets) %in%
-                        list_targets_library[grep(
-                            "variable=(average_CN|clonal_CN|event_count|shannon)",
-                            list_targets_library
-                        )])] <- 1
-                } else if (any(grep("Blue", stat_value))) {
-                    list_targets[row, which(colnames(list_targets) %in%
-                        list_targets_library[grep(
-                            "variable=(cherries|pitchforks|IL_number|avgLadder)",
-                            list_targets_library
-                        )])] <- 1
-                } else if (any(grep("Red", stat_value))) {
-                    list_targets[row, which(colnames(list_targets) %in%
-                        list_targets_library[grep(
-                            "variable=(stairs|colless|sackin|B2)",
-                            list_targets_library
-                        )])] <- 1
-                } else if (stat_value == "All") {
-                    list_targets[row, which(colnames(list_targets) %in%
-                        list_targets_library)] <- 1
-                }
-            }
-            fitting_parameters(
-                rda_name = library_name,
-                library_name = library_name_mini,
-                copynumber_DATA = copynumber_DATA,
-                parameters_truth = parameters_truth,
-                list_parameters = list_parameters,
-                list_targets_by_parameter = list_targets,
-                n_cores = n_cores,
-                plot_ABC_prior_as_uniform = plot_ABC_prior_as_uniform
-            )
-        }
+        # if (fitting == TRUE) {
+        #     list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
+        #     colnames(list_targets) <- c("Variable", list_targets_library)
+        #     list_targets[, 1] <- list_parameters$Variable
+        #     for (row in 1:nrow(list_targets)) {
+        #         if (any(grep("Green", stat_value))) {
+        #             list_targets[row, which(colnames(list_targets) %in%
+        #                 list_targets_library[grep(
+        #                     "variable=(average_CN|clonal_CN|event_count|shannon)",
+        #                     list_targets_library
+        #                 )])] <- 1
+        #         } else if (any(grep("Blue", stat_value))) {
+        #             list_targets[row, which(colnames(list_targets) %in%
+        #                 list_targets_library[grep(
+        #                     "variable=(cherries|pitchforks|IL_number|avgLadder)",
+        #                     list_targets_library
+        #                 )])] <- 1
+        #         } else if (any(grep("Red", stat_value))) {
+        #             list_targets[row, which(colnames(list_targets) %in%
+        #                 list_targets_library[grep(
+        #                     "variable=(stairs|colless|sackin|B2)",
+        #                     list_targets_library
+        #                 )])] <- 1
+        #         } else if (stat_value == "All") {
+        #             list_targets[row, which(colnames(list_targets) %in%
+        #                 list_targets_library)] <- 1
+        #         }
+        #     }
+        #     fitting_parameters(
+        #         rda_name = library_name,
+        #         library_name = library_name_mini,
+        #         copynumber_DATA = copynumber_DATA,
+        #         parameters_truth = parameters_truth,
+        #         list_parameters = list_parameters,
+        #         list_targets_by_parameter = list_targets,
+        #         n_cores = n_cores,
+        #         plot_ABC_prior_as_uniform = plot_ABC_prior_as_uniform
+        #     )
+        # }
         #   Input the csv of parameter values
         filename <- paste0(library_name_mini, "_para_output.csv")
         list_parameters_output_mini <- read.csv(filename, header = TRUE)
         #   Compute Error
         for (Error_target in Error_targets) {
-            list_Error[nrow(list_Error) + 1, ] <- c(Error_target, stat_value, round(compute_error(
-                results = list_parameters_output_mini[which(list_parameters_output_mini$Type == Error_target), ],
-                ID_actual = "Ground_truth",
-                ID_predicted = "Mean"
-            ), digits = 3))
+            list_Error[nrow(list_Error) + 1, ] <- c(
+                Error_target, stat_value, round(compute_error(
+                    results = list_parameters_output_mini[which(list_parameters_output_mini$Type == Error_target), ],
+                    ID_actual = "Ground_truth",
+                    ID_predicted = "Mean"
+                ), digits = 3),
+                statistics_IDs[which(statistics_values == stat_value)],
+                Error_IDs[which(Error_targets == Error_target)]
+            )
         }
     }
-    p <- ggplot(data = list_Error, aes(x = Statistics_values, y = Error, fill = Error_Targets)) +
+
+    list_Error$Error <- as.numeric(list_Error$Error)
+
+    list_Error$Error_Targets <- factor(list_Error$Error_Targets, levels = Error_targets)
+    list_Error$Error_Titles <- factor(list_Error$Error_Titles, levels = statistics_IDs)
+
+    list_Error <<- list_Error
+
+    p <- ggplot(data = list_Error, aes(x = Error_Titles, y = Error, fill = Target_Titles)) +
         geom_bar(stat = "identity", position = position_dodge(), width = 0.6) +
-        scale_fill_manual(values = c("CNA_probability" = "#dd4751", "Selection_rate" = "darkblue", alpha = 0.3))
+        scale_fill_manual(values = c("#774d28", "#70c972"))
+    # scale_fill_manual(values = c("" = "#dd4751", "Selection_rate" = "darkblue", alpha = 0.3))
     p <- p +
         xlab(statistics_title) +
         ylab("RMSE") +
+        # scale_y_continuous() +
         theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
         theme(text = element_text(size = fontsize)) +
-        theme(legend.position = "top", legend.title = element_blank(), legend.text = element_text(size = fontsize / 2)) +
+        theme(axis.text.x = element_text(angle = 20, hjust = 1)) +
+        theme(legend.position = "top", legend.justification = "left", legend.title = element_blank(), legend.text = element_text(size = fontsize)) +
         jpeg(plot_name, width = 1500, height = 1500)
     print(p)
     dev.off()
