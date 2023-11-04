@@ -6,6 +6,10 @@
 R_workplace <- "/Users/xiangzijin/Documents/simulation/1026_medicc"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
+# R_workplace <- "/Users/lexie/Documents/DNA/DLPdata/vignettes"
+# R_resultPaths <- "/Users/lexie/Documents/DNA/DLPdata/Results/"
+# R_outputPaths <- "/Users/lexie/Library/CloudStorage/GoogleDrive-zl3213@columbia.edu/.shortcut-targets-by-id/10rccHeZeICEtbkkvEtKGaMZdk7yOe5PB/2023-10-26.Ground truth for Zhihan/output/"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
 # R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
 # R_libPaths <- ""
@@ -280,10 +284,52 @@ for (i in 2:n_simulations) {
 stats_comb <- cbind(simulation = simulation_labels, stats_comb)
 write.csv(stats_comb, "Statistics_simulation.csv")
 # =============================================COMPUTE MEDICC STATISTICS
-# ....
-# ....
-# ....
-# ....
-# ....
-# ....
-# ....
+setwd(R_outputPaths)
+list_medicc <- list.files(pattern = "*.new$")
+n_library <- length(list_medicc)
+eventsFiles <- list.files(pattern = "*copynumber_events_df.tsv$")
+# list_groundtruth <- list.files(pattern = "*.newick$")
+
+setwd(R_workplace)
+combined_df <- data.frame()
+for (i in 1:n_library) {
+    ###========== phylogeny Stat
+    medicc_phylogeny <- read.tree(file = paste0(R_newickPaths, list_medicc[i]))
+    new_tree <- drop.tip(medicc_phylogeny,'diploid')
+    medicc_stat <- statistics(sample_phylogeny = new_tree, sample_clone_assignment=None, list_targets = list_targets_library)
+    medicc_df <- as.data.frame(t(as.data.frame(medicc_stat)))
+    prefix <- paste(head(strsplit(list_medicc[i], "_")[[1]],-2),collapse = "_")
+    colnames(medicc_df) <- paste0(prefix, "_medicc")
+    if (i==1) {
+        combined_df <- medicc_df
+    } else {
+        combined_df <- cbind(combined_df, medicc_df)
+    }
+    # groundtruth_phylogeny <- read.newick(file = paste0(R_newickPaths, list_groundtruth[i]))
+    # groundtruth_stat <- statistics(sample_phylogeny = groundtruth_phylogeny, sample_clone_assignment=None, list_targets = list_targets_library)
+    # groundtruth_df <- as.data.frame(t(as.data.frame(groundtruth_stat)))
+    # colnames(groundtruth_df) <- paste0(strsplit(list_medicc[i], "_")[[1]][1], "_groundtruth")
+    # combined_df <- cbind(combined_df, groundtruth_df)
+
+    ###========== clonal
+    file_id <- sapply(eventsFiles, function(x) grepl(paste0(prefix,"_"), x))
+    filename <- eventsFiles[file_id]
+    events_df <- read.table(paste0(R_outputPaths, filename), sep="\t", header=TRUE)
+
+    unique_ids <- unique(events_df$sample_id)
+    results <- data.frame(sample_id = character(0), Ncells = numeric(0) )
+
+    Ntips <- Ntip(new_tree)
+    match_indices <- match(unique_ids, c(new_tree$tip.label, new_tree$node.label))
+    for (id in unique_ids) {
+        match_number <- match(id, c(new_tree$tip.label, new_tree$node.label))
+        descendents <- clade.members(match_number, new_tree, tip.labels = FALSE, include.nodes=FALSE)
+        Ncells <- length(descendents)
+        results <- rbind(results, data.frame(sample_id = id, Ncells = Ncells))
+    }
+    merged_data <- merge(events_df, results, by = "sample_id")
+    merged_data$clonal_flag <- merged_data$Ncells == Ntips
+    write.table(merged_data, file = paste0(R_resultPaths, prefix,"_clonal.tsv"), sep = "\t", row.names = FALSE)
+}
+combined_df <- data.frame(Statistic = rownames(combined_df), combined_df)
+write.table(combined_df, file = paste0(R_resultPaths, "compare_stats_1026_prune.tsv"), sep = "\t", row.names = FALSE)
