@@ -351,7 +351,7 @@ plot_ABC_correlation <- function(inference_result = parameters_inferred,
                                  color_data = "red",
                                  fontsize = 50,
                                  plot_diagonal = FALSE,
-                                 plot_RRMSE = FALSE) {
+                                 plot_Error = FALSE) {
     library(ggplot2)
     library(ehaGoF)
     if (!is.null(error_y)) {
@@ -393,18 +393,18 @@ plot_ABC_correlation <- function(inference_result = parameters_inferred,
     if (plot_diagonal) {
         corr_plot <- corr_plot + geom_abline(intercept = 0)
     }
-    if (plot_RRMSE) {
-        RRMSE <- compute_error(
+    if (plot_Error) {
+        Error <- round(compute_error(
             results = parameters_inferred,
             ID_actual = value_x, ID_predicted = value_y
-        )
+        ), digits = 3)
         text_x <- min(x_min, y_min) + 0.05 * (max(x_max, y_max) - min(x_min, y_min))
         text_y <- min(x_min, y_min) + 0.95 * (max(x_max, y_max) - min(x_min, y_min))
         corr_plot <- corr_plot +
             annotate(
                 "text",
                 x = text_x, y = text_y,
-                label = paste("RRMSE=", RRMSE),
+                label = paste("RMSE=", Error),
                 size = unit(fontsize / 2, "pt"), color = color_data, hjust = 0
             )
     }

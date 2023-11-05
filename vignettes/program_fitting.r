@@ -19,9 +19,9 @@
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/simulation/Statistics_exp"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+R_workplace <- "/Users/xiangzijin/Documents/simulation/1101_new plots"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
 # R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
 # R_libPaths <- ""
@@ -31,9 +31,9 @@
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+# R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
 library(readxl)
@@ -51,7 +51,7 @@ N_data_sc <- 50
 # N_data_sc <- 10
 #   Number of bulk samples in ground-truth data & ABC simulations
 # N_data_bulk <- 20
-N_data_bulk <- 100
+N_data_bulk <- 5
 #   Bounds for ground-truth selection rates (1/r -> r)
 bound_ground_truth_arm_s <- 1.15
 #   Bounds for prior distribution of log10(prob_CN_missegregation)
@@ -317,56 +317,56 @@ vec_centromeres <<- model_variables$cn_info$Centromere_location
 # }
 # #---Get bulk statistics & CN profiles
 # #   Get statistics & representative CN profiles for each bulk sample
-# list_targets_library_bulk <- list_targets_library[grepl("data=bulk", list_targets_library)]
-# cat(paste0("Loading ", N_data_bulk, " bulk DNA-seq data sets...\n"))
-# n_cores <- max(detectCores() - 1, 1)
-# cl <- makePSOCKcluster(n_cores)
-# model_name <<- model_name
-# clusterExport(cl, varlist = c(
-#     "model_name", "N_data_sc", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
-#     "cn_table", "get_each_statistics", "list_targets_library_bulk", "find_clonal_ancestry", "find_event_count"
-# ))
-# e <- new.env()
-# e$libs <- .libPaths()
-# clusterExport(cl, "libs", envir = e)
-# clusterEvalQ(cl, .libPaths(libs))
-# pbo <- pboptions(type = "txt")
-# ls_cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i) {
-#     load(paste0(model_name, "_bulk_simulation_", i, ".rda"))
-#     simulations <- list()
-#     simulations[[1]] <- simulation
-#     ls_each_sim <- list()
-#     ls_each_sim[[1]] <- get_each_clonal_CN_profiles(
-#         simulations,
-#         arm_level = TRUE,
-#         cn_table = cn_table,
-#         bulk = TRUE
-#     )
-#     ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_bulk)
-#     return(ls_each_sim)
-# })
-# #   Get statistics & representative CN profiles for entire bulk cohort
-# ground_truth_cn_data_bulk <- list()
-# ground_truth_statistics_bulk <- list()
-# for (simulation in 1:N_data_bulk) {
-#     for (statistic in 1:length(ls_cn_bulk_ground_truth[[1]][[1]])) {
-#         if (simulation == 1) {
-#             ground_truth_cn_data_bulk[[statistic]] <- ls_cn_bulk_ground_truth[[simulation]][[1]][[statistic]][1]
-#         } else {
-#             ground_truth_cn_data_bulk[[statistic]] <- c(ground_truth_cn_data_bulk[[statistic]], ls_cn_bulk_ground_truth[[simulation]][[1]][[statistic]][1])
-#         }
-#     }
-#     names(ground_truth_cn_data_bulk) <- names(ls_cn_bulk_ground_truth[[1]][[1]])
-#     for (stat_ID in names(ls_cn_bulk_ground_truth[[1]][[2]])) {
-#         stat_details <- strsplit(stat_ID, ";")[[1]]
-#         if (simulation == 1) {
-#             ground_truth_statistics_bulk[[stat_ID]] <- ls_cn_bulk_ground_truth[[1]][[2]][[stat_ID]]
-#         } else {
-#             ground_truth_statistics_bulk[[stat_ID]] <- rbind(ground_truth_statistics_bulk[[stat_ID]], ls_cn_bulk_ground_truth[[simulation]][[2]][[stat_ID]])
-#         }
-#     }
-#     names(ground_truth_statistics_bulk) <- names(ls_cn_bulk_ground_truth[[1]][[2]])
-# }
+list_targets_library_bulk <- list_targets_library[grepl("data=bulk", list_targets_library)]
+cat(paste0("Loading ", N_data_bulk, " bulk DNA-seq data sets...\n"))
+n_cores <- max(detectCores() - 1, 1)
+cl <- makePSOCKcluster(n_cores)
+model_name <<- model_name
+clusterExport(cl, varlist = c(
+    "model_name", "N_data_sc", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
+    "cn_table", "get_each_statistics", "list_targets_library_bulk", "find_clonal_ancestry", "find_event_count"
+))
+e <- new.env()
+e$libs <- .libPaths()
+clusterExport(cl, "libs", envir = e)
+clusterEvalQ(cl, .libPaths(libs))
+pbo <- pboptions(type = "txt")
+ls_cn_bulk_ground_truth <- pblapply(cl = cl, X = 1:N_data_bulk, FUN = function(i) {
+    load(paste0(model_name, "_bulk_simulation_", i, ".rda"))
+    simulations <- list()
+    simulations[[1]] <- simulation
+    ls_each_sim <- list()
+    ls_each_sim[[1]] <- get_each_clonal_CN_profiles(
+        simulations,
+        arm_level = TRUE,
+        cn_table = cn_table,
+        bulk = TRUE
+    )
+    ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_bulk)
+    return(ls_each_sim)
+})
+#   Get statistics & representative CN profiles for entire bulk cohort
+ground_truth_cn_data_bulk <- list()
+ground_truth_statistics_bulk <- list()
+for (simulation in 1:N_data_bulk) {
+    for (statistic in 1:length(ls_cn_bulk_ground_truth[[1]][[1]])) {
+        if (simulation == 1) {
+            ground_truth_cn_data_bulk[[statistic]] <- ls_cn_bulk_ground_truth[[simulation]][[1]][[statistic]][1]
+        } else {
+            ground_truth_cn_data_bulk[[statistic]] <- c(ground_truth_cn_data_bulk[[statistic]], ls_cn_bulk_ground_truth[[simulation]][[1]][[statistic]][1])
+        }
+    }
+    names(ground_truth_cn_data_bulk) <- names(ls_cn_bulk_ground_truth[[1]][[1]])
+    for (stat_ID in names(ls_cn_bulk_ground_truth[[1]][[2]])) {
+        stat_details <- strsplit(stat_ID, ";")[[1]]
+        if (simulation == 1) {
+            ground_truth_statistics_bulk[[stat_ID]] <- ls_cn_bulk_ground_truth[[1]][[2]][[stat_ID]]
+        } else {
+            ground_truth_statistics_bulk[[stat_ID]] <- rbind(ground_truth_statistics_bulk[[stat_ID]], ls_cn_bulk_ground_truth[[simulation]][[2]][[stat_ID]])
+        }
+    }
+    names(ground_truth_statistics_bulk) <- names(ls_cn_bulk_ground_truth[[1]][[2]])
+}
 # ===============================================MAKE SIMULATION LIBRARY
 # ABC_simcount <- 10
 # library_simulations(
@@ -515,7 +515,7 @@ vec_centromeres <<- model_variables$cn_info$Centromere_location
 #     cn_table = cn_table
 # )
 # ==============================================FIT PARAMETERS USING ABC
-parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
+# parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 # fitting_parameters(
 #     library_name = model_name,
 #     copynumber_DATA = DLP_stats,
@@ -531,7 +531,7 @@ parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 # plot_ABC_correlation(
 #     inference_result = parameters_inferred,
 #     plot_name = paste0(model_name, "_ABC_correlation.jpeg"),
-#     title_plot = "Inferred selection rates against ground truth",
+#     title_plot = "",
 #     value_x = "Ground_truth", title_x = "Ground truth",
 #     value_y = "Mean", title_y = "Posterior mean +/- std",
 #     error_y = "Sd",
@@ -572,25 +572,25 @@ parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
 # )
 # =============================PLOT FITTING RESULTS FOR DIFFERENT CHOICE
 # ======================================================== OF STATISTICS
-statistics_title <- "Choice of statistics"
-statistics_values <- c("All", "Green", "Red", "Blue", "Red&Green", "Green&Blue", "Red&Blue")
-statistics_IDs <- c("All", "CN", "Phylo balance", "Phylo tips", "CN + Phylo balance", "CN + Phylo tips", "Phylo tips + balance")
+# statistics_title <- "Choice of statistics"
+# statistics_values <- c("All", "Green", "Red", "Blue", "Red&Green", "Green&Blue", "Red&Blue")
+# statistics_IDs <- c("All", "CN", "Phylo balance", "Phylo tips", "CN + Phylo balance", "CN + Phylo tips", "Phylo tips + balance")
 
-statistics_fitting_and_plotting(
-    library_name = model_name,
-    library_statistics_name = paste0(model_name, "_statistics"),
-    statistics_title = statistics_title,
-    statistics_values = statistics_values,
-    statistics_IDs = statistics_IDs,
-    Error_targets = c("CNA_probability", "Selection_rate"),
-    Error_IDs = c("log10(prob_misseg)", "Selection rate"),
-    copynumber_DATA = DLP_stats,
-    parameters_truth = parameters_truth,
-    list_parameters = list_parameters,
-    list_targets_library = list_targets_library,
-    plot_ABC_prior_as_uniform = TRUE,
-    fontsize = 40,
-    fitting = FALSE,
-    # fitting = TRUE,
-    plot_name = paste0(model_name, "_Choose_Statistics.jpeg")
-)
+# statistics_fitting_and_plotting(
+#     library_name = model_name,
+#     library_statistics_name = paste0(model_name, "_statistics"),
+#     statistics_title = statistics_title,
+#     statistics_values = statistics_values,
+#     statistics_IDs = statistics_IDs,
+#     Error_targets = c("CNA_probability", "Selection_rate"),
+#     Error_IDs = c("log10(prob_misseg)", "Selection rate"),
+#     copynumber_DATA = DLP_stats,
+#     parameters_truth = parameters_truth,
+#     list_parameters = list_parameters,
+#     list_targets_library = list_targets_library,
+#     plot_ABC_prior_as_uniform = TRUE,
+#     fontsize = 50,
+#     fitting = FALSE,
+#     # fitting = TRUE,
+#     plot_name = paste0(model_name, "_Choose_Statistics.jpeg")
+# )
