@@ -173,17 +173,17 @@ cn_table$Centromere <- cn_table$Centromere_location * cn_bin_length
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 # ======================================================MAKE SIMULATIONS
-simulator_full_program(
-    model = model_variables, model_prefix = model_name,
-    folder_workplace = folder_workplace,
-    n_simulations = n_simulations,
-    build_cn = TRUE,
-    save_cn_profile = TRUE, save_cn_clones = TRUE,
-    internal_nodes_cn_info = TRUE,
-    save_newick_tree = TRUE,
-    compute_parallel = TRUE,
-    R_libPaths = R_libPaths
-)
+# simulator_full_program(
+#     model = model_variables, model_prefix = model_name,
+#     folder_workplace = folder_workplace,
+#     n_simulations = n_simulations,
+#     build_cn = TRUE,
+#     save_cn_profile = TRUE, save_cn_clones = TRUE,
+#     internal_nodes_cn_info = TRUE,
+#     save_newick_tree = TRUE,
+#     compute_parallel = TRUE,
+#     R_libPaths = R_libPaths
+# )
 # plot_clonal_phylo(
 #     model = model_name,
 #     n_simulations = n_simulations,
@@ -236,28 +236,28 @@ ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i
     return(ls_each_sim)
 })
 stopCluster(cl)
-#   Get statistics & clonal CN profiles for entire single-cell cohort
-ground_truth_cn_data_sc <- list()
-ground_truth_statistics_sc <- list()
-for (simulation in 1:n_simulations) {
-    for (statistic in 1:length(ls_cn_sc_ground_truth[[1]][[1]])) {
-        if (simulation == 1) {
-            ground_truth_cn_data_sc[[statistic]] <- ls_cn_sc_ground_truth[[simulation]][[1]][[statistic]][1]
-        } else {
-            ground_truth_cn_data_sc[[statistic]] <- c(ground_truth_cn_data_sc[[statistic]], ls_cn_sc_ground_truth[[simulation]][[1]][[statistic]][1])
-        }
-    }
-    names(ground_truth_cn_data_sc) <- names(ls_cn_sc_ground_truth[[1]][[1]])
-    for (stat_ID in names(ls_cn_sc_ground_truth[[1]][[2]])) {
-        stat_details <- strsplit(stat_ID, ";")[[1]]
-        if (simulation == 1) {
-            ground_truth_statistics_sc[[stat_ID]] <- ls_cn_sc_ground_truth[[1]][[2]][[stat_ID]]
-        } else {
-            ground_truth_statistics_sc[[stat_ID]] <- rbind(ground_truth_statistics_sc[[stat_ID]], ls_cn_sc_ground_truth[[simulation]][[2]][[stat_ID]])
-        }
-    }
-    names(ground_truth_statistics_sc) <- names(ls_cn_sc_ground_truth[[1]][[2]])
-}
+# #   Get statistics & clonal CN profiles for entire single-cell cohort
+# ground_truth_cn_data_sc <- list()
+# ground_truth_statistics_sc <- list()
+# for (simulation in 1:n_simulations) {
+#     for (statistic in 1:length(ls_cn_sc_ground_truth[[1]][[1]])) {
+#         if (simulation == 1) {
+#             ground_truth_cn_data_sc[[statistic]] <- ls_cn_sc_ground_truth[[simulation]][[1]][[statistic]][1]
+#         } else {
+#             ground_truth_cn_data_sc[[statistic]] <- c(ground_truth_cn_data_sc[[statistic]], ls_cn_sc_ground_truth[[simulation]][[1]][[statistic]][1])
+#         }
+#     }
+#     names(ground_truth_cn_data_sc) <- names(ls_cn_sc_ground_truth[[1]][[1]])
+#     for (stat_ID in names(ls_cn_sc_ground_truth[[1]][[2]])) {
+#         stat_details <- strsplit(stat_ID, ";")[[1]]
+#         if (simulation == 1) {
+#             ground_truth_statistics_sc[[stat_ID]] <- ls_cn_sc_ground_truth[[1]][[2]][[stat_ID]]
+#         } else {
+#             ground_truth_statistics_sc[[stat_ID]] <- rbind(ground_truth_statistics_sc[[stat_ID]], ls_cn_sc_ground_truth[[simulation]][[2]][[stat_ID]])
+#         }
+#     }
+#     names(ground_truth_statistics_sc) <- names(ls_cn_sc_ground_truth[[1]][[2]])
+# }
 
 
 # DLP_stats <- get_statistics(
@@ -284,52 +284,52 @@ for (i in 2:n_simulations) {
 stats_comb <- cbind(simulation = simulation_labels, stats_comb)
 write.csv(stats_comb, "Statistics_simulation.csv")
 # =============================================COMPUTE MEDICC STATISTICS
-setwd(R_outputPaths)
-list_medicc <- list.files(pattern = "*.new$")
-n_library <- length(list_medicc)
-eventsFiles <- list.files(pattern = "*copynumber_events_df.tsv$")
-# list_groundtruth <- list.files(pattern = "*.newick$")
+# setwd(R_outputPaths)
+# list_medicc <- list.files(pattern = "*.new$")
+# n_library <- length(list_medicc)
+# eventsFiles <- list.files(pattern = "*copynumber_events_df.tsv$")
+# # list_groundtruth <- list.files(pattern = "*.newick$")
 
-setwd(R_workplace)
-combined_df <- data.frame()
-for (i in 1:n_library) {
-    ###========== phylogeny Stat
-    medicc_phylogeny <- read.tree(file = paste0(R_newickPaths, list_medicc[i]))
-    new_tree <- drop.tip(medicc_phylogeny,'diploid')
-    medicc_stat <- statistics(sample_phylogeny = new_tree, sample_clone_assignment=None, list_targets = list_targets_library)
-    medicc_df <- as.data.frame(t(as.data.frame(medicc_stat)))
-    prefix <- paste(head(strsplit(list_medicc[i], "_")[[1]],-2),collapse = "_")
-    colnames(medicc_df) <- paste0(prefix, "_medicc")
-    if (i==1) {
-        combined_df <- medicc_df
-    } else {
-        combined_df <- cbind(combined_df, medicc_df)
-    }
-    # groundtruth_phylogeny <- read.newick(file = paste0(R_newickPaths, list_groundtruth[i]))
-    # groundtruth_stat <- statistics(sample_phylogeny = groundtruth_phylogeny, sample_clone_assignment=None, list_targets = list_targets_library)
-    # groundtruth_df <- as.data.frame(t(as.data.frame(groundtruth_stat)))
-    # colnames(groundtruth_df) <- paste0(strsplit(list_medicc[i], "_")[[1]][1], "_groundtruth")
-    # combined_df <- cbind(combined_df, groundtruth_df)
+# setwd(R_workplace)
+# combined_df <- data.frame()
+# for (i in 1:n_library) {
+#     ###========== phylogeny Stat
+#     medicc_phylogeny <- read.tree(file = paste0(R_newickPaths, list_medicc[i]))
+#     new_tree <- drop.tip(medicc_phylogeny,'diploid')
+#     medicc_stat <- statistics(sample_phylogeny = new_tree, sample_clone_assignment=None, list_targets = list_targets_library)
+#     medicc_df <- as.data.frame(t(as.data.frame(medicc_stat)))
+#     prefix <- paste(head(strsplit(list_medicc[i], "_")[[1]],-2),collapse = "_")
+#     colnames(medicc_df) <- paste0(prefix, "_medicc")
+#     if (i==1) {
+#         combined_df <- medicc_df
+#     } else {
+#         combined_df <- cbind(combined_df, medicc_df)
+#     }
+#     # groundtruth_phylogeny <- read.newick(file = paste0(R_newickPaths, list_groundtruth[i]))
+#     # groundtruth_stat <- statistics(sample_phylogeny = groundtruth_phylogeny, sample_clone_assignment=None, list_targets = list_targets_library)
+#     # groundtruth_df <- as.data.frame(t(as.data.frame(groundtruth_stat)))
+#     # colnames(groundtruth_df) <- paste0(strsplit(list_medicc[i], "_")[[1]][1], "_groundtruth")
+#     # combined_df <- cbind(combined_df, groundtruth_df)
 
-    ###========== clonal
-    file_id <- sapply(eventsFiles, function(x) grepl(paste0(prefix,"_"), x))
-    filename <- eventsFiles[file_id]
-    events_df <- read.table(paste0(R_outputPaths, filename), sep="\t", header=TRUE)
+#     ###========== clonal
+#     file_id <- sapply(eventsFiles, function(x) grepl(paste0(prefix,"_"), x))
+#     filename <- eventsFiles[file_id]
+#     events_df <- read.table(paste0(R_outputPaths, filename), sep="\t", header=TRUE)
 
-    unique_ids <- unique(events_df$sample_id)
-    results <- data.frame(sample_id = character(0), Ncells = numeric(0) )
+#     unique_ids <- unique(events_df$sample_id)
+#     results <- data.frame(sample_id = character(0), Ncells = numeric(0) )
 
-    Ntips <- Ntip(new_tree)
-    match_indices <- match(unique_ids, c(new_tree$tip.label, new_tree$node.label))
-    for (id in unique_ids) {
-        match_number <- match(id, c(new_tree$tip.label, new_tree$node.label))
-        descendents <- clade.members(match_number, new_tree, tip.labels = FALSE, include.nodes=FALSE)
-        Ncells <- length(descendents)
-        results <- rbind(results, data.frame(sample_id = id, Ncells = Ncells))
-    }
-    merged_data <- merge(events_df, results, by = "sample_id")
-    merged_data$clonal_flag <- merged_data$Ncells == Ntips
-    write.table(merged_data, file = paste0(R_resultPaths, prefix,"_clonal.tsv"), sep = "\t", row.names = FALSE)
-}
-combined_df <- data.frame(Statistic = rownames(combined_df), combined_df)
-write.table(combined_df, file = paste0(R_resultPaths, "compare_stats_1026_prune.tsv"), sep = "\t", row.names = FALSE)
+#     Ntips <- Ntip(new_tree)
+#     match_indices <- match(unique_ids, c(new_tree$tip.label, new_tree$node.label))
+#     for (id in unique_ids) {
+#         match_number <- match(id, c(new_tree$tip.label, new_tree$node.label))
+#         descendents <- clade.members(match_number, new_tree, tip.labels = FALSE, include.nodes=FALSE)
+#         Ncells <- length(descendents)
+#         results <- rbind(results, data.frame(sample_id = id, Ncells = Ncells))
+#     }
+#     merged_data <- merge(events_df, results, by = "sample_id")
+#     merged_data$clonal_flag <- merged_data$Ncells == Ntips
+#     write.table(merged_data, file = paste0(R_resultPaths, prefix,"_clonal.tsv"), sep = "\t", row.names = FALSE)
+# }
+# combined_df <- data.frame(Statistic = rownames(combined_df), combined_df)
+# write.table(combined_df, file = paste0(R_resultPaths, "compare_stats_1026_prune.tsv"), sep = "\t", row.names = FALSE)

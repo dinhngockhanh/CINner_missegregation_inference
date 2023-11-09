@@ -1297,7 +1297,7 @@ sensitivity_fitting_and_plotting <- function(library_name,
                                              list_targets_by_parameter = NULL,
                                              n_cores = NULL,
                                              plot_ABC_prior_as_uniform = FALSE,
-                                             fontsize = 20,
+                                             fontsize = 50,
                                              fitting = FALSE) {
     library(ggplot2)
     library(tidyr)
@@ -1332,7 +1332,7 @@ sensitivity_fitting_and_plotting <- function(library_name,
         #   Input the csv of parameter values
         filename <- paste0(library_name_mini, "_para_output.csv")
         list_parameters_output_mini <- read.csv(filename, header = TRUE)
-        print(list_parameters_output_mini)
+        # print(list_parameters_output_mini)
         #   Compute Error
         for (j in 1:length(Error_targets)) {
             for (k in 1:length(Error_metrics)) {
@@ -1341,7 +1341,7 @@ sensitivity_fitting_and_plotting <- function(library_name,
                         mean(list_parameters_output_mini$Sd[which(list_parameters_output_mini$Type == Error_targets[j])])
                     print(list_Error[[Error_targets[j]]][[paste0(Error_targets[j], "_", Error_metrics[k])]])
                 } else if (Error_metrics[k] == "RMSE") {
-                    list_Error[[Error_targets[j]]][[Error_metrics[k]]][which(list_Error[[Error_targets[j]]]$Value == sensitivity_value)] <- compute_Error(
+                    list_Error[[Error_targets[j]]][[Error_metrics[k]]][which(list_Error[[Error_targets[j]]]$Value == sensitivity_value)] <- compute_error(
                         results = list_parameters_output_mini[which(list_parameters_output_mini$Type == Error_targets[j]), ],
                         ID_actual = "Ground_truth",
                         ID_predicted = "Mean"
@@ -1353,29 +1353,53 @@ sensitivity_fitting_and_plotting <- function(library_name,
             }
         }
     }
-    print(list_Error)
 
-    #   Plot Error with respect to sensitivity parameter
-    for (i in 1:length(Error_targets)) {
-        Error_target <- Error_targets[i]
-        # Define a custom color palette
-        custom_colors <- c("Var" = "blue", "Sd" = "#0084ff", "RMSE" = "#ff8c00")
-        # Reshape the DataFrame into long format
-        df_long <- pivot_longer(list_Error[[Error_target]], cols = -Value, names_to = "Variable", values_to = "Value2")
-        # Create the ggplot and map the colors using scale_color_manual
-        p <- ggplot(df_long, aes(x = Value, y = Value2, color = Variable)) +
-            xlab(paste0(strsplit(sensitivity_title, " ")[[1]][1], " Sample Cohort Size")) +
+    if (sensitivity_parameter == "ABC_simcount") {
+        list_Error <- data.frame(cbind(
+            Value = list_Error$CNA_probability$Value,
+            CNA_RMSE = list_Error$CNA_probability$RMSE,
+            Sel_RMSE = list_Error$Selection_rate$RMSE
+        ))
+        print(list_Error)
+        cols <- c("c1" = "#ff00ff", "c2" = "#3399ff")
+        p <- ggplot(list_Error, aes(Value)) +
+            xlab("Simulation count in ABC library") +
             ylab("") +
+            geom_line(aes(y = Sel_RMSE, color = "Sel.rate"), size = 1) +
+            geom_point(aes(y = Sel_RMSE, color = "Sel.rate"), size = 10) +
+            geom_line(aes(y = CNA_RMSE, color = "log10(prob_misseg)"), size = 1) +
+            geom_point(aes(y = CNA_RMSE, color = "log10(prob_misseg)"), size = 10) +
             theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
             theme(text = element_text(size = fontsize)) +
-            geom_line(size = 1) +
-            geom_point(size = 10) +
-            scale_color_manual(values = custom_colors) +
-            theme(legend.position = , legend.title = element_blank(), legend.text = element_text(size = fontsize / 2))
-        filename <- paste0(library_sensitivity_name, "_", Error_target, ".jpeg")
-        jpeg(filename, width = 2000, height = 1000)
+            scale_color_manual(values = c("Sel.rate" = "#ff00ff", "log10(prob_misseg)" = "#3399ff")) +
+            theme(legend.position = "top", legend.justification = "left", legend.title = element_blank(), legend.text = element_text(size = fontsize))
+        plot_name <- paste0(library_sensitivity_name, ".jpeg")
+        jpeg(plot_name, width = 2000, height = 1000)
         print(p)
         dev.off()
+    } else {
+        #   Plot Error with respect to sensitivity parameter
+        for (i in 1:length(Error_targets)) {
+            Error_target <- Error_targets[i]
+            # Define a custom color palette
+            custom_colors <- c("Var" = "blue", "Sd" = "#0084ff", "RMSE" = "#ff8c00")
+            # Reshape the DataFrame into long format
+            df_long <- pivot_longer(list_Error[[Error_target]], cols = -Value, names_to = "Variable", values_to = "Value2")
+            # Create the ggplot and map the colors using scale_color_manual
+            p <- ggplot(df_long, aes(x = Value, y = Value2, color = Variable)) +
+                xlab(paste0(strsplit(sensitivity_title, " ")[[1]][1], " Sample Cohort Size")) +
+                ylab("") +
+                theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
+                theme(text = element_text(size = fontsize)) +
+                geom_line(size = 1) +
+                geom_point(size = 10) +
+                scale_color_manual(values = custom_colors) +
+                theme(legend.position = "top", legend.justification = "left", legend.title = element_blank(), legend.text = element_text(size = fontsize))
+            plot_name <- paste0(library_sensitivity_name, Error_target, ".jpeg")
+            jpeg(plot_name, width = 2000, height = 1000)
+            print(p)
+            dev.off()
+        }
     }
 }
 
@@ -1397,7 +1421,7 @@ statistics_fitting_and_plotting <- function(library_name,
                                             list_targets_selection = NULL,
                                             n_cores = NULL,
                                             plot_ABC_prior_as_uniform = FALSE,
-                                            fontsize = 40,
+                                            fontsize = 50,
                                             fitting = FALSE,
                                             plot_name) {
     library(ggplot2)

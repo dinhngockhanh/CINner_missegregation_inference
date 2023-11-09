@@ -456,6 +456,7 @@ sensitivity_fitting_and_plotting(
     sensitivity_parameter = sensitivity_parameter,
     sensitivity_values = sensitivity_values_bulk,
     copynumber_DATA = list_DLP_stats,
+    Error_metrics = c("Sd", "RMSE"),
     parameters_truth = parameters_truth,
     list_parameters = list_parameters,
     list_targets_by_parameter = list_targets,
