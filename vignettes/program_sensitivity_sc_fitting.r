@@ -452,7 +452,7 @@ for (row in 2:nrow(list_targets)) {
 sensitivity_fitting_and_plotting(
     library_name = model_name,
     library_sensitivity_name = paste0(model_name, "_N_data_sc"),
-    sensitivity_title = sensitivity_title,
+    sensitivity_title = 'Single-cell DNA sample size',
     sensitivity_parameter = sensitivity_parameter,
     sensitivity_values = sensitivity_values_sc,
     # copynumber_DATA = list_DLP_stats,

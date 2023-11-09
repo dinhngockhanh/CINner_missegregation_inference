@@ -1289,7 +1289,7 @@ sensitivity_fitting_and_plotting <- function(library_name,
                                              sensitivity_parameter,
                                              sensitivity_values,
                                              Error_targets = c("CNA_probability", "Selection_rate"),
-                                             Error_metrics = c("Var", "Sd", "RMSE"),
+                                             Error_metrics = c("Variance", "Standard deviation", "RMSE"),
                                              #  Error_titles = c("All parameters", "Prob(misseg)", "Sel. rates"),
                                              copynumber_DATA = NULL,
                                              parameters_truth = NULL,
@@ -1336,7 +1336,7 @@ sensitivity_fitting_and_plotting <- function(library_name,
         #   Compute Error
         for (j in 1:length(Error_targets)) {
             for (k in 1:length(Error_metrics)) {
-                if (Error_metrics[k] == "Sd") {
+                if (Error_metrics[k] == "Standard deviation") {
                     list_Error[[Error_targets[j]]][[Error_metrics[k]]][which(list_Error[[Error_targets[j]]]$Value == sensitivity_value)] <-
                         mean(list_parameters_output_mini$Sd[which(list_parameters_output_mini$Type == Error_targets[j])])
                     print(list_Error[[Error_targets[j]]][[paste0(Error_targets[j], "_", Error_metrics[k])]])
@@ -1346,7 +1346,7 @@ sensitivity_fitting_and_plotting <- function(library_name,
                         ID_actual = "Ground_truth",
                         ID_predicted = "Mean"
                     )
-                } else if (Error_metrics[k] == "Var") {
+                } else if (Error_metrics[k] == "Variance") {
                     list_Error[[Error_targets[j]]][[Error_metrics[k]]][which(list_Error[[Error_targets[j]]]$Value == sensitivity_value)] <-
                         (mean(list_parameters_output_mini$Sd[which(list_parameters_output_mini$Type == Error_targets[j])]))^2
                 }
@@ -1382,12 +1382,12 @@ sensitivity_fitting_and_plotting <- function(library_name,
         for (i in 1:length(Error_targets)) {
             Error_target <- Error_targets[i]
             # Define a custom color palette
-            custom_colors <- c("Var" = "blue", "Sd" = "#0084ff", "RMSE" = "#ff8c00")
+            custom_colors <- c("Variance" = "blue", "Standard deviation" = "#0084ff", "RMSE" = "#ff8c00")
             # Reshape the DataFrame into long format
             df_long <- pivot_longer(list_Error[[Error_target]], cols = -Value, names_to = "Variable", values_to = "Value2")
             # Create the ggplot and map the colors using scale_color_manual
             p <- ggplot(df_long, aes(x = Value, y = Value2, color = Variable)) +
-                xlab(paste0(strsplit(sensitivity_title, " ")[[1]][1], " Sample Cohort Size")) +
+                xlab(sensitivity_title) +
                 ylab("") +
                 theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
                 theme(text = element_text(size = fontsize)) +
