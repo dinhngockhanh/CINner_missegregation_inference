@@ -1354,53 +1354,53 @@ sensitivity_fitting_and_plotting <- function(library_name,
         }
     }
 
-    if (sensitivity_parameter == "ABC_simcount") {
-        list_Error <- data.frame(cbind(
-            Value = list_Error$CNA_probability$Value,
-            CNA_RMSE = list_Error$CNA_probability$RMSE,
-            Sel_RMSE = list_Error$Selection_rate$RMSE
-        ))
-        print(list_Error)
-        cols <- c("c1" = "#ff00ff", "c2" = "#3399ff")
-        p <- ggplot(list_Error, aes(Value)) +
-            xlab("Simulation count in ABC library") +
+    # if (sensitivity_parameter == "ABC_simcount") {
+    #     list_Error <- data.frame(cbind(
+    #         Value = list_Error$CNA_probability$Value,
+    #         CNA_RMSE = list_Error$CNA_probability$RMSE,
+    #         Sel_RMSE = list_Error$Selection_rate$RMSE
+    #     ))
+    #     print(list_Error)
+    #     cols <- c("c1" = "#ff00ff", "c2" = "#3399ff")
+    #     p <- ggplot(list_Error, aes(Value)) +
+    #         xlab("Simulation count in ABC library") +
+    #         ylab("") +
+    #         geom_line(aes(y = Sel_RMSE, color = "Sel.rate"), size = 1) +
+    #         geom_point(aes(y = Sel_RMSE, color = "Sel.rate"), size = 10) +
+    #         geom_line(aes(y = CNA_RMSE, color = "log10(prob_misseg)"), size = 1) +
+    #         geom_point(aes(y = CNA_RMSE, color = "log10(prob_misseg)"), size = 10) +
+    #         theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
+    #         theme(text = element_text(size = fontsize)) +
+    #         scale_color_manual(values = c("Sel.rate" = "#ff00ff", "log10(prob_misseg)" = "#3399ff")) +
+    #         theme(legend.position = "top", legend.justification = "left", legend.title = element_blank(), legend.text = element_text(size = fontsize))
+    #     plot_name <- paste0(library_sensitivity_name, ".jpeg")
+    #     jpeg(plot_name, width = 2000, height = 1000)
+    #     print(p)
+    #     dev.off()
+    # } else {
+    #   Plot Error with respect to sensitivity parameter
+    for (i in 1:length(Error_targets)) {
+        Error_target <- Error_targets[i]
+        # Define a custom color palette
+        custom_colors <- c("Variance" = "blue", "Standard deviation" = "#0084ff", "RMSE" = "#ff8c00")
+        # Reshape the DataFrame into long format
+        df_long <- pivot_longer(list_Error[[Error_target]], cols = -Value, names_to = "Variable", values_to = "Value2")
+        # Create the ggplot and map the colors using scale_color_manual
+        p <- ggplot(df_long, aes(x = Value, y = Value2, color = Variable)) +
+            xlab(sensitivity_title) +
             ylab("") +
-            geom_line(aes(y = Sel_RMSE, color = "Sel.rate"), size = 1) +
-            geom_point(aes(y = Sel_RMSE, color = "Sel.rate"), size = 10) +
-            geom_line(aes(y = CNA_RMSE, color = "log10(prob_misseg)"), size = 1) +
-            geom_point(aes(y = CNA_RMSE, color = "log10(prob_misseg)"), size = 10) +
             theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
             theme(text = element_text(size = fontsize)) +
-            scale_color_manual(values = c("Sel.rate" = "#ff00ff", "log10(prob_misseg)" = "#3399ff")) +
+            geom_line(size = 1) +
+            geom_point(size = 10) +
+            scale_color_manual(values = custom_colors) +
             theme(legend.position = "top", legend.justification = "left", legend.title = element_blank(), legend.text = element_text(size = fontsize))
-        plot_name <- paste0(library_sensitivity_name, ".jpeg")
+        plot_name <- paste0(library_sensitivity_name, Error_target, ".jpeg")
         jpeg(plot_name, width = 2000, height = 1000)
         print(p)
         dev.off()
-    } else {
-        #   Plot Error with respect to sensitivity parameter
-        for (i in 1:length(Error_targets)) {
-            Error_target <- Error_targets[i]
-            # Define a custom color palette
-            custom_colors <- c("Variance" = "blue", "Standard deviation" = "#0084ff", "RMSE" = "#ff8c00")
-            # Reshape the DataFrame into long format
-            df_long <- pivot_longer(list_Error[[Error_target]], cols = -Value, names_to = "Variable", values_to = "Value2")
-            # Create the ggplot and map the colors using scale_color_manual
-            p <- ggplot(df_long, aes(x = Value, y = Value2, color = Variable)) +
-                xlab(sensitivity_title) +
-                ylab("") +
-                theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
-                theme(text = element_text(size = fontsize)) +
-                geom_line(size = 1) +
-                geom_point(size = 10) +
-                scale_color_manual(values = custom_colors) +
-                theme(legend.position = "top", legend.justification = "left", legend.title = element_blank(), legend.text = element_text(size = fontsize))
-            plot_name <- paste0(library_sensitivity_name, Error_target, ".jpeg")
-            jpeg(plot_name, width = 2000, height = 1000)
-            print(p)
-            dev.off()
-        }
     }
+    # }
 }
 
 #' @export
@@ -1430,45 +1430,45 @@ statistics_fitting_and_plotting <- function(library_name,
     colnames(list_Error) <- c("Error_Targets", "Statistics_values", "Error", "Error_Titles", "Target_Titles")
     for (stat_value in statistics_values) {
         library_name_mini <- paste0(library_statistics_name, "_", stat_value)
-        # if (fitting == TRUE) {
-        #     list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
-        #     colnames(list_targets) <- c("Variable", list_targets_library)
-        #     list_targets[, 1] <- list_parameters$Variable
-        #     for (row in 1:nrow(list_targets)) {
-        #         if (any(grep("Green", stat_value))) {
-        #             list_targets[row, which(colnames(list_targets) %in%
-        #                 list_targets_library[grep(
-        #                     "variable=(average_CN|clonal_CN|event_count|shannon)",
-        #                     list_targets_library
-        #                 )])] <- 1
-        #         } else if (any(grep("Blue", stat_value))) {
-        #             list_targets[row, which(colnames(list_targets) %in%
-        #                 list_targets_library[grep(
-        #                     "variable=(cherries|pitchforks|IL_number|avgLadder)",
-        #                     list_targets_library
-        #                 )])] <- 1
-        #         } else if (any(grep("Red", stat_value))) {
-        #             list_targets[row, which(colnames(list_targets) %in%
-        #                 list_targets_library[grep(
-        #                     "variable=(stairs|colless|sackin|B2)",
-        #                     list_targets_library
-        #                 )])] <- 1
-        #         } else if (stat_value == "All") {
-        #             list_targets[row, which(colnames(list_targets) %in%
-        #                 list_targets_library)] <- 1
-        #         }
-        #     }
-        #     fitting_parameters(
-        #         rda_name = library_name,
-        #         library_name = library_name_mini,
-        #         copynumber_DATA = copynumber_DATA,
-        #         parameters_truth = parameters_truth,
-        #         list_parameters = list_parameters,
-        #         list_targets_by_parameter = list_targets,
-        #         n_cores = n_cores,
-        #         plot_ABC_prior_as_uniform = plot_ABC_prior_as_uniform
-        #     )
-        # }
+        if (fitting == TRUE) {
+            list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
+            colnames(list_targets) <- c("Variable", list_targets_library)
+            list_targets[, 1] <- list_parameters$Variable
+            for (row in 1:nrow(list_targets)) {
+                if (any(grep("Green", stat_value))) {
+                    list_targets[row, which(colnames(list_targets) %in%
+                        list_targets_library[grep(
+                            "variable=(average_CN|clonal_CN|event_count|shannon)",
+                            list_targets_library
+                        )])] <- 1
+                } else if (any(grep("Blue", stat_value))) {
+                    list_targets[row, which(colnames(list_targets) %in%
+                        list_targets_library[grep(
+                            "variable=(cherries|pitchforks|IL_number|avgLadder)",
+                            list_targets_library
+                        )])] <- 1
+                } else if (any(grep("Red", stat_value))) {
+                    list_targets[row, which(colnames(list_targets) %in%
+                        list_targets_library[grep(
+                            "variable=(stairs|colless|sackin|B2)",
+                            list_targets_library
+                        )])] <- 1
+                } else if (stat_value == "All") {
+                    list_targets[row, which(colnames(list_targets) %in%
+                        list_targets_library)] <- 1
+                }
+            }
+            fitting_parameters(
+                rda_name = library_name,
+                library_name = library_name_mini,
+                copynumber_DATA = copynumber_DATA,
+                parameters_truth = parameters_truth,
+                list_parameters = list_parameters,
+                list_targets_by_parameter = list_targets,
+                n_cores = n_cores,
+                plot_ABC_prior_as_uniform = plot_ABC_prior_as_uniform
+            )
+        }
         #   Input the csv of parameter values
         filename <- paste0(library_name_mini, "_para_output.csv")
         list_parameters_output_mini <- read.csv(filename, header = TRUE)
@@ -1492,7 +1492,7 @@ statistics_fitting_and_plotting <- function(library_name,
     list_Error$Error_Titles <- factor(list_Error$Error_Titles, levels = statistics_IDs)
 
     list_Error <<- list_Error
-
+    print(list_Error)
     p <- ggplot(data = list_Error, aes(x = Error_Titles, y = Error, fill = Target_Titles)) +
         geom_bar(stat = "identity", position = position_dodge(), width = 0.6) +
         scale_fill_manual(values = c("#774d28", "#70c972"))
