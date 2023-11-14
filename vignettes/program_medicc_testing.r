@@ -173,38 +173,66 @@ cn_table$Centromere <- cn_table$Centromere_location * cn_bin_length
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 # ======================================================MAKE SIMULATIONS
-simulator_full_program(
-    model = model_variables, model_prefix = model_name,
-    folder_workplace = folder_workplace,
-    n_simulations = n_simulations,
-    build_cn = TRUE,
-    save_cn_profile = TRUE, save_cn_clones = TRUE,
-    internal_nodes_cn_info = TRUE,
-    save_newick_tree = TRUE,
-    compute_parallel = TRUE,
-    R_libPaths = R_libPaths
-)
-plot_clonal_phylo(
-    model = model_name,
-    n_simulations = n_simulations,
-    folder_workplace = folder_workplace,
-    folder_plots = folder_workplace,
-    width = 2000,
-    height = 2000,
-    compute_parallel = TRUE
-)
-plot_cn_heatmap(
-    model = model_name,
-    n_simulations = n_simulations,
-    folder_workplace = folder_workplace,
-    folder_plots = folder_workplace,
-    plotcol = "total-copy",
-    CN_data = "TRUTH",
-    phylo = "TRUTH",
-    width = 1000,
-    height = 1000,
-    compute_parallel = TRUE
-)
+# simulator_full_program(
+#     model = model_variables, model_prefix = model_name,
+#     folder_workplace = folder_workplace,
+#     n_simulations = n_simulations,
+#     build_cn = TRUE,
+#     save_cn_profile = TRUE, save_cn_clones = TRUE,
+#     internal_nodes_cn_info = TRUE,
+#     save_newick_tree = TRUE,
+#     compute_parallel = TRUE,
+#     R_libPaths = R_libPaths
+# )
+# plot_clonal_phylo(
+#     model = model_name,
+#     n_simulations = n_simulations,
+#     folder_workplace = folder_workplace,
+#     folder_plots = folder_workplace,
+#     width = 2000,
+#     height = 2000,
+#     compute_parallel = TRUE
+# )
+# plot_cn_heatmap(
+#     model = model_name,
+#     n_simulations = n_simulations,
+#     folder_workplace = folder_workplace,
+#     folder_plots = folder_workplace,
+#     plotcol = "total-copy",
+#     CN_data = "TRUTH",
+#     phylo = "TRUTH",
+#     width = 1000,
+#     height = 1000,
+#     compute_parallel = TRUE
+# )
+# =======================================TRANSFERING CSV TO MEDICC INPUTS
+cat(paste0("Transferring ", n_simulations, " csvs to input format of medicc2...\n"))
+n_cores <- max(detectCores() - 1, 1)
+cl <- makePSOCKcluster(n_cores)
+clusterExport(cl, varlist = c("read.csv", "write.table", "R_workplace", "as.integer", "grep"))
+e <- new.env()
+e$libs <- .libPaths()
+clusterExport(cl, "libs", envir = e)
+clusterEvalQ(cl, .libPaths(libs))
+
+pbo <- pboptions(type = "txt")
+mediccinput <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
+    data <- read.csv(paste0("Medicc_testing_cn_profiles_long_", i, ".csv"))
+    new_df <- data.frame(matrix(nrow = nrow(data), ncol = 6))
+    colnames(new_df) <- c("sample_id", "chrom", "start", "end", "cn_a", "cn_b")
+    new_df$sample_id <- data$cell_id
+    new_df$chrom <- paste0("chr", data$chr)
+    new_df$start <- as.integer(data$start)
+    new_df$end <- as.integer(data$end)
+    new_df$cn_a <- data$Maj
+    new_df$cn_b <- data$Min
+    new_df <- new_df[grep("Library", new_df$sample_id), ]
+    file_path <- paste0(R_workplace, "/sample", i, ".tsv")
+    write.table(new_df, file = file_path, sep = "\t", quote = FALSE, row.names = FALSE)
+})
+stopCluster(cl)
+
+
 # =======================================COMPUTE GROUND-TRUTH STATISTICS
 # #---Get single-cell statistics & CN profiles
 # #   Get statistics & clonal CN profiles for each single-cell sample
