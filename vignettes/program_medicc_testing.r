@@ -206,111 +206,76 @@ vec_centromeres <<- model_variables$cn_info$Centromere_location
 #     compute_parallel = TRUE
 # )
 # =======================================TRANSFERING CSV TO MEDICC INPUTS
-cat(paste0("Transferring ", n_simulations, " csvs to input format of medicc2...\n"))
-n_cores <- max(detectCores() - 1, 1)
-cl <- makePSOCKcluster(n_cores)
-clusterExport(cl, varlist = c("read.csv", "write.table", "R_workplace", "as.integer", "grep"))
-e <- new.env()
-e$libs <- .libPaths()
-clusterExport(cl, "libs", envir = e)
-clusterEvalQ(cl, .libPaths(libs))
-
-pbo <- pboptions(type = "txt")
-mediccinput <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
-    data <- read.csv(paste0("Medicc_testing_cn_profiles_long_", i, ".csv"))
-    new_df <- data.frame(matrix(nrow = nrow(data), ncol = 6))
-    colnames(new_df) <- c("sample_id", "chrom", "start", "end", "cn_a", "cn_b")
-    new_df$sample_id <- data$cell_id
-    new_df$chrom <- paste0("chr", data$chr)
-    new_df$start <- as.integer(data$start)
-    new_df$end <- as.integer(data$end)
-    new_df$cn_a <- data$Maj
-    new_df$cn_b <- data$Min
-    new_df <- new_df[grep("Library", new_df$sample_id), ]
-    file_path <- paste0(R_workplace, "/sample", i, ".tsv")
-    write.table(new_df, file = file_path, sep = "\t", quote = FALSE, row.names = FALSE)
-})
-stopCluster(cl)
-
-
-# =======================================COMPUTE GROUND-TRUTH STATISTICS
-# #---Get single-cell statistics & CN profiles
-# #   Get statistics & clonal CN profiles for each single-cell sample
-# list_targets_library_sc <- list_targets_library[grepl("data=sc", list_targets_library)]
-# cat(paste0("Loading ", n_simulations, " single-cell DNA-seq data sets...\n"))
+R_inputplace <- paste0(R_workplace,"/Medicc_testing")
+# cat(paste0("Transferring ", n_simulations, " csvs to input format of medicc2...\n"))
 # n_cores <- max(detectCores() - 1, 1)
 # cl <- makePSOCKcluster(n_cores)
-# model_name <<- model_name
-# clusterExport(cl, varlist = c(
-#     "model_name", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
-#     "cn_table", "get_each_statistics", "list_targets_library_sc", "find_clonal_ancestry", "find_event_count"
-# ))
+# clusterExport(cl, varlist = c("read.csv", "write.table", "R_workplace","R_inputplace", "as.integer", "grep"))
 # e <- new.env()
 # e$libs <- .libPaths()
 # clusterExport(cl, "libs", envir = e)
 # clusterEvalQ(cl, .libPaths(libs))
+
 # pbo <- pboptions(type = "txt")
-# ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
-#     load(paste0(model_name, "_simulation_", i, ".rda"))
-#     simulations <- list()
-#     simulations[[1]] <- simulation
-#     ls_each_sim <- list()
-#     ls_each_sim[[1]] <- get_each_clonal_CN_profiles(
-#         simulations,
-#         arm_level = TRUE,
-#         cn_table = cn_table
-#     )
-#     ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_sc)
-#     return(ls_each_sim)
+# mediccinput <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
+#     data <- read.csv(paste0(R_inputplace,"/Medicc_testing_cn_profiles_long_", i, ".csv"))
+#     new_df <- data.frame(matrix(nrow = nrow(data), ncol = 6))
+#     colnames(new_df) <- c("sample_id", "chrom", "start", "end", "cn_a", "cn_b")
+#     new_df$sample_id <- data$cell_id
+#     new_df$chrom <- paste0("chr", data$chr)
+#     new_df$start <- as.integer(data$start)
+#     new_df$end <- as.integer(data$end)
+#     new_df$cn_a <- data$Maj
+#     new_df$cn_b <- data$Min
+#     new_df <- new_df[grep("Library", new_df$sample_id), ]
+#     file_path <- paste0(R_workplace, "/sample", i, ".tsv")
+#     write.table(new_df, file = file_path, sep = "\t", quote = FALSE, row.names = FALSE)
 # })
 # stopCluster(cl)
-# #   Get statistics & clonal CN profiles for entire single-cell cohort
-# ground_truth_cn_data_sc <- list()
-# ground_truth_statistics_sc <- list()
-# for (simulation in 1:n_simulations) {
-#     for (statistic in 1:length(ls_cn_sc_ground_truth[[1]][[1]])) {
-#         if (simulation == 1) {
-#             ground_truth_cn_data_sc[[statistic]] <- ls_cn_sc_ground_truth[[simulation]][[1]][[statistic]][1]
-#         } else {
-#             ground_truth_cn_data_sc[[statistic]] <- c(ground_truth_cn_data_sc[[statistic]], ls_cn_sc_ground_truth[[simulation]][[1]][[statistic]][1])
-#         }
-#     }
-#     names(ground_truth_cn_data_sc) <- names(ls_cn_sc_ground_truth[[1]][[1]])
-#     for (stat_ID in names(ls_cn_sc_ground_truth[[1]][[2]])) {
-#         stat_details <- strsplit(stat_ID, ";")[[1]]
-#         if (simulation == 1) {
-#             ground_truth_statistics_sc[[stat_ID]] <- ls_cn_sc_ground_truth[[1]][[2]][[stat_ID]]
-#         } else {
-#             ground_truth_statistics_sc[[stat_ID]] <- rbind(ground_truth_statistics_sc[[stat_ID]], ls_cn_sc_ground_truth[[simulation]][[2]][[stat_ID]])
-#         }
-#     }
-#     names(ground_truth_statistics_sc) <- names(ls_cn_sc_ground_truth[[1]][[2]])
-# }
 
 
-# DLP_stats <- get_statistics(
-#     simulations_statistics_sc = ground_truth_statistics_sc,
-#     # simulations_statistics_bulk = ground_truth_statistics_bulk,
-#     list_targets = list_targets_library,
-#     cn_data_sc = ground_truth_cn_data_sc,
-#     # cn_data_bulk = ground_truth_cn_data_bulk,
-#     arm_level = TRUE,
-#     cn_table = cn_table
-# )
-# rbind(ls_cn_sc_ground_truth[[1]][[2]],(ls_cn_sc_ground_truth[[2]][[2]] )
-
-
-### Add the simulation labels to the data frame
-# simulation_labels <- c()
-# for (i in 1:n_simulations) {
-#     simulation_labels[i] <- paste0("Simulation", i)
-# }
-# stats_comb <- data.frame(ls_cn_sc_ground_truth[[1]][[2]])
-# for (i in 2:n_simulations) {
-#     stats_comb <- rbind(stats_comb, data.frame(ls_cn_sc_ground_truth[[i]][[2]]))
-# }
-# stats_comb <- cbind(simulation = simulation_labels, stats_comb)
-# write.csv(stats_comb, "Statistics_simulation.csv")
+# =======================================COMPUTE GROUND-TRUTH STATISTICS
+#---Get single-cell statistics & CN profiles
+#   Get statistics & clonal CN profiles for each single-cell sample
+list_targets_library_sc <- list_targets_library[grepl("data=sc", list_targets_library)]
+cat(paste0("Loading ", n_simulations, " single-cell DNA-seq data sets...\n"))
+n_cores <- max(detectCores() - 1, 1)
+cl <- makePSOCKcluster(n_cores)
+model_name <<- model_name
+clusterExport(cl, varlist = c(
+    "model_name", "R_inputplace","get_each_clonal_CN_profiles", "get_arm_CN_profiles",
+    "cn_table", "get_each_statistics", "list_targets_library_sc", "find_clonal_ancestry", "find_event_count"
+))
+e <- new.env()
+e$libs <- .libPaths()
+clusterExport(cl, "libs", envir = e)
+clusterEvalQ(cl, .libPaths(libs))
+pbo <- pboptions(type = "txt")
+ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
+    load(paste0(R_inputplace, "/",model_name, "_simulation_", i, ".rda"))
+    simulations <- list()
+    simulations[[1]] <- simulation
+    ls_each_sim <- list()
+    ls_each_sim[[1]] <- get_each_clonal_CN_profiles(
+        simulations,
+        arm_level = TRUE,
+        cn_table = cn_table
+    )
+    ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_sc)
+    return(ls_each_sim)
+})
+stopCluster(cl)
+## Add the simulation labels to the data frame
+simulation_labels <- c()
+for (i in 1:n_simulations) {
+    simulation_labels[i] <- paste0("Simulation", i)
+}
+stats_comb <- data.frame(ls_cn_sc_ground_truth[[1]][[2]])
+for (i in 2:n_simulations) {
+    stats_comb <- rbind(stats_comb, data.frame(ls_cn_sc_ground_truth[[i]][[2]]))
+}
+stats_comb <- cbind(simulation = simulation_labels, stats_comb)
+write.csv(stats_comb, "Statistics_simulation.csv")
 # =============================================COMPUTE MEDICC STATISTICS
 # setwd(R_outputPaths)
 # list_medicc <- list.files(pattern = "*.new$")
