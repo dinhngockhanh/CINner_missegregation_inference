@@ -720,7 +720,9 @@ func_stat <- function(parameters,
                       parameter_IDs,
                       model_variables,
                       list_targets,
-                      arm_level) {
+                      arm_level,
+                      n_simulations_sc,
+                      n_simulations_bulk) {
     #   Assign parameters in model variables
     model_variables <- assign_paras(model_variables, parameter_IDs, parameters)
     #   Make single-cell simulations and get relevant statistics
@@ -774,7 +776,9 @@ func_ABC <- function(parameters,
                      cn_data_sc = NULL,
                      cn_data_bulk = NULL,
                      arm_level = FALSE,
-                     save_sample_statistics = FALSE) {
+                     save_sample_statistics = FALSE,
+                     n_simulations_sc,
+                     n_simulations_bulk) {
     #   Assign parameters in model variables
     model_variables <- assign_paras(model_variables, parameter_IDs, parameters)
     #   Make single-cell simulations
@@ -829,6 +833,8 @@ library_simulations <- function(library_name,
                                 ABC_simcount = 10000,
                                 arm_level = FALSE,
                                 cn_table = NULL,
+                                n_simulations_sc,
+                                n_simulations_bulk,
                                 ##############################################
                                 n_cores = NULL) {
     library(parallel)
@@ -867,7 +873,7 @@ library_simulations <- function(library_name,
     arm_level <<- arm_level
     clusterExport(cl, varlist = c(
         "list_targets_library", "sim_param", "parameter_IDs", "model_name", "model_variables", "cn_table", "arm_level",
-        "func_stat", "assign_paras", "get_statistics", "get_each_clonal_CN_profiles", "get_cn_profile", "get_arm_CN_profiles",
+        "func_stat", "n_simulations_sc", "n_simulations_bulk", "assign_paras", "get_statistics", "get_each_clonal_CN_profiles", "get_cn_profile", "get_arm_CN_profiles",
         "find_clonal_ancestry", "find_event_count", "cn_distance", "sample_distance", "cohort_distance", "get_each_statistics",
         "vec_CN_block_no", "vec_centromeres",
         "BUILD_driver_library", "simulator_full_program", "one_simulation",
@@ -889,7 +895,7 @@ library_simulations <- function(library_name,
     sim_results_list <- pblapply(cl = cl, X = (ABC_simcount_start + 1):(ABC_simcount_start + ABC_simcount), FUN = function(iteration) {
         simulation_parameters <- sim_param[iteration - ABC_simcount_start, ]
         simulation_statistics <- func_stat(
-            parameters = simulation_parameters, parameter_IDs = parameter_IDs, model_variables = model_variables, list_targets = list_targets_library, arm_level = arm_level
+            parameters = simulation_parameters, parameter_IDs = parameter_IDs, model_variables = model_variables, list_targets = list_targets_library, arm_level = arm_level, n_simulations_sc = n_simulations_sc, n_simulations_bulk = n_simulations_bulk
         )
         filename <- paste0(library_name, "/", library_name, "_ABC_simulation_statistics_", iteration, ".rda")
         save(simulation_statistics, file = filename)

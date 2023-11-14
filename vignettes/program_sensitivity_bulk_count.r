@@ -330,6 +330,8 @@ for (i in 1:length(sensitivity_values_bulk)) {
 }
 # ===============================================MAKE SIMULATION LIBRARY
 ABC_simcount <- 200
+n_simulations_sc <- 50
+n_simulations_bulk <- 100
 library_simulations(
     library_name = model_name,
     model_variables = model_variables,
@@ -338,7 +340,9 @@ library_simulations(
     ABC_simcount_start = 0,
     ABC_simcount = ABC_simcount,
     arm_level = TRUE,
-    cn_table = cn_table
+    cn_table = cn_table,
+    n_simulations_sc,
+    n_simulations_bulk
 )
 # =============================SENSITIVITY ANALYSIS FOR SIMULATION COUNT
 sensitivity_parameter <- "N_data_bulk"
