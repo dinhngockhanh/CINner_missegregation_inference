@@ -3,17 +3,17 @@
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/1026_medicc"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/1026_medicc"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
 # R_workplace <- "/Users/lexie/Documents/DNA/DLPdata/vignettes"
 # R_resultPaths <- "/Users/lexie/Documents/DNA/DLPdata/Results/"
 # R_outputPaths <- "/Users/lexie/Library/CloudStorage/GoogleDrive-zl3213@columbia.edu/.shortcut-targets-by-id/10rccHeZeICEtbkkvEtKGaMZdk7yOe5PB/2023-10-26.Ground truth for Zhihan/output/"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
-# R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/testR"
+R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/Medicc_simulations"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
@@ -40,7 +40,7 @@ setwd(R_workplace)
 # devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
 # ==================================================IMPORTANT PARAMETERS
 #   Number of simulations
-n_simulations <- 10
+n_simulations <- 1000
 #   Number of cells sampled in each simulation
 n_cells <- 500
 #   Bounds for ground-truth selection rates (1/r -> r)
@@ -173,69 +173,69 @@ cn_table$Centromere <- cn_table$Centromere_location * cn_bin_length
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 # ======================================================MAKE SIMULATIONS
-# simulator_full_program(
-#     model = model_variables, model_prefix = model_name,
-#     folder_workplace = folder_workplace,
-#     n_simulations = n_simulations,
-#     build_cn = TRUE,
-#     save_cn_profile = TRUE, save_cn_clones = TRUE,
-#     internal_nodes_cn_info = TRUE,
-#     save_newick_tree = TRUE,
-#     compute_parallel = TRUE,
-#     R_libPaths = R_libPaths
-# )
-# plot_clonal_phylo(
-#     model = model_name,
-#     n_simulations = n_simulations,
-#     folder_workplace = folder_workplace,
-#     folder_plots = folder_workplace,
-#     width = 2000,
-#     height = 2000,
-#     compute_parallel = TRUE
-# )
-# plot_cn_heatmap(
-#     model = model_name,
-#     n_simulations = n_simulations,
-#     folder_workplace = folder_workplace,
-#     folder_plots = folder_workplace,
-#     plotcol = "total-copy",
-#     CN_data = "TRUTH",
-#     phylo = "TRUTH",
-#     width = 1000,
-#     height = 1000,
-#     compute_parallel = TRUE
-# )
+simulator_full_program(
+    model = model_variables, model_prefix = model_name,
+    folder_workplace = folder_workplace,
+    n_simulations = n_simulations,
+    build_cn = TRUE,
+    save_cn_profile = TRUE, save_cn_clones = TRUE,
+    internal_nodes_cn_info = TRUE,
+    save_newick_tree = TRUE,
+    compute_parallel = TRUE,
+    R_libPaths = R_libPaths
+)
+plot_clonal_phylo(
+    model = model_name,
+    n_simulations = n_simulations,
+    folder_workplace = folder_workplace,
+    folder_plots = folder_workplace,
+    width = 2000,
+    height = 2000,
+    compute_parallel = TRUE
+)
+plot_cn_heatmap(
+    model = model_name,
+    n_simulations = n_simulations,
+    folder_workplace = folder_workplace,
+    folder_plots = folder_workplace,
+    plotcol = "total-copy",
+    CN_data = "TRUTH",
+    phylo = "TRUTH",
+    width = 1000,
+    height = 1000,
+    compute_parallel = TRUE
+)
 # =======================================COMPUTE GROUND-TRUTH STATISTICS
-#---Get single-cell statistics & CN profiles
-#   Get statistics & clonal CN profiles for each single-cell sample
-list_targets_library_sc <- list_targets_library[grepl("data=sc", list_targets_library)]
-cat(paste0("Loading ", n_simulations, " single-cell DNA-seq data sets...\n"))
-n_cores <- max(detectCores() - 1, 1)
-cl <- makePSOCKcluster(n_cores)
-model_name <<- model_name
-clusterExport(cl, varlist = c(
-    "model_name", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
-    "cn_table", "get_each_statistics", "list_targets_library_sc", "find_clonal_ancestry", "find_event_count"
-))
-e <- new.env()
-e$libs <- .libPaths()
-clusterExport(cl, "libs", envir = e)
-clusterEvalQ(cl, .libPaths(libs))
-pbo <- pboptions(type = "txt")
-ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
-    load(paste0(model_name, "_simulation_", i, ".rda"))
-    simulations <- list()
-    simulations[[1]] <- simulation
-    ls_each_sim <- list()
-    ls_each_sim[[1]] <- get_each_clonal_CN_profiles(
-        simulations,
-        arm_level = TRUE,
-        cn_table = cn_table
-    )
-    ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_sc)
-    return(ls_each_sim)
-})
-stopCluster(cl)
+# #---Get single-cell statistics & CN profiles
+# #   Get statistics & clonal CN profiles for each single-cell sample
+# list_targets_library_sc <- list_targets_library[grepl("data=sc", list_targets_library)]
+# cat(paste0("Loading ", n_simulations, " single-cell DNA-seq data sets...\n"))
+# n_cores <- max(detectCores() - 1, 1)
+# cl <- makePSOCKcluster(n_cores)
+# model_name <<- model_name
+# clusterExport(cl, varlist = c(
+#     "model_name", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
+#     "cn_table", "get_each_statistics", "list_targets_library_sc", "find_clonal_ancestry", "find_event_count"
+# ))
+# e <- new.env()
+# e$libs <- .libPaths()
+# clusterExport(cl, "libs", envir = e)
+# clusterEvalQ(cl, .libPaths(libs))
+# pbo <- pboptions(type = "txt")
+# ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
+#     load(paste0(model_name, "_simulation_", i, ".rda"))
+#     simulations <- list()
+#     simulations[[1]] <- simulation
+#     ls_each_sim <- list()
+#     ls_each_sim[[1]] <- get_each_clonal_CN_profiles(
+#         simulations,
+#         arm_level = TRUE,
+#         cn_table = cn_table
+#     )
+#     ls_each_sim[[2]] <- get_each_statistics(simulations, ls_each_sim[[1]], list_targets_library_sc)
+#     return(ls_each_sim)
+# })
+# stopCluster(cl)
 # #   Get statistics & clonal CN profiles for entire single-cell cohort
 # ground_truth_cn_data_sc <- list()
 # ground_truth_statistics_sc <- list()
@@ -273,16 +273,16 @@ stopCluster(cl)
 
 
 ### Add the simulation labels to the data frame
-simulation_labels <- c()
-for (i in 1:n_simulations) {
-    simulation_labels[i] <- paste0("Simulation", i)
-}
-stats_comb <- data.frame(ls_cn_sc_ground_truth[[1]][[2]])
-for (i in 2:n_simulations) {
-    stats_comb <- rbind(stats_comb, data.frame(ls_cn_sc_ground_truth[[i]][[2]]))
-}
-stats_comb <- cbind(simulation = simulation_labels, stats_comb)
-write.csv(stats_comb, "Statistics_simulation.csv")
+# simulation_labels <- c()
+# for (i in 1:n_simulations) {
+#     simulation_labels[i] <- paste0("Simulation", i)
+# }
+# stats_comb <- data.frame(ls_cn_sc_ground_truth[[1]][[2]])
+# for (i in 2:n_simulations) {
+#     stats_comb <- rbind(stats_comb, data.frame(ls_cn_sc_ground_truth[[i]][[2]]))
+# }
+# stats_comb <- cbind(simulation = simulation_labels, stats_comb)
+# write.csv(stats_comb, "Statistics_simulation.csv")
 # =============================================COMPUTE MEDICC STATISTICS
 # setwd(R_outputPaths)
 # list_medicc <- list.files(pattern = "*.new$")
