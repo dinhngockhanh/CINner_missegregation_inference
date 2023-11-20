@@ -19,9 +19,9 @@ R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/R"
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
 library(readxl)
@@ -106,6 +106,10 @@ Table_sample <- data.frame(Sample_ID = c("SA01"), Cell_count = c(1000), Age_samp
 selection_model <- "chrom-arm-selection"
 #---Probabilities of CNA
 prob_CN_missegregation <- 2e-4
+
+prob_neutral_CN_focal_amplification <- 1e-4
+prob_neutral_CN_focal_deletion <- 1e-4
+
 #---Viability thresholds
 bound_maximum_CN <- 8
 bound_average_ploidy <- 4.5
@@ -124,6 +128,8 @@ model_variables <- BUILD_general_variables(
     CN_arm_level = TRUE,
     Table_sample = Table_sample,
     prob_CN_missegregation = prob_CN_missegregation,
+    prob_neutral_CN_focal_amplification = prob_neutral_CN_focal_amplification,
+    prob_neutral_CN_focal_deletion = prob_neutral_CN_focal_deletion,
     selection_model = selection_model,
     bound_average_ploidy = bound_average_ploidy,
     bound_homozygosity = bound_homozygosity,
@@ -173,6 +179,17 @@ cn_table$Centromere <- cn_table$Centromere_location * cn_bin_length
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 # ======================================================MAKE SIMULATIONS
+simulator_full_program(
+    model = model_variables, model_prefix = model_name,
+    folder_workplace = folder_workplace,
+    n_simulations = n_simulations,
+    build_cn = TRUE,
+    save_cn_profile = TRUE, save_cn_clones = TRUE,
+    internal_nodes_cn_info = TRUE,
+    save_newick_tree = TRUE,
+    compute_parallel = TRUE,
+    R_libPaths = R_libPaths
+)
 # simulator_full_program(
 #     model = model_variables, model_prefix = model_name,
 #     folder_workplace = folder_workplace,
@@ -243,7 +260,7 @@ n_cores <- max(detectCores() - 1, 1)
 cl <- makePSOCKcluster(n_cores)
 model_name <<- model_name
 clusterExport(cl, varlist = c(
-    "model_name", "R_inputplace","get_each_clonal_CN_profiles", "get_arm_CN_profiles",
+    "model_name", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
     "cn_table", "get_each_statistics", "list_targets_library_sc", "find_clonal_ancestry", "find_event_count"
 ))
 e <- new.env()
@@ -252,7 +269,7 @@ clusterExport(cl, "libs", envir = e)
 clusterEvalQ(cl, .libPaths(libs))
 pbo <- pboptions(type = "txt")
 ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
-    load(paste0(R_inputplace, "/",model_name, "_simulation_", i, ".rda"))
+    load(paste0(model_name, "_simulation_", i, ".rda"))
     simulations <- list()
     simulations[[1]] <- simulation
     ls_each_sim <- list()
@@ -265,7 +282,43 @@ ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i
     return(ls_each_sim)
 })
 stopCluster(cl)
-## Add the simulation labels to the data frame
+# #   Get statistics & clonal CN profiles for entire single-cell cohort
+# ground_truth_cn_data_sc <- list()
+# ground_truth_statistics_sc <- list()
+# for (simulation in 1:n_simulations) {
+#     for (statistic in 1:length(ls_cn_sc_ground_truth[[1]][[1]])) {
+#         if (simulation == 1) {
+#             ground_truth_cn_data_sc[[statistic]] <- ls_cn_sc_ground_truth[[simulation]][[1]][[statistic]][1]
+#         } else {
+#             ground_truth_cn_data_sc[[statistic]] <- c(ground_truth_cn_data_sc[[statistic]], ls_cn_sc_ground_truth[[simulation]][[1]][[statistic]][1])
+#         }
+#     }
+#     names(ground_truth_cn_data_sc) <- names(ls_cn_sc_ground_truth[[1]][[1]])
+#     for (stat_ID in names(ls_cn_sc_ground_truth[[1]][[2]])) {
+#         stat_details <- strsplit(stat_ID, ";")[[1]]
+#         if (simulation == 1) {
+#             ground_truth_statistics_sc[[stat_ID]] <- ls_cn_sc_ground_truth[[1]][[2]][[stat_ID]]
+#         } else {
+#             ground_truth_statistics_sc[[stat_ID]] <- rbind(ground_truth_statistics_sc[[stat_ID]], ls_cn_sc_ground_truth[[simulation]][[2]][[stat_ID]])
+#         }
+#     }
+#     names(ground_truth_statistics_sc) <- names(ls_cn_sc_ground_truth[[1]][[2]])
+# }
+
+
+# DLP_stats <- get_statistics(
+#     simulations_statistics_sc = ground_truth_statistics_sc,
+#     # simulations_statistics_bulk = ground_truth_statistics_bulk,
+#     list_targets = list_targets_library,
+#     cn_data_sc = ground_truth_cn_data_sc,
+#     # cn_data_bulk = ground_truth_cn_data_bulk,
+#     arm_level = TRUE,
+#     cn_table = cn_table
+# )
+# rbind(ls_cn_sc_ground_truth[[1]][[2]],(ls_cn_sc_ground_truth[[2]][[2]] )
+
+
+### Add the simulation labels to the data frame
 simulation_labels <- c()
 for (i in 1:n_simulations) {
     simulation_labels[i] <- paste0("Simulation", i)
