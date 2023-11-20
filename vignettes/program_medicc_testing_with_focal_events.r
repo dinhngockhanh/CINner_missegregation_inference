@@ -243,6 +243,10 @@ make_simulation <- function(index) {
     write.csv(cn_profiles_short, paste0(folder_workplace, "/", model_name, "_cn_profiles_long_1.csv"), row.names = FALSE)
 }
 # ===Make simulations in parallel
+
+simcount_start <- 1
+simcount_end <- 50
+
 numCores <- detectCores()
 cl <- makePSOCKcluster(numCores - 1)
 if (is.null(R_libPaths) == FALSE) {
@@ -262,7 +266,7 @@ clusterExport(cl, varlist = c(
     "bound_ground_truth_arm_s"
 ))
 pbo <- pboptions(type = "txt")
-pblapply(cl = cl, X = 1:n_simulations, FUN = function(iteration) {
+pblapply(cl = cl, X = simcount_start:simcount_end, FUN = function(iteration) {
     make_simulation(index = iteration)
 })
 stopCluster(cl)

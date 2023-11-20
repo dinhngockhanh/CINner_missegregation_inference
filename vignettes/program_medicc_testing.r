@@ -186,6 +186,35 @@ simulator_full_program(
 #     height = 1000,
 #     compute_parallel = TRUE
 # )
+# =======================================TRANSFERING CSV TO MEDICC INPUTS
+R_inputplace <- paste0(R_workplace,"/Medicc_testing")
+# cat(paste0("Transferring ", n_simulations, " csvs to input format of medicc2...\n"))
+# n_cores <- max(detectCores() - 1, 1)
+# cl <- makePSOCKcluster(n_cores)
+# clusterExport(cl, varlist = c("read.csv", "write.table", "R_workplace","R_inputplace", "as.integer", "grep"))
+# e <- new.env()
+# e$libs <- .libPaths()
+# clusterExport(cl, "libs", envir = e)
+# clusterEvalQ(cl, .libPaths(libs))
+
+# pbo <- pboptions(type = "txt")
+# mediccinput <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
+#     data <- read.csv(paste0(R_inputplace,"/Medicc_testing_cn_profiles_long_", i, ".csv"))
+#     new_df <- data.frame(matrix(nrow = nrow(data), ncol = 6))
+#     colnames(new_df) <- c("sample_id", "chrom", "start", "end", "cn_a", "cn_b")
+#     new_df$sample_id <- data$cell_id
+#     new_df$chrom <- paste0("chr", data$chr)
+#     new_df$start <- as.integer(data$start)
+#     new_df$end <- as.integer(data$end)
+#     new_df$cn_a <- data$Maj
+#     new_df$cn_b <- data$Min
+#     new_df <- new_df[grep("Library", new_df$sample_id), ]
+#     file_path <- paste0(R_workplace, "/Simulation", i, ".tsv")
+#     write.table(new_df, file = file_path, sep = "\t", quote = FALSE, row.names = FALSE)
+# })
+# stopCluster(cl)
+
+
 # =======================================COMPUTE GROUND-TRUTH STATISTICS
 #---Get single-cell statistics & CN profiles
 #   Get statistics & clonal CN profiles for each single-cell sample
