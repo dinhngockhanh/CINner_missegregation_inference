@@ -228,7 +228,7 @@ R_inputplace <- paste0(R_workplace,"/Medicc_testing")
 #     new_df$cn_a <- data$Maj
 #     new_df$cn_b <- data$Min
 #     new_df <- new_df[grep("Library", new_df$sample_id), ]
-#     file_path <- paste0(R_workplace, "/sample", i, ".tsv")
+#     file_path <- paste0(R_workplace, "/Simulation", i, ".tsv")
 #     write.table(new_df, file = file_path, sep = "\t", quote = FALSE, row.names = FALSE)
 # })
 # stopCluster(cl)
