@@ -1,11 +1,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+R_workplace <- getwd()
+R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/simulation/1026_medicc"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/1118_medicc"
 # R_libPaths <- ""
-# R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/R"
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
 # R_workplace <- "/Users/lexie/Documents/DNA/DLPdata/vignettes"
 # R_resultPaths <- "/Users/lexie/Documents/DNA/DLPdata/Results/"
@@ -19,9 +19,9 @@
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
+# R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
 library(readxl)
@@ -35,7 +35,7 @@ setwd(R_workplace)
 # devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
 # ==================================================IMPORTANT PARAMETERS
 #   Number of simulations
-n_simulations <- 1000
+n_simulations <- 5
 #   Number of cells sampled in each simulation
 n_cells <- 500
 #   Bounds for ground-truth log10(prob_CN_missegregation)
@@ -45,7 +45,7 @@ bound_ground_truth_prob_CN_missegregation_right <- -3
 bound_ground_truth_prob_neutral_CN_focal_events_left <- -3
 bound_ground_truth_prob_neutral_CN_focal_events_right <- -1
 #   Bounds for ground-truth selection rates (1/r -> r)
-bound_ground_truth_arm_s <- 1.2
+bound_ground_truth_arm_s <- 1.15
 #   Statistics for the study
 list_targets_library <- c(
     #---Single-cell DNA: clonal/subclonal CNAs
@@ -157,15 +157,15 @@ make_simulation <- function(index) {
         save_newick_tree = TRUE,
         R_libPaths = R_libPaths
     )
-    # plot_clonal_phylo(
-    #     model = model_name,
-    #     n_simulations = 1,
-    #     folder_workplace = folder_workplace,
-    #     folder_plots = folder_workplace,
-    #     width = 2000,
-    #     height = 2000,
-    #     compute_parallel = FALSE
-    # )
+    plot_clonal_phylo(
+        model = model_name,
+        n_simulations = 1,
+        folder_workplace = folder_workplace,
+        folder_plots = folder_workplace,
+        width = 2000,
+        height = 2000,
+        compute_parallel = FALSE
+    )
     # plot_cn_heatmap(
     #     model = model_name,
     #     n_simulations = 1,
