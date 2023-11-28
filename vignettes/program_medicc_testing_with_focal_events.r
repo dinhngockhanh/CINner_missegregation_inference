@@ -3,7 +3,7 @@ R_workplace <- getwd()
 R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/simulation/1118_medicc"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/1124_medicc"
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
@@ -157,15 +157,15 @@ make_simulation <- function(index) {
         save_newick_tree = TRUE,
         R_libPaths = R_libPaths
     )
-    plot_clonal_phylo(
-        model = model_name,
-        n_simulations = 1,
-        folder_workplace = folder_workplace,
-        folder_plots = folder_workplace,
-        width = 2000,
-        height = 2000,
-        compute_parallel = FALSE
-    )
+    # plot_clonal_phylo(
+    #     model = model_name,
+    #     n_simulations = 1,
+    #     folder_workplace = folder_workplace,
+    #     folder_plots = folder_workplace,
+    #     width = 2000,
+    #     height = 2000,
+    #     compute_parallel = FALSE
+    # )
     # plot_cn_heatmap(
     #     model = model_name,
     #     n_simulations = 1,
@@ -245,7 +245,7 @@ make_simulation <- function(index) {
 # ===Make simulations in parallel
 
 simcount_start <- 1
-simcount_end <- 50
+simcount_end <- 6
 
 numCores <- detectCores()
 cl <- makePSOCKcluster(numCores - 1)
