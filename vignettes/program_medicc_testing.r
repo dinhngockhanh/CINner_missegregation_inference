@@ -3,17 +3,17 @@
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/1124_medicc"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/1124_medicc"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
 # R_workplace <- "/Users/lexie/Documents/DNA/DLPdata/vignettes"
 # R_resultPaths <- "/Users/lexie/Documents/DNA/DLPdata/Results/"
 # R_outputPaths <- "/Users/lexie/Library/CloudStorage/GoogleDrive-zl3213@columbia.edu/.shortcut-targets-by-id/10rccHeZeICEtbkkvEtKGaMZdk7yOe5PB/2023-10-26.Ground truth for Zhihan/output/"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
-# R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/Medicc_simulations"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/R"
+R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/1128_Medicc_simulations"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
@@ -40,7 +40,7 @@ setwd(R_workplace)
 # devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
 # # ==================================================IMPORTANT PARAMETERS
 # #   Number of simulations
-n_simulations <- 5
+n_simulations <- 1200
 # #   Number of cells sampled in each simulation
 # n_cells <- 500
 # #   Bounds for ground-truth selection rates (1/r -> r)
@@ -215,14 +215,14 @@ mediccinput <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
 stopCluster(cl)
 
 focal_rate_df <- data.frame(matrix(nrow = n_simulations, ncol = 2))
-colnames(focal_rate_df) <- c("Simulation_id", "log10_neutral_focal_rate")
+colnames(focal_rate_df) <- c("Simulation_id", "log10_misseg_rate")
 for (i in 1:n_simulations) {
     focal_rate_df$Simulation_id[i] <- paste0("Simulation_", i)
     R_inputplace <- paste0(R_workplace, "/Medicc_testing_", i)
     ground_truth_params <- read.csv(paste0(R_inputplace, "/Medicc_testing_ground_truth_1.csv"))
-    focal_rate_df$log10_neutral_focal_rate[i] <- ground_truth_params$Value[which(ground_truth_params$Parameter == "log10_neutral_focal_rate")]
+    focal_rate_df$log10_misseg_rate[i] <- ground_truth_params$Value[which(ground_truth_params$Parameter == "log10_misseg_rate")]
 }
-write.csv(focal_rate_df, "focal_rate_df.csv")
+write.csv(focal_rate_df, "misseg_rate_df.csv")
 # =======================================COMPUTE GROUND-TRUTH STATISTICS
 #---Get single-cell statistics & CN profiles
 #   Get statistics & clonal CN profiles for each single-cell sample
