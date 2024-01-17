@@ -119,9 +119,9 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
         stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
         if (stat_target == "genome") {
             simulations_statistics[[stat_ID]] <- matrix(0, nrow = length(simulations), ncol = 1)
-        } else if (stat_target == "chromosome") {
-            stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")[[1]]
-            simulations_statistics[[stat_ID]] <- matrix(0, nrow = length(simulations), ncol = length(stat_chromosome_ID))
+        } else if (stat_target == "chromosome_arm") {
+            stat_chromosome_arm_ID <- strsplit(strsplit(stat_details[grep("chromosome_arm=", stat_details)], "=")[[1]][2], ",")[[1]]
+            simulations_statistics[[stat_ID]] <- matrix(0, nrow = length(simulations), ncol = length(stat_chromosome_arm_ID))
         }
     }
     #--------------------------------------Compute simulation statistics
@@ -153,21 +153,25 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
             stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
             stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
             stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
-            if (stat_target == "chromosome") {
-                stat_chromosome_ID <- strsplit(strsplit(stat_details[grep("chromosome=", stat_details)], "=")[[1]][2], ",")[[1]]
+            if (stat_target == "chromosome_arm") {
+                stat_chromosome_arm_ID <- strsplit(strsplit(stat_details[grep("chromosome_arm=", stat_details)], "=")[[1]][2], ",")[[1]]
                 if (stat_variable == "shannon") {
-                    #   Extract CN for each chromosome from each unique clone
-                    ls_chrom_profiles <- vector("list", length(stat_chromosome_ID))
+                    #   Extract CN for each chromosome_arm from each unique clone
+                    ls_chrom_profiles <- vector("list", length(stat_chromosome_arm_ID))
                     for (j in 1:length(simulation$sample$sample_genotype_unique)) {
                         genome_profile <- simulation$sample$sample_genotype_unique_profile[[j]]
-                        for (k in 1:length(stat_chromosome_ID)) {
-                            vec_CN <- paste(genome_profile$copy[genome_profile$chr == stat_chromosome_ID[k]], collapse = "")
+                        for (k in 1:length(stat_chromosome_arm_ID)) {
+                            if (grepl("p", stat_chromosome_arm_ID[k])) {
+                                vec_CN <- paste(genome_profile$copy[genome_profile$chr == gsub("\\D", "", stat_chromosome_arm_ID[k]) & genome_profile$start == 1], collapse = "")
+                            } else {
+                                vec_CN <- paste(genome_profile$copy[genome_profile$chr == gsub("\\D", "", stat_chromosome_arm_ID[k]) & genome_profile$start == 500001], collapse = "")
+                            }
                             ls_chrom_profiles[[k]][j] <- vec_CN
                         }
                     }
-                    #   Get Shannon index for each chromosome
-                    diversity_by_chromosome <- rep(0, length(stat_chromosome_ID))
-                    for (j in 1:length(stat_chromosome_ID)) {
+                    #   Get Shannon index for each chromosome_arm
+                    diversity_by_chromosome <- rep(0, length(stat_chromosome_arm_ID))
+                    for (j in 1:length(stat_chromosome_arm_ID)) {
                         tmp_frequency_table <- cbind(simulation$sample$sample_genotype_unique, match(ls_chrom_profiles[[j]], unique(ls_chrom_profiles[[j]])))
                         tmp_sample_clone_ID <- simulation$sample$sample_clone_ID
                         for (k in 1:nrow(tmp_frequency_table)) {
