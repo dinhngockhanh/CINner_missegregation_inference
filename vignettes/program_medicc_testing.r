@@ -3,17 +3,17 @@
 # R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
 # R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/simulation/1124_medicc"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
+# R_workplace <- "/Users/xiangzijin/Documents/simulation/1124_medicc"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
 # R_workplace <- "/Users/lexie/Documents/DNA/DLPdata/vignettes"
 # R_resultPaths <- "/Users/lexie/Documents/DNA/DLPdata/Results/"
 # R_outputPaths <- "/Users/lexie/Library/CloudStorage/GoogleDrive-zl3213@columbia.edu/.shortcut-targets-by-id/10rccHeZeICEtbkkvEtKGaMZdk7yOe5PB/2023-10-26.Ground truth for Zhihan/output/"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
-# R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/Medicc_simulations"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/R"
+R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/1128_Medicc_simulations"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
@@ -39,8 +39,8 @@ sapply(files_sources, source)
 setwd(R_workplace)
 # devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
 # # ==================================================IMPORTANT PARAMETERS
-# #   Number of simulations
-n_simulations <- 5
+# # #   Number of simulations
+n_simulations <- 1200
 # #   Number of cells sampled in each simulation
 # n_cells <- 500
 # #   Bounds for ground-truth selection rates (1/r -> r)
@@ -62,7 +62,7 @@ n_simulations <- 5
 #     "data=sc;target=genome;statistic=mean;variable=B2", # balance index of phylogeny tree
 #     "data=sc;target=genome;statistic=mean;variable=maxDepth" # height of phylogeny tree
 # )
-# # ===============================================GROUND TRUTH PARAMETERS
+# # # ===============================================GROUND TRUTH PARAMETERS
 # cell_lifespan <- 30
 # T_0 <- list(0, "year")
 # T_end <- list(80, "year")
@@ -135,7 +135,7 @@ n_simulations <- 5
 # model_name <- "Medicc_testing"
 # model_variables <- CHECK_model_variables(model_variables)
 # folder_workplace <- paste0(model_name, "/")
-# # ==============GET TABLE OF CHROMOSOME LENGTHS AND CENTROMERE LOCATIONS
+# ==============GET TABLE OF CHROMOSOME LENGTHS AND CENTROMERE LOCATIONS
 # cn_table <- model_variables$cn_info
 # cn_bin_length <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == "size_CN_block_DNA")])
 # cn_table$Length <- cn_table$Bin_count * cn_bin_length
@@ -209,20 +209,27 @@ mediccinput <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
     new_df$end <- as.integer(data$end)
     new_df$cn_a <- data$Maj
     new_df$cn_b <- data$Min
+    # print(grep("library", new_df$sample_id))
+    new_df <- new_df[grep("Library", new_df$sample_id),]
     file_path <- paste0(R_workplace, "/Simulation", i, ".tsv")
     write.table(new_df, file = file_path, sep = "\t", quote = FALSE, row.names = FALSE)
 })
 stopCluster(cl)
 
-focal_rate_df <- data.frame(matrix(nrow = n_simulations, ncol = 2))
-colnames(focal_rate_df) <- c("Simulation_id", "log10_neutral_focal_rate")
-for (i in 1:n_simulations) {
-    focal_rate_df$Simulation_id[i] <- paste0("Simulation_", i)
-    R_inputplace <- paste0(R_workplace, "/Medicc_testing_", i)
-    ground_truth_params <- read.csv(paste0(R_inputplace, "/Medicc_testing_ground_truth_1.csv"))
-    focal_rate_df$log10_neutral_focal_rate[i] <- ground_truth_params$Value[which(ground_truth_params$Parameter == "log10_neutral_focal_rate")]
-}
-write.csv(focal_rate_df, "focal_rate_df.csv")
+# focal_rate_df <- data.frame(matrix(nrow = n_simulations, ncol = 24))
+# R_inputplace <- paste0(R_workplace, "/Medicc_testing_", 1)
+# ground_truth_params <- read.csv(paste0(R_inputplace, "/Medicc_testing_ground_truth_1.csv"))
+# colnames(focal_rate_df) <- c("Simulation_id", ground_truth_params$Parameter)
+# for (i in 1:n_simulations) {
+#     focal_rate_df$Simulation_id[i] <- paste0("Simulation_", i)
+#     R_inputplace <- paste0(R_workplace, "/Medicc_testing_", i)
+#     ground_truth_params <- read.csv(paste0(R_inputplace, "/Medicc_testing_ground_truth_1.csv"))
+#     for (para in ground_truth_params$Parameter){
+#         focal_rate_df[[para]][i] <- ground_truth_params$Value[which(ground_truth_params$Parameter == para)]
+#     }
+    
+# }
+# write.csv(focal_rate_df, "params_df.csv")
 # =======================================COMPUTE GROUND-TRUTH STATISTICS
 #---Get single-cell statistics & CN profiles
 #   Get statistics & clonal CN profiles for each single-cell sample
@@ -232,7 +239,7 @@ write.csv(focal_rate_df, "focal_rate_df.csv")
 # cl <- makePSOCKcluster(n_cores)
 # model_name <<- model_name
 # clusterExport(cl, varlist = c(
-#     "model_name", "get_each_clonal_CN_profiles", "get_arm_CN_profiles",
+#     "model_name", "R_workplace","get_each_clonal_CN_profiles", "get_arm_CN_profiles",
 #     "cn_table", "get_each_statistics", "list_targets_library_sc", "find_clonal_ancestry", "find_event_count"
 # ))
 # e <- new.env()
@@ -240,8 +247,11 @@ write.csv(focal_rate_df, "focal_rate_df.csv")
 # clusterExport(cl, "libs", envir = e)
 # clusterEvalQ(cl, .libPaths(libs))
 # pbo <- pboptions(type = "txt")
+
 # ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
-#     load(paste0(model_name, "_simulation_", i, ".rda"))
+#     R_inputplace <- paste0(R_workplace, "/Medicc_testing_", i)
+#     load(paste0(R_inputplace,"/",model_name, "_simulation_1", ".rda"))
+    
 #     simulations <- list()
 #     simulations[[1]] <- simulation
 #     ls_each_sim <- list()
@@ -287,10 +297,9 @@ write.csv(focal_rate_df, "focal_rate_df.csv")
 #     arm_level = TRUE,
 #     cn_table = cn_table
 # )
-# rbind(ls_cn_sc_ground_truth[[1]][[2]],(ls_cn_sc_ground_truth[[2]][[2]] )
 
 
-### Add the simulation labels to the data frame
+# ## Add the simulation labels to the data frame
 # simulation_labels <- c()
 # for (i in 1:n_simulations) {
 #     simulation_labels[i] <- paste0("Simulation", i)
