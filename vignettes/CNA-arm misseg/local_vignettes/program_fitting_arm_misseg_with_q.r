@@ -149,55 +149,55 @@ list_chromosomes <- paste(unique(model_variables$chromosome_arm_library$Chromoso
 # =============DEFINE LIST OF STATISTICS FOR BUILDING SIMULATION LIBRARY
 list_targets_library <- c(
     #---Bulk DNA: CN
-    "data=bulk;target=genome;statistic=dist;variable=average_CN;metric=euclidean",
-    "data=bulk;target=genome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
-    "data=bulk;target=genome;statistic=var;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
+    # "data=bulk;target=genome;statistic=dist;variable=average_CN;metric=euclidean",
+    # "data=bulk;target=genome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
+    # "data=bulk;target=genome;statistic=var;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
     paste0("data=bulk;target=chromosome;statistic=dist;variable=average_CN;metric=euclidean;chromosome=", list_chromosomes),
-    paste0("data=bulk;target=chromosome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation;chromosome=", list_chromosomes),
-    paste0("data=bulk;target=chromosome;statistic=var;representative_CN=average_CN;variable=event_count;type=total;event=missegregation;chromosome=", list_chromosomes),
-    #---Single-cell DNA: subclonal CN
-    "data=sc;target=genome;statistic=dist;variable=clonal_CN;metric=euclidean",
+    # paste0("data=bulk;target=chromosome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation;chromosome=", list_chromosomes),
+    # paste0("data=bulk;target=chromosome;statistic=var;representative_CN=average_CN;variable=event_count;type=total;event=missegregation;chromosome=", list_chromosomes),
+    # #---Single-cell DNA: subclonal CN
+    # "data=sc;target=genome;statistic=dist;variable=clonal_CN;metric=euclidean",
     "data=sc;target=genome;statistic=mean;variable=shannon",
-    "data=sc;target=genome;statistic=mean;variable=event_count;type=clonal;event=missegregation",
-    "data=sc;target=genome;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
-    "data=sc;target=genome;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
-    "data=sc;target=genome;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
+    # "data=sc;target=genome;statistic=mean;variable=event_count;type=clonal;event=missegregation",
+    # "data=sc;target=genome;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
+    # "data=sc;target=genome;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
+    # "data=sc;target=genome;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
     "data=sc;target=genome;statistic=var;variable=shannon",
-    "data=sc;target=genome;statistic=var;variable=event_count;type=clonal;event=missegregation",
-    "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=missegregation",
-    "data=sc;target=genome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
-    "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
+    # "data=sc;target=genome;statistic=var;variable=event_count;type=clonal;event=missegregation",
+    # "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=missegregation",
+    # "data=sc;target=genome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
+    # "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
     paste0("data=sc;target=chromosome;statistic=dist;variable=clonal_CN;metric=euclidean;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=mean;variable=shannon;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=var;variable=shannon;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
-    #---Single-cell DNA: phylo stats for tips
-    "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
-    "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
-    "data=sc;target=genome;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
-    "data=sc;target=genome;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
-    "data=sc;target=genome;statistic=var;variable=cherries",
-    "data=sc;target=genome;statistic=var;variable=pitchforks",
-    "data=sc;target=genome;statistic=var;variable=IL_number",
-    "data=sc;target=genome;statistic=var;variable=avgLadder",
-    #---Single-cell DNA: phylo stats for balance
-    "data=sc;target=genome;statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
-    "data=sc;target=genome;statistic=mean;variable=colless", # balance index of phylogeny tree
-    "data=sc;target=genome;statistic=mean;variable=sackin", # balance index of phylogeny tree
-    "data=sc;target=genome;statistic=mean;variable=B2", # balance index of phylogeny tree
-    "data=sc;target=genome;statistic=mean;variable=maxDepth", # height of phylogeny tree
-    "data=sc;target=genome;statistic=var;variable=stairs",
-    "data=sc;target=genome;statistic=var;variable=colless",
-    "data=sc;target=genome;statistic=var;variable=sackin",
-    "data=sc;target=genome;statistic=var;variable=B2",
-    "data=sc;target=genome;statistic=var;variable=maxDepth"
+    paste0("data=sc;target=chromosome;statistic=mean;variable=shannon;chromosome=", list_chromosomes)
+    # paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
+    # paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
+    # paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
+    # paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
+    # paste0("data=sc;target=chromosome;statistic=var;variable=shannon;chromosome=", list_chromosomes),
+    # paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
+    # paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
+    # paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
+    # paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
+    ## ---Single-cell DNA: phylo stats for tips
+    # "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
+    # "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
+    # "data=sc;target=genome;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
+    # "data=sc;target=genome;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
+    # "data=sc;target=genome;statistic=var;variable=cherries",
+    # "data=sc;target=genome;statistic=var;variable=pitchforks",
+    # "data=sc;target=genome;statistic=var;variable=IL_number",
+    # "data=sc;target=genome;statistic=var;variable=avgLadder",
+    # #---Single-cell DNA: phylo stats for balance
+    # "data=sc;target=genome;statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
+    # "data=sc;target=genome;statistic=mean;variable=colless", # balance index of phylogeny tree
+    # "data=sc;target=genome;statistic=mean;variable=sackin", # balance index of phylogeny tree
+    # "data=sc;target=genome;statistic=mean;variable=B2", # balance index of phylogeny tree
+    # "data=sc;target=genome;statistic=mean;variable=maxDepth", # height of phylogeny tree
+    # "data=sc;target=genome;statistic=var;variable=stairs",
+    # "data=sc;target=genome;statistic=var;variable=colless",
+    # "data=sc;target=genome;statistic=var;variable=sackin",
+    # "data=sc;target=genome;statistic=var;variable=B2",
+    # "data=sc;target=genome;statistic=var;variable=maxDepth"
 )
 # ==============GET TABLE OF CHROMOSOME LENGTHS AND CENTROMERE LOCATIONS
 cn_table <- model_variables$cn_info
@@ -206,38 +206,38 @@ cn_table$Length <- cn_table$Bin_count * cn_bin_length
 cn_table$Centromere <- cn_table$Centromere_location * cn_bin_length
 vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
-# ================================================MAKE GROUND-TRUTH DATA
-#---Make single-cell ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_sc, " single-cell simulations...\n"))
-simulator_full_program(
-    model = model_variables, model_prefix = paste0(model_name, "_sc"),
-    n_simulations = N_data_sc,
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
-#---Make bulk ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
-simulator_full_program(
-    model = model_variables, model_prefix = paste0(model_name, "_bulk"),
-    n_simulations = N_data_bulk,
-    stage_final = 2,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "sample_genotype_unique_profile",
-        "sample_genotype_unique",
-        "sample_clone_ID"
-    ),
-    R_libPaths = R_libPaths
-)
+# # ================================================MAKE GROUND-TRUTH DATA
+# #---Make single-cell ground-truth simulations
+# cat(paste0("\n\n\nMaking ", N_data_sc, " single-cell simulations...\n"))
+# simulator_full_program(
+#     model = model_variables, model_prefix = paste0(model_name, "_sc"),
+#     n_simulations = N_data_sc,
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# #---Make bulk ground-truth simulations
+# cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
+# simulator_full_program(
+#     model = model_variables, model_prefix = paste0(model_name, "_bulk"),
+#     n_simulations = N_data_bulk,
+#     stage_final = 2,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "sample_genotype_unique_profile",
+#         "sample_genotype_unique",
+#         "sample_clone_ID"
+#     ),
+#     R_libPaths = R_libPaths
+# )
 # ---Print out ground-truth parameters
 list_parameters_ground_truth <- list_parameters
 list_parameters_ground_truth$Value <- 0
@@ -373,129 +373,129 @@ for (simulation in 1:N_data_bulk) {
     names(ground_truth_statistics_bulk) <- names(ls_cn_bulk_ground_truth[[1]][[2]])
 }
 # ===============================================MAKE SIMULATION LIBRARY
-ABC_simcount <- 10
-library_simulations(
-    library_name = model_name,
-    model_variables = model_variables,
-    list_parameters = list_parameters,
-    list_targets_library = list_targets_library,
-    ####
-    ####
-    ####
-    ####
-    ####
-    ABC_simcount_start = 0,
-    ABC_simcount = ABC_simcount,
-    arm_level = TRUE,
-    cn_table = cn_table,
-    n_simulations_sc = N_data_sc,
-    n_simulations_bulk = N_data_bulk
-    ####
-    ####
-    ####
-    ####
-    ####
-)
+# ABC_simcount <- 10
+# library_simulations(
+#     library_name = model_name,
+#     model_variables = model_variables,
+#     list_parameters = list_parameters,
+#     list_targets_library = list_targets_library,
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+#     ABC_simcount_start = 0,
+#     ABC_simcount = ABC_simcount,
+#     arm_level = TRUE,
+#     cn_table = cn_table,
+#     n_simulations_sc = N_data_sc,
+#     n_simulations_bulk = N_data_bulk
+#     ####
+#     ####
+#     ####
+#     ####
+#     ####
+# )
 # ==================DEFINE LIST OF STATISTICS FOR FITTING EACH PARAMETER
-list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
-colnames(list_targets) <- c("Variable", list_targets_library)
-list_targets[, 1] <- list_parameters$Variable
-#---Statistics for fitting misseg rate
-list_targets_misseg <- c(
-    #---Bulk DNA: CN
-    "data=bulk;target=genome;statistic=dist;variable=average_CN;metric=euclidean",
-    "data=bulk;target=genome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
-    "data=bulk;target=genome;statistic=var;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
-    #---Single-cell DNA: subclonal CN
-    "data=sc;target=genome;statistic=dist;variable=clonal_CN;metric=euclidean",
-    "data=sc;target=genome;statistic=mean;variable=shannon",
-    "data=sc;target=genome;statistic=mean;variable=event_count;type=clonal;event=missegregation",
-    "data=sc;target=genome;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
-    "data=sc;target=genome;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
-    "data=sc;target=genome;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    "data=sc;target=genome;statistic=var;variable=shannon",
-    "data=sc;target=genome;statistic=var;variable=event_count;type=clonal;event=missegregation",
-    "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=missegregation",
-    "data=sc;target=genome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
-    "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
-    #---Single-cell DNA: phylo stats for tips
-    "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
-    "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
-    "data=sc;target=genome;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
-    "data=sc;target=genome;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
-    "data=sc;target=genome;statistic=var;variable=cherries",
-    "data=sc;target=genome;statistic=var;variable=pitchforks",
-    "data=sc;target=genome;statistic=var;variable=IL_number",
-    "data=sc;target=genome;statistic=var;variable=avgLadder",
-    #---Single-cell DNA: phylo stats for balance
-    "data=sc;target=genome;statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
-    "data=sc;target=genome;statistic=mean;variable=colless", # balance index of phylogeny tree
-    "data=sc;target=genome;statistic=mean;variable=sackin", # balance index of phylogeny tree
-    "data=sc;target=genome;statistic=mean;variable=B2", # balance index of phylogeny tree
-    "data=sc;target=genome;statistic=mean;variable=maxDepth", # height of phylogeny tree
-    "data=sc;target=genome;statistic=var;variable=stairs",
-    "data=sc;target=genome;statistic=var;variable=colless",
-    "data=sc;target=genome;statistic=var;variable=sackin",
-    "data=sc;target=genome;statistic=var;variable=B2",
-    "data=sc;target=genome;statistic=var;variable=maxDepth"
-)
-list_targets[1, which(colnames(list_targets) %in% list_targets_misseg)] <- 1
-list_targets[2, which(colnames(list_targets) %in% list_targets_misseg)] <- 1
-#---Statistics for fitting selection rate
-list_targets_selection <- c(
-    #---Bulk DNA: CN
-    paste0("data=bulk;target=chromosome;statistic=dist;variable=average_CN;metric=euclidean;chromosome=", list_chromosomes),
-    paste0("data=bulk;target=chromosome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation;chromosome=", list_chromosomes),
-    paste0("data=bulk;target=chromosome;statistic=var;representative_CN=average_CN;variable=event_count;type=total;event=missegregation;chromosome=", list_chromosomes),
-    #---Single-cell DNA: subclonal CN
-    paste0("data=sc;target=chromosome;statistic=dist;variable=clonal_CN;metric=euclidean;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=mean;variable=shannon;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=var;variable=shannon;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
-    paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes)
-    # #---Single-cell DNA: phylo stats for tips
-    # "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
-    # "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
-    # "data=sc;target=genome;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
-    # "data=sc;target=genome;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
-    # "data=sc;target=genome;statistic=var;variable=cherries",
-    # "data=sc;target=genome;statistic=var;variable=pitchforks",
-    # "data=sc;target=genome;statistic=var;variable=IL_number",
-    # "data=sc;target=genome;statistic=var;variable=avgLadder",
-    # #---Single-cell DNA: phylo stats for balance
-    # "data=sc;target=genome;statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
-    # "data=sc;target=genome;statistic=mean;variable=colless", # balance index of phylogeny tree
-    # "data=sc;target=genome;statistic=mean;variable=sackin", # balance index of phylogeny tree
-    # "data=sc;target=genome;statistic=mean;variable=B2", # balance index of phylogeny tree
-    # "data=sc;target=genome;statistic=mean;variable=maxDepth", # height of phylogeny tree
-    # "data=sc;target=genome;statistic=var;variable=stairs",
-    # "data=sc;target=genome;statistic=var;variable=colless",
-    # "data=sc;target=genome;statistic=var;variable=sackin",
-    # "data=sc;target=genome;statistic=var;variable=B2",
-    # "data=sc;target=genome;statistic=var;variable=maxDepth"
-)
-for (row in 3:nrow(list_targets)) {
-    list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
-}
-# =============================COMPUTE STATISTICS FOR SIMULATION LIBRARY
-library_statistics(
-    library_name = model_name,
-    model_variables = model_variables,
-    list_parameters = list_parameters,
-    list_targets_library = list_targets_library,
-    ABC_simcount_start = 0,
-    ABC_simcount = ABC_simcount,
-    cn_data_sc = ground_truth_cn_data_sc,
-    cn_data_bulk = ground_truth_cn_data_bulk,
-    arm_level = TRUE,
-    cn_table = cn_table
-)
+# list_targets <- data.frame(matrix(0, ncol = (length(list_targets_library) + 1), nrow = length(list_parameters$Variable)))
+# colnames(list_targets) <- c("Variable", list_targets_library)
+# list_targets[, 1] <- list_parameters$Variable
+# #---Statistics for fitting misseg rate
+# list_targets_misseg <- c(
+#     #---Bulk DNA: CN
+#     "data=bulk;target=genome;statistic=dist;variable=average_CN;metric=euclidean",
+#     "data=bulk;target=genome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
+#     "data=bulk;target=genome;statistic=var;representative_CN=average_CN;variable=event_count;type=total;event=missegregation",
+#     #---Single-cell DNA: subclonal CN
+#     "data=sc;target=genome;statistic=dist;variable=clonal_CN;metric=euclidean",
+#     "data=sc;target=genome;statistic=mean;variable=shannon",
+#     "data=sc;target=genome;statistic=mean;variable=event_count;type=clonal;event=missegregation",
+#     "data=sc;target=genome;statistic=mean;variable=event_count;type=subclonal;event=missegregation",
+#     "data=sc;target=genome;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
+#     "data=sc;target=genome;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
+#     "data=sc;target=genome;statistic=var;variable=shannon",
+#     "data=sc;target=genome;statistic=var;variable=event_count;type=clonal;event=missegregation",
+#     "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=missegregation",
+#     "data=sc;target=genome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation",
+#     "data=sc;target=genome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation",
+#     #---Single-cell DNA: phylo stats for tips
+#     "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
+#     "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
+#     "data=sc;target=genome;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
+#     "data=sc;target=genome;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
+#     "data=sc;target=genome;statistic=var;variable=cherries",
+#     "data=sc;target=genome;statistic=var;variable=pitchforks",
+#     "data=sc;target=genome;statistic=var;variable=IL_number",
+#     "data=sc;target=genome;statistic=var;variable=avgLadder",
+#     #---Single-cell DNA: phylo stats for balance
+#     "data=sc;target=genome;statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
+#     "data=sc;target=genome;statistic=mean;variable=colless", # balance index of phylogeny tree
+#     "data=sc;target=genome;statistic=mean;variable=sackin", # balance index of phylogeny tree
+#     "data=sc;target=genome;statistic=mean;variable=B2", # balance index of phylogeny tree
+#     "data=sc;target=genome;statistic=mean;variable=maxDepth", # height of phylogeny tree
+#     "data=sc;target=genome;statistic=var;variable=stairs",
+#     "data=sc;target=genome;statistic=var;variable=colless",
+#     "data=sc;target=genome;statistic=var;variable=sackin",
+#     "data=sc;target=genome;statistic=var;variable=B2",
+#     "data=sc;target=genome;statistic=var;variable=maxDepth"
+# )
+# list_targets[1, which(colnames(list_targets) %in% list_targets_misseg)] <- 1
+# list_targets[2, which(colnames(list_targets) %in% list_targets_misseg)] <- 1
+# #---Statistics for fitting selection rate
+# list_targets_selection <- c(
+#     #---Bulk DNA: CN
+#     paste0("data=bulk;target=chromosome;statistic=dist;variable=average_CN;metric=euclidean;chromosome=", list_chromosomes),
+#     paste0("data=bulk;target=chromosome;statistic=mean;representative_CN=average_CN;variable=event_count;type=total;event=missegregation;chromosome=", list_chromosomes),
+#     paste0("data=bulk;target=chromosome;statistic=var;representative_CN=average_CN;variable=event_count;type=total;event=missegregation;chromosome=", list_chromosomes),
+#     #---Single-cell DNA: subclonal CN
+#     paste0("data=sc;target=chromosome;statistic=dist;variable=clonal_CN;metric=euclidean;chromosome=", list_chromosomes),
+#     paste0("data=sc;target=chromosome;statistic=mean;variable=shannon;chromosome=", list_chromosomes),
+#     paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
+#     paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
+#     paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
+#     paste0("data=sc;target=chromosome;statistic=mean;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
+#     paste0("data=sc;target=chromosome;statistic=var;variable=shannon;chromosome=", list_chromosomes),
+#     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=missegregation;chromosome=", list_chromosomes),
+#     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=missegregation;chromosome=", list_chromosomes),
+#     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=clonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes),
+#     paste0("data=sc;target=chromosome;statistic=var;variable=event_count;type=subclonal;event=chromosome-arm-missegregation;chromosome=", list_chromosomes)
+#     # #---Single-cell DNA: phylo stats for tips
+#     # "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
+#     # "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
+#     # "data=sc;target=genome;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
+#     # "data=sc;target=genome;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
+#     # "data=sc;target=genome;statistic=var;variable=cherries",
+#     # "data=sc;target=genome;statistic=var;variable=pitchforks",
+#     # "data=sc;target=genome;statistic=var;variable=IL_number",
+#     # "data=sc;target=genome;statistic=var;variable=avgLadder",
+#     # #---Single-cell DNA: phylo stats for balance
+#     # "data=sc;target=genome;statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
+#     # "data=sc;target=genome;statistic=mean;variable=colless", # balance index of phylogeny tree
+#     # "data=sc;target=genome;statistic=mean;variable=sackin", # balance index of phylogeny tree
+#     # "data=sc;target=genome;statistic=mean;variable=B2", # balance index of phylogeny tree
+#     # "data=sc;target=genome;statistic=mean;variable=maxDepth", # height of phylogeny tree
+#     # "data=sc;target=genome;statistic=var;variable=stairs",
+#     # "data=sc;target=genome;statistic=var;variable=colless",
+#     # "data=sc;target=genome;statistic=var;variable=sackin",
+#     # "data=sc;target=genome;statistic=var;variable=B2",
+#     # "data=sc;target=genome;statistic=var;variable=maxDepth"
+# )
+# for (row in 3:nrow(list_targets)) {
+#     list_targets[row, which(colnames(list_targets) %in% list_targets_selection)] <- 1
+# }
+# # =============================COMPUTE STATISTICS FOR SIMULATION LIBRARY
+# library_statistics(
+#     library_name = model_name,
+#     model_variables = model_variables,
+#     list_parameters = list_parameters,
+#     list_targets_library = list_targets_library,
+#     ABC_simcount_start = 0,
+#     ABC_simcount = ABC_simcount,
+#     cn_data_sc = ground_truth_cn_data_sc,
+#     cn_data_bulk = ground_truth_cn_data_bulk,
+#     arm_level = TRUE,
+#     cn_table = cn_table
+# )
 # ==================PLOT CORRELATION OF STATISTICS IN SIMULATION LIBRARY
 # plot_statistics_correlation()
 # =========================GET FITTING STATISTICS FROM GROUND-TRUTH DATA
@@ -508,27 +508,27 @@ DLP_stats <- get_statistics(
     arm_level = TRUE,
     cn_table = cn_table
 )
-# ==============================================FIT PARAMETERS USING ABC
-parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
-fitting_parameters(
-    library_name = model_name,
-    copynumber_DATA = DLP_stats,
-    parameters_truth = parameters_truth,
-    list_parameters = list_parameters,
-    list_targets_by_parameter = list_targets,
-    plot_ABC_prior_as_uniform = TRUE
-)
-# # ===================PLOT CORRELATION BETWEEN INFERENCE AND GROUND TRUTH
-# # ===================================================FOR SELECTION RATES
-parameters_inferred <- read.csv("Fitting_whole_chroms_para_output.csv", header = TRUE)
-parameters_inferred <- parameters_inferred[which(parameters_inferred$Type == "Arm_selection_rate"), ]
-plot_ABC_correlation(
-    inference_result = parameters_inferred,
-    plot_name = paste0(model_name, "_ABC_correlation.jpeg"),
-    title_plot = "Inferred selection rates against ground truth",
-    value_x = "Ground_truth", title_x = "Ground truth",
-    value_y = "Mean", title_y = "Posterior mean +/- std",
-    error_y = "Sd",
-    color_data = "red",
-    plot_diagonal = TRUE
-)
+# # ==============================================FIT PARAMETERS USING ABC
+# parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
+# fitting_parameters(
+#     library_name = model_name,
+#     copynumber_DATA = DLP_stats,
+#     parameters_truth = parameters_truth,
+#     list_parameters = list_parameters,
+#     list_targets_by_parameter = list_targets,
+#     plot_ABC_prior_as_uniform = TRUE
+# )
+# # # ===================PLOT CORRELATION BETWEEN INFERENCE AND GROUND TRUTH
+# # # ===================================================FOR SELECTION RATES
+# parameters_inferred <- read.csv("Fitting_whole_chroms_para_output.csv", header = TRUE)
+# parameters_inferred <- parameters_inferred[which(parameters_inferred$Type == "Arm_selection_rate"), ]
+# plot_ABC_correlation(
+#     inference_result = parameters_inferred,
+#     plot_name = paste0(model_name, "_ABC_correlation.jpeg"),
+#     title_plot = "Inferred selection rates against ground truth",
+#     value_x = "Ground_truth", title_x = "Ground truth",
+#     value_y = "Mean", title_y = "Posterior mean +/- std",
+#     error_y = "Sd",
+#     color_data = "red",
+#     plot_diagonal = TRUE
+# )

@@ -1,4 +1,4 @@
-for i in {1..100}; do
-    sbatch "batch_program_fitting_arm_step2_library_${i}.sh"
+for i in {1..30}; do
+    sbatch "batch_program_fitting_arm_step3_stats_${i}.sh"
     sleep 1
 done

@@ -216,6 +216,22 @@ get_each_statistics <- function(simulations, simulations_clonal_CN, list_targets
                             simpleError("Error: event count from maximal CN in bulk data not implemented yet")
                         }
                     }
+                } else if (stat_variable == "clonal_CN") {
+                    #   Get clonal CN profiles and their populations
+                    simulations_statistics[["variable=clonal_CN_profiles"]][[i]] <-
+                        simulations_clonal_CN[["variable=clonal_CN_profiles"]][[i]]
+                    simulations_statistics[["variable=clonal_CN_populations"]][[i]] <-
+                        simulations_clonal_CN[["variable=clonal_CN_populations"]][[i]]
+                } else if (stat_variable == "maximal_CN") {
+                    #   Get maximal CN profile
+                    simulations_statistics[["variable=maximal_CN_profile"]][[i]] <-
+                        simulations_clonal_CN[["variable=maximal_CN_profile"]][[i]]
+                } else if (stat_variable == "average_CN") {
+                    #   Get average CN profile
+                    simulations_statistics[["variable=average_CN_profile"]][[i]] <-
+                        simulations_clonal_CN[["variable=average_CN_profile"]][[i]]
+                } else {
+                    stop(paste0("Error: Unknown statistic: ", stat))
                 }
             } else if (stat_target == "genome") {
                 if (stat_variable == "shannon") {

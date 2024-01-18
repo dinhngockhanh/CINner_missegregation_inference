@@ -1,27 +1,28 @@
 #---Gather simulation librarys of 1000&500
-# filename <- paste0("Simpler_DLP&BULK_DNA", "_ABC_input1.rda")
+# setwd("/Users/xiangzijin/Documents/DLP_fitting_with_arm_CNA/Ginsburg inference for chr level stats")
+# filename <- paste0("Fitting_whole_chroms_ABC_input_1.rda")
 # load(filename)
 # ABC_input_all <- ABC_input
-# for (batch in 2:47) {
-#     filename <- paste0("Simpler_DLP&BULK_DNA", "_ABC_input", batch, ".rda")
+# for (batch in 2:69) {
+#     filename <- paste0("Fitting_whole_chroms", "_ABC_input_", batch, ".rda")
 #     load(filename)
 #     ABC_input_all$sim_param <- rbind(ABC_input_all$sim_param, ABC_input$sim_param)
 #     for (i in 1:length(ABC_input$sim_stat)) {
 #         ABC_input_all$sim_stat[[i]] <- rbind(ABC_input_all$sim_stat[[i]], ABC_input$sim_stat[[i]])
 #     }
 # }
-# filename <- "Simpler_DLP&BULK_DNA_ABC_input.rda"
+# filename <- "Fitting_whole_chroms_ABC_input.rda"
 # ABC_input <- ABC_input_all
 # save(ABC_input, file = filename)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
+R_workplace <- getwd()
+R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
+R_libPaths_extra <- "/burg/iicd/users/zx2406/R_arm_level_stats"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/DLP_fitting_with_arm_CNA"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R_arm_level_stats"
+# R_workplace <- "/Users/xiangzijin/Documents/DLP_fitting_with_arm_CNA"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R_arm_level_stats"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
 # R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
 # R_libPaths <- ""
@@ -50,9 +51,9 @@ setwd(R_workplace)
 # devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
 # ==================================================IMPORTANT PARAMETERS
 #   Number of single-cell samples in ground-truth data & ABC simulations
-N_data_sc <- 5
+N_data_sc <- 50
 #   Number of bulk samples in ground-truth data & ABC simulations
-N_data_bulk <- 10
+N_data_bulk <- 100
 #   Bounds for ground-truth selection rates (1/r -> r)
 bound_ground_truth_arm_s <- 1.1
 #   Bounds for prior distribution of log10(prob_CN_missegregation)
@@ -206,65 +207,65 @@ vec_CN_block_no <<- model_variables$cn_info$Bin_count
 vec_centromeres <<- model_variables$cn_info$Centromere_location
 # ================================================MAKE GROUND-TRUTH DATA
 #---Make single-cell ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_sc, " single-cell simulations...\n"))
-simulator_full_program(
-    model = model_variables, model_prefix = paste0(model_name, "_sc"),
-    n_simulations = N_data_sc,
-    stage_final = 3,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "evolution_origin",
-        "evolution_genotype_changes",
-        "sample_clone_ID",
-        "sample_genotype_unique",
-        "sample_genotype_unique_profile",
-        "phylogeny_clustering_truth"
-    ),
-    R_libPaths = R_libPaths
-)
-#---Make bulk ground-truth simulations
-cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
-simulator_full_program(
-    model = model_variables, model_prefix = paste0(model_name, "_bulk"),
-    n_simulations = N_data_bulk,
-    stage_final = 2,
-    compute_parallel = TRUE,
-    output_variables = c(
-        "sample_genotype_unique_profile",
-        "sample_genotype_unique",
-        "sample_clone_ID"
-    ),
-    R_libPaths = R_libPaths
-)
-# ---Print out ground-truth parameters
-list_parameters_ground_truth <- list_parameters
-list_parameters_ground_truth$Value <- 0
-for (row in 1:nrow(list_parameters)) {
-    parameter_ID_input <- list_parameters$Variable[row]
-    #   Convert parameter operator if necessary
-    if (grepl(":", parameter_ID_input)) {
-        parameter_ID <- sub(".*:", "", parameter_ID_input)
-        parameter_operator <- sub(":.*", "", parameter_ID_input)
-    } else {
-        parameter_ID <- parameter_ID_input
-        parameter_operator <- ""
-    }
-    if (parameter_ID %in% model_variables$general_variables$Variable) {
-        parameter_value_input <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)])
-    } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
-        parameter_value_input <- as.numeric(model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)])
-    }
-    if (parameter_operator == "") {
-        parameter_value <- parameter_value_input
-    } else if (parameter_operator == "10^") {
-        parameter_value <- log10(parameter_value_input)
-    } else {
-        simpleError("Parameter operator not recognized")
-    }
-    #   Assign parameter value
-    list_parameters_ground_truth$Value[row] <- parameter_value
-}
-write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
+# cat(paste0("\n\n\nMaking ", N_data_sc, " single-cell simulations...\n"))
+# simulator_full_program(
+#     model = model_variables, model_prefix = paste0(model_name, "_sc"),
+#     n_simulations = N_data_sc,
+#     stage_final = 3,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "evolution_origin",
+#         "evolution_genotype_changes",
+#         "sample_clone_ID",
+#         "sample_genotype_unique",
+#         "sample_genotype_unique_profile",
+#         "phylogeny_clustering_truth"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# #---Make bulk ground-truth simulations
+# cat(paste0("\n\n\nMaking ", N_data_bulk, " bulk simulations...\n"))
+# simulator_full_program(
+#     model = model_variables, model_prefix = paste0(model_name, "_bulk"),
+#     n_simulations = N_data_bulk,
+#     stage_final = 2,
+#     compute_parallel = TRUE,
+#     output_variables = c(
+#         "sample_genotype_unique_profile",
+#         "sample_genotype_unique",
+#         "sample_clone_ID"
+#     ),
+#     R_libPaths = R_libPaths
+# )
+# # ---Print out ground-truth parameters
+# list_parameters_ground_truth <- list_parameters
+# list_parameters_ground_truth$Value <- 0
+# for (row in 1:nrow(list_parameters)) {
+#     parameter_ID_input <- list_parameters$Variable[row]
+#     #   Convert parameter operator if necessary
+#     if (grepl(":", parameter_ID_input)) {
+#         parameter_ID <- sub(".*:", "", parameter_ID_input)
+#         parameter_operator <- sub(":.*", "", parameter_ID_input)
+#     } else {
+#         parameter_ID <- parameter_ID_input
+#         parameter_operator <- ""
+#     }
+#     if (parameter_ID %in% model_variables$general_variables$Variable) {
+#         parameter_value_input <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)])
+#     } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
+#         parameter_value_input <- as.numeric(model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)])
+#     }
+#     if (parameter_operator == "") {
+#         parameter_value <- parameter_value_input
+#     } else if (parameter_operator == "10^") {
+#         parameter_value <- log10(parameter_value_input)
+#     } else {
+#         simpleError("Parameter operator not recognized")
+#     }
+#     #   Assign parameter value
+#     list_parameters_ground_truth$Value[row] <- parameter_value
+# }
+# write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 # ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
 #---Get single-cell statistics & CN profiles
 #   Get statistics & clonal CN profiles for each single-cell sample
@@ -372,7 +373,7 @@ for (simulation in 1:N_data_bulk) {
 }
 
 # ===============================================MAKE SIMULATION LIBRARY
-ABC_simcount <- 10
+ABC_simcount <- 500
 library_simulations(
     library_name = model_name,
     model_variables = model_variables,
@@ -573,25 +574,25 @@ library_statistics(
 # ==================PLOT CORRELATION OF STATISTICS IN SIMULATION LIBRARY
 # plot_statistics_correlation()
 # =========================GET FITTING STATISTICS FROM GROUND-TRUTH DATA
-DLP_stats <- get_statistics(
-    simulations_statistics_sc = ground_truth_statistics_sc,
-    simulations_statistics_bulk = ground_truth_statistics_bulk,
-    list_targets = list_targets_library,
-    cn_data_sc = ground_truth_cn_data_sc,
-    cn_data_bulk = ground_truth_cn_data_bulk,
-    arm_level = TRUE,
-    cn_table = cn_table
-)
+# DLP_stats <- get_statistics(
+#     simulations_statistics_sc = ground_truth_statistics_sc,
+#     simulations_statistics_bulk = ground_truth_statistics_bulk,
+#     list_targets = list_targets_library,
+#     cn_data_sc = ground_truth_cn_data_sc,
+#     cn_data_bulk = ground_truth_cn_data_bulk,
+#     arm_level = TRUE,
+#     cn_table = cn_table
+# )
 # ==============================================FIT PARAMETERS USING ABC
-parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
-fitting_parameters(
-    library_name = model_name,
-    copynumber_DATA = DLP_stats,
-    parameters_truth = parameters_truth,
-    list_parameters = list_parameters,
-    list_targets_by_parameter = list_targets,
-    plot_ABC_prior_as_uniform = TRUE
-)
+# parameters_truth <- read.csv("parameters_ground_truth.csv", header = TRUE)
+# fitting_parameters(
+#     library_name = model_name,
+#     copynumber_DATA = DLP_stats,
+#     parameters_truth = parameters_truth,
+#     list_parameters = list_parameters,
+#     list_targets_by_parameter = list_targets,
+#     plot_ABC_prior_as_uniform = TRUE
+# )
 # ===================PLOT CORRELATION BETWEEN INFERENCE AND GROUND TRUTH
 # ===================================================FOR SELECTION RATES
 # parameters_inferred <- read.csv("Fitting_whole_chroms_para_output.csv", header = TRUE)
