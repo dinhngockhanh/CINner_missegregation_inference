@@ -1060,7 +1060,11 @@ fitting_parameters <- function(library_name,
                                list_parameters,
                                list_targets_by_parameter,
                                n_cores = NULL,
-                               plot_ABC_prior_as_uniform = FALSE) {
+                               plot_ABC_prior_as_uniform = FALSE,
+                               stat_names = NULL,
+                               phylo_tip_stats = NULL,
+                               phylo_balance_stats = NULL,
+                               copy_number_stats = NULL) {
     library(parallel)
     library(pbapply)
     library(abcrf)
@@ -1111,6 +1115,7 @@ fitting_parameters <- function(library_name,
         #   Prepare matrices of prepared statistics library & data observation
         flags_targets <- list_targets_by_parameter[which(list_targets_by_parameter$Variable == para_ID), 2:ncol(list_targets_by_parameter)]
         list_targets <- list_target_statistics[which(flags_targets == 1)]
+        target_stat_names <- stat_names[which(flags_targets == 1)]
         mini_data <- NULL
         mini_obs <- NULL
         for (i in 1:length(list_targets)) {
@@ -1130,8 +1135,11 @@ fitting_parameters <- function(library_name,
         }
         mini_data <- data.frame(mini_data)
         colnames(mini_data) <- paste0("stat_", 1:ncol(mini_data))
+        # print(target_stat_names)
+        # colnames(mini_data) <- target_stat_names
         mini_obs <- data.frame(matrix(mini_obs, nrow = 1))
         colnames(mini_obs) <- paste0("stat_", 1:ncol(mini_obs))
+        # colnames(mini_data) <- target_stat_names
         #   Prepare library of parameters for this parameter
         data_rf <- cbind(sim_param[para_ID], mini_data)
         #   Train the random forest
@@ -1144,6 +1152,57 @@ fitting_parameters <- function(library_name,
             # sampsize = nrow(data_rf),
             # save.memory = TRUE
         )
+
+        # ========================================
+        #   Plot the out-of-bag estimates (equivalent to cross-validation)
+        png(paste0("NEUTRAL_abcrf_", para, "_out_of_bag.png"))
+        plot(data_rf[, 1],
+            model_rf$model.rf$predictions,
+            xlab = "True value",
+            ylab = "Out-of-bag estimate"
+        ) + abline(a = 0, b = 1, col = "red")
+        dev.off()
+        #   Can the error be lowered by increasing the number of trees?
+        oob_error <- err.regAbcrf(model_rf, training = data_rf, paral = T)
+        png(paste0("NEUTRAL_abcrf_", para, "_error_by_ntree.png"))
+        plot(oob_error[, "ntree"], oob_error[, "oob_mse"], type = "l", xlab = "Number of trees", ylab = "Out-of-bag MSE")
+        dev.off()
+        #   Can the error be lowered by increasing the number of trees?
+        oob_error <- err.regAbcrf(model_rf, training = data_rf, paral = T)
+        png(paste0("NEUTRAL_abcrf_", para, "_error_by_ntree.png"))
+        plot(oob_error[, "ntree"], oob_error[, "oob_mse"], type = "l", xlab = "Number of trees", ylab = "Out-of-bag MSE")
+        dev.off()
+        #   Variance Importance of each statistic in inferring gamma
+        png(paste0("NEUTRAL_abcrf_", para, "_variance_importance.png"), width = 1500, height = 800, res = 150)
+        n.var <- min(30, length(model_rf$model.rf$variable.importance))
+        imp <- model_rf$model.rf$variable.importance
+        names(imp) <- target_stat_names
+
+        groups <- c()
+        for (i in 1:length(names(imp))) {
+            if (any(grepl(names(imp)[i], copy_number_stats, fixed = TRUE))) {
+                group_idx <- "copy_number_stats"
+            } else if (any(grepl(names(imp)[i], phylo_balance_stats, fixed = TRUE))) {
+                group_idx <- "phylo_balance_stats"
+            } else if (any(grepl(names(imp)[i], phylo_tip_stats, fixed = TRUE))) {
+                group_idx <- "phylo_tip_stats"
+            }
+            groups <- c(groups, group_idx)
+        }
+
+        group_colors <- c("copy_number_stats" = "#00BA38", "phylo_balance_stats" = "#F8766D", "phylo_tip_stats" = "#619CFF")
+
+
+        ord <- rev(order(imp, decreasing = TRUE)[1:n.var])
+        colors <- group_colors[groups[ord]]
+        xmin <- 0
+        xlim <- c(xmin, max(imp) + 1)
+        dotchart(imp[ord], pch = 19, col = colors, xlab = "Variable Importance", ylab = "", xlim = xlim, main = NULL, bg = "white", cex = 0.7)
+        legend("bottomright", legend = names(group_colors), fill = group_colors, bty = "n", cex = 0.7)
+        dev.off()
+
+        # ========================================
+
         #   Predict posterior distribution based on found random forest
         post_rf <- predict(model_rf, mini_obs, data_rf, paral = TRUE, ncores = n_cores)
         #   Choose best values from posterior distribution
