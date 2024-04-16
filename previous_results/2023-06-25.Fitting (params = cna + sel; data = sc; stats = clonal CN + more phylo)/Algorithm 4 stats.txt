@@ -1,1 +1,0 @@
-Mean & Var:  Shannon, clonal & subclonal misseg count, clonal & sub clonal arm-missed count, Wasserstein distance, cherries, pitchforks, colless, IL_number, sackin, avgLadder, maxDepth, stairs

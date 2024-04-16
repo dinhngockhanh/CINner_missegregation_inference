@@ -1,1 +1,0 @@
-Mean:  Shannon, clonal & subclonal misseg count, clonal & sub clonal arm-missed count, Wasserstein distance, pitchforks, maxDepth, B2 index, stairs, colless, cherries, IL_number, sackin, avgLadder

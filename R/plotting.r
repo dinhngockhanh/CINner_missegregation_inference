@@ -248,83 +248,240 @@ plot_ABC_inference <- function(object,
 }
 
 #' @export
-plot_statistics_correlation <- function(filename,
-                                        list_targets_library,
-                                        list_parameters) {
+plot_statistics_correlation <- function(filename) {
+    #---------------------------------------------------Load the reference table
     library("ggcorrplot")
     load(file = filename)
-    # =========================================Get list of parameter IDs
-    parameter_IDs <- list_parameters$Title
-    parameter_types <- list_parameters$Type
-    # =========================================Get list of statistic IDs
-    statistic_IDs <- c()
-    statistic_groups <- c()
-    for (stat in list_targets_library) {
-        stat_details <- strsplit(stat, ";")[[1]]
-        stat_ID <- strsplit(stat_details[grep("statistic_ID=", stat_details)], "=")[[1]][2]
-        stat_group <- strsplit(stat_details[grep("statistic_group=", stat_details)], "=")[[1]][2]
-        statistic_IDs <- c(statistic_IDs, stat_ID)
-        statistic_groups <- c(statistic_groups, stat_group)
-    }
-    unique_statistic_IDs <- unique(statistic_IDs)
-    unique_statistic_groups <- unique(statistic_groups)
-
-
-
-
-
-
-
-
-    # ====================================Compute the correlation matrix
-    correlation_matrix <- data.frame(matrix(nrow = 0, ncol = length(parameter_IDs)))
-    colnames(correlation_matrix) <- parameter_IDs
-    for (i_stat in 1:length(unique_statistic_IDs)) {
-        statistic_ID <- unique_statistic_IDs[i_stat]
-        statistic_group <- unique_statistic_groups[i_stat]
-        for (i_para in 1:length(list_parameters)) {
-            parameter_ID <- parameter_IDs[i_para]
-            parameter_type <- parameter_types[i_para]
-            sim_stat_loc <- which(grepl(statistic_ID, statistic_IDs))
-            print(sim_stat_loc)
-        }
-    }
-
-
-
-    # =========================================Initialize the parameters
+    #-------------------------------------------------------------Get parameters
     parameters <- ABC_input$sim_param
-    param_names <- list_parameters$Title
+    # Parameter names appeared in the plot
+    param_names <- c(
+        "log10(prob_misseg)",
+        "Sel.rate(Chrom 1)",
+        "Sel.rate(Chrom 2)",
+        "Sel.rate(Chrom 3)",
+        "Sel.rate(Chrom 4)",
+        "Sel.rate(Chrom 5)",
+        "Sel.rate(Chrom 6)",
+        "Sel.rate(Chrom 7)",
+        "Sel.rate(Chrom 8)",
+        "Sel.rate(Chrom 9)",
+        "Sel.rate(Chrom 10)",
+        "Sel.rate(Chrom 11)",
+        "Sel.rate(Chrom 12)",
+        "Sel.rate(Chrom 13)",
+        "Sel.rate(Chrom 14)",
+        "Sel.rate(Chrom 15)",
+        "Sel.rate(Chrom 16)",
+        "Sel.rate(Chrom 17)",
+        "Sel.rate(Chrom 18)",
+        "Sel.rate(Chrom 19)",
+        "Sel.rate(Chrom 20)",
+        "Sel.rate(Chrom 21)",
+        "Sel.rate(Chrom 22)"
+    )
     colnames(parameters) <- param_names
-    # ===================================================Get the correlation matrix for misseg rates
-    statistics_misseg <- data.frame(matrix(ncol = 0, nrow = ABC_simcount))
-    for (i in 1:length(which(grepl("genome", misseg_stat_names)))) {
-        statistics_misseg[, i] <- ABC_input$sim_stat[which(grepl("genome", misseg_stat_names))[i]]
+    #---------------------------------------------------Get statistics
+    # list of statistics used by misseg rate
+    misseg_stat_names <- c(
+        #-----bulk
+        "Wasserstein_dist_bulk_genome",
+        "Wasserstein_dist_sc_genome",
+        "Mean_Shannon_genome",
+        "Mean_Clonal_misseg_count_bulk_genome",
+        "Mean_Clonal_misseg_count_sc_genome",
+        "Mean_Subclonal_misseg_count_sc_genome",
+        "Mean_Clonal_armmisseg_count_sc_genome",
+        "Mean_Subclonal_armmisseg_count_sc_genome",
+        #-----sc_subclonal CN
+        "Var_Shannon_genome",
+        "Var_Clonal_misseg_count_bulk_genome",
+        "Var_Clonal_misseg_count_sc_genome",
+        "Var_Subclonal_misseg_count_sc_genome",
+        "Var_Clonal_armmisseg_count_sc_genome",
+        "Var_Subclonal_armmisseg_count_sc_genome",
+        #-----sc_Phylo Stats
+        "Mean_Cherries_genome",
+        "Mean_Pitchforks_genome",
+        "Mean_IL_number_genome",
+        "Mean_AvgLadder_genome",
+        "Var_Cherries_genome",
+        "Var_Pitchforks_genome",
+        "Var_IL_number_genome",
+        "Var_AvgLadder_genome",
+        # balance
+        "Mean_Stairs_genome",
+        "Mean_Colless_genome",
+        "Mean_Sackin_genome",
+        "Mean_B2_genome",
+        "Mean_MaxDepth_genome",
+        "Var_Stairs_genome",
+        "Var_Colless_genome",
+        "Var_Sackin_genome",
+        "Var_B2_genome",
+        "Var_MaxDepth_genome"
+    )
+
+    # List of statistics used by selection rates
+    sel_stat_names <- c(
+        #-----bulk
+        "Wasserstein_dist_bulk_chr",
+        "Wasserstein_dist_sc_chr",
+        "Mean_Shannon_chr",
+        "Mean_Clonal_misseg_count_bulk_chr",
+        #-----sc_subclonal CN
+        "Mean_Clonal_misseg_count_sc_chr",
+        "Mean_Subclonal_misseg_count_sc_chr",
+        "Mean_Clonal_armmisseg_count_sc_chr",
+        "Mean_Subclonal_armmisseg_count_sc_chr",
+        "Var_Shannon_chr",
+        "Var_Clonal_misseg_count_bulk_chr",
+        "Var_Clonal_misseg_count_sc_chr",
+        "Var_Subclonal_misseg_count_sc_chr",
+        "Var_Clonal_armmisseg_count_sc_chr",
+        "Var_Subclonal_armmisseg_count_sc_chr",
+        #-----sc_Phylo Stats
+        "Mean_Cherries_genome",
+        "Mean_Pitchforks_genome",
+        "Mean_IL_number_genome",
+        "Mean_AvgLadder_genome",
+        "Var_Cherries_genome",
+        "Var_Pitchforks_genome",
+        "Var_IL_number_genome",
+        "Var_AvgLadder_genome",
+        # balance
+        "Mean_Stairs_genome",
+        "Mean_Colless_genome",
+        "Mean_Sackin_genome",
+        "Mean_B2_genome",
+        "Mean_MaxDepth_genome",
+        "Var_Stairs_genome",
+        "Var_Colless_genome",
+        "Var_Sackin_genome",
+        "Var_B2_genome",
+        "Var_MaxDepth_genome"
+    )
+
+    # List of statistics in the reference table
+    list_target_stats <- c(
+        #-----bulk
+        "Wasserstein_dist_bulk_genome",
+        "Mean_Clonal_misseg_count_bulk_genome",
+        "Var_Clonal_misseg_count_bulk_genome",
+        "Wasserstein_dist_bulk_chr",
+        "Mean_Clonal_misseg_count_bulk_chr",
+        "Var_Clonal_misseg_count_bulk_chr",
+        #-----sc_subclonal CN
+        "Wasserstein_dist_sc_genome",
+        "Mean_Shannon_genome",
+        "Mean_Clonal_misseg_count_sc_genome",
+        "Mean_Subclonal_misseg_count_sc_genome",
+        "Mean_Clonal_armmisseg_count_sc_genome",
+        "Mean_Subclonal_armmisseg_count_sc_genome",
+        "Var_Shannon_genome",
+        "Var_Clonal_misseg_count_sc_genome",
+        "Var_Subclonal_misseg_count_sc_genome",
+        "Var_Clonal_armmisseg_count_sc_genome",
+        "Var_Subclonal_armmisseg_count_sc_genome",
+        "Wasserstein_dist_sc_chr",
+        "Mean_Shannon_chr",
+        "Mean_Clonal_misseg_count_sc_chr",
+        "Mean_Subclonal_misseg_count_sc_chr",
+        "Mean_Clonal_armmisseg_count_sc_chr",
+        "Mean_Subclonal_armmisseg_count_sc_chr",
+        "Var_Shannon_chr",
+        "Var_Clonal_misseg_count_sc_chr",
+        "Var_Subclonal_misseg_count_sc_chr",
+        "Var_Clonal_armmisseg_count_sc_chr",
+        "Var_Subclonal_armmisseg_count_sc_chr",
+        #-----sc_Phylo Stats
+        "Mean_Cherries_genome",
+        "Mean_Pitchforks_genome",
+        "Mean_IL_number_genome",
+        "Mean_AvgLadder_genome",
+        "Var_Cherries_genome",
+        "Var_Pitchforks_genome",
+        "Var_IL_number_genome",
+        "Var_AvgLadder_genome",
+        # balance
+        "Mean_Stairs_genome",
+        "Mean_Colless_genome",
+        "Mean_Sackin_genome",
+        "Mean_B2_genome",
+        "Mean_MaxDepth_genome",
+        "Var_Stairs_genome",
+        "Var_Colless_genome",
+        "Var_Sackin_genome",
+        "Var_B2_genome",
+        "Var_MaxDepth_genome"
+    )
+
+    # Name of statistics appeared on the plot
+    stat_names <- c(
+        "Bulk CN distance",
+        "Single-cell CN distance",
+        "Mean(sc Shannon index)",
+        "Mean(misseg. count in bulk)",
+        "Mean(clonal misseg. count in sc)",
+        "Mean(subclonal misseg. count in sc)",
+        "NA",
+        "NA",
+        "Var(sc Shannon index)",
+        "Var(misseg. count in bulk)",
+        "Var(clonal misseg. count in sc)",
+        "Var(subclonal misseg. count in sc)",
+        "NA",
+        "NA",
+        "Mean(cherry count)",
+        "Mean(pitchfork count)",
+        "Mean(IL number)",
+        "Mean(average ladder)",
+        "Var(cherry count)",
+        "Var(pitchfork count)",
+        "Var(IL number)",
+        "Var(average ladder)",
+        "Mean(stairs)",
+        "Mean(Colless index)",
+        "Mean(Sackin index)",
+        "Mean(B2 index)",
+        "Mean(max depth)",
+        "Var(stairs)",
+        "Var(Colless index)",
+        "Var(Sackin index)",
+        "Var(B2 index)",
+        "Var(max depth)"
+    )
+
+    #-----------------=--------------------------Get correlation matrix (misseg)
+    statistics_misseg <- data.frame(matrix(ncol = 0, nrow = 100000))
+    for (i in 1:length(misseg_stat_names)) {
+        statistics_misseg[, i] <- ABC_input$sim_stat[[which(grepl(misseg_stat_names[i], list_target_stats))]]
     }
-    prob_misseg <- parameters[, 1]
+    prob_misseg <- data.frame(ABC_input$sim_param[, 1])
     corr_mtx_misseg <- cor(y = prob_misseg, x = statistics_misseg)
-    # =====================================================Get the correlation matrix for selections
-    # =======================================and combine it with correlation matrix for misseg rates
-    corr_mtx_sel_mix <- NULL
+    #-----------------------------------------Get correlation matrix (selection)
+    corr_mtx_sel <- NULL
     for (i in 2:length(param_names)) {
-        statistics_sel <- data.frame(matrix(ncol = 0, nrow = ABC_simcount))
+        statistics_sel <- data.frame(matrix(ncol = 0, nrow = 100000))
         for (j in 1:length(sel_stat_names)) {
             if (grepl("genome", sel_stat_names[j])) {
-                statistics_sel[, j] <- ABC_input$sim_stat[[which(grepl(sel_stat_names[j], misseg_stat_names))]]
+                statistics_sel[, j] <- ABC_input$sim_stat[[which(grepl(sel_stat_names[j], list_target_stats))]]
             } else if (grepl("chr", sel_stat_names[j])) {
-                statistics_sel[, j] <- ABC_input$sim_stat[[which(grepl(sel_stat_names[j], misseg_stat_names))]][, (i - 1)]
+                statistics_sel[, j] <- ABC_input$sim_stat[[which(grepl(sel_stat_names[j], list_target_stats))]][, (i - 1)]
             }
         }
-        prob_sel <- parameters[, i]
-        corr_mtx_sel <- cor(y = prob_sel, x = statistics_sel)
-        corr_mtx_sel_mix <- cbind(corr_mtx_sel_mix, corr_mtx_sel)
+        corr_mtx_sel <- cbind(corr_mtx_sel, cor(y = parameters[, i], x = statistics_sel))
     }
-    colnames(corr_mtx_sel_mix) <- param_names[-1]
-    corr_mtx <- cbind(corr_mtx_misseg, corr_mtx_sel_mix)
+    corr_mtx <- cbind(corr_mtx_misseg, corr_mtx_sel)
     rownames(corr_mtx) <- stat_names
     colnames(corr_mtx) <- param_names
-    # ============================================================Plot the Correlation
-    plot <- ggcorrplot(corr_mtx, ggtheme = ggplot2::theme_gray) +
+    #------------------------------------------------------Plot correlation plot
+    plot <- ggcorrplot(
+        corr_mtx,
+        method = "circle",
+        ggtheme = ggplot2::theme_bw,
+        legend.title = "Correlation"
+    ) +
         theme(axis.text.x = element_text(colour = c(
             "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38", "#00BA38",
             "#00BA38", "#00BA38", "#00BA38",
@@ -332,9 +489,8 @@ plot_statistics_correlation <- function(filename,
             "#619CFF", "#619CFF", "#619CFF", "#619CFF",
             "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D",
             "#F8766D", "#F8766D", "#F8766D", "#F8766D", "#F8766D"
-        )), plot.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "in"))
-    # scale_fill_gradient2(limit = c(-0.3, 0.3), low = "blue", high = "red", )
-    ggsave(file = "correlation_plot.png", width = 10, height = 10, units = "in", plot = plot, dpi = 300, limitsize = TRUE)
+        ), angle = 45), plot.margin = margin(t = 0.2, r = 0.2, b = 0.2, l = 0.2, unit = "in"))
+    ggsave(file = "correlation_plot.png", width = 12, height = 10, units = "in", plot = plot, dpi = 300, limitsize = TRUE)
     return(plot)
 }
 

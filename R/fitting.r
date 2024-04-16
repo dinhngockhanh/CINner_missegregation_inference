@@ -1,8 +1,6 @@
 compute_error <- function(results, ID_actual, ID_predicted) {
     library(Metrics)
     error <- rmse(results[[ID_actual]], results[[ID_predicted]])
-    # library(ehaGoF)
-    # error <- gofRRMSE(results[[ID_actual]], results[[ID_predicted]], dgt = 3)
     return(error)
 }
 
@@ -600,7 +598,6 @@ get_statistics <- function(list_targets,
         }
     }
     #-----------------------------------------Get statistics for fitting
-    # statistics <- vector("list", length(list_targets))
     statistics <- list()
     for (stat in list_targets) {
         stat_details <- strsplit(stat, ";")[[1]]
@@ -785,60 +782,6 @@ func_stat <- function(parameters,
     return(output)
 }
 
-func_ABC <- function(parameters,
-                     parameter_IDs,
-                     model_variables,
-                     list_targets,
-                     cn_data_sc = NULL,
-                     cn_data_bulk = NULL,
-                     arm_level = FALSE,
-                     save_sample_statistics = FALSE,
-                     n_simulations_sc,
-                     n_simulations_bulk) {
-    #   Assign parameters in model variables
-    model_variables <- assign_paras(model_variables, parameter_IDs, parameters)
-    #   Make single-cell simulations
-    SIMS_sc <- simulator_full_program(
-        model = model_variables, model_prefix = "", n_simulations = n_simulations_sc,
-        stage_final = 3,
-        save_simulation = FALSE, report_progress = TRUE,
-        lite_memory = TRUE,
-        output_variables = c(
-            "evolution_origin",
-            "evolution_genotype_changes",
-            "sample_clone_ID",
-            "sample_genotype_unique",
-            "sample_genotype_unique_profile",
-            "phylogeny_clustering_truth"
-        )
-    )
-    #   Make bulk simulations
-    SIMS_bulk <- simulator_full_program(
-        model = model_variables, model_prefix = "", n_simulations = n_simulations_bulk,
-        stage_final = 2,
-        save_simulation = FALSE, report_progress = TRUE,
-        lite_memory = TRUE,
-        output_variables = c(
-            "evolution_origin",
-            "evolution_genotype_changes",
-            "sample_clone_ID",
-            "sample_genotype_unique",
-            "sample_genotype_unique_profile"
-        )
-    )
-    #   Get statistics from simulations
-    stat <- get_statistics(
-        simulations_sc = SIMS_sc,
-        simulations_bulk = SIMS_bulk,
-        cn_data_sc = cn_data_sc,
-        cn_data_bulk = cn_data_bulk,
-        list_targets = list_targets,
-        arm_level = arm_level,
-        cn_table = cn_table,
-        save_sample_statistics = save_sample_statistics
-    )
-    return(stat)
-}
 
 #' @export
 library_simulations <- function(library_name,
@@ -851,7 +794,6 @@ library_simulations <- function(library_name,
                                 cn_table = NULL,
                                 n_simulations_sc,
                                 n_simulations_bulk,
-                                ##############################################
                                 n_cores = NULL) {
     library(parallel)
     library(pbapply)
@@ -1373,7 +1315,6 @@ sensitivity_fitting_and_plotting <- function(library_name,
                                              sensitivity_values,
                                              Error_targets = c("CNA_probability", "Selection_rate"),
                                              Error_metrics = c("Variance", "Standard deviation", "RMSE"),
-                                             #  Error_titles = c("All parameters", "Prob(misseg)", "Sel. rates"),
                                              copynumber_DATA = NULL,
                                              parameters_truth = NULL,
                                              list_parameters,
@@ -1494,8 +1435,6 @@ statistics_fitting_and_plotting <- function(library_name,
                                             statistics_IDs,
                                             Error_targets = c("CNA_probability", "Selection_rate"),
                                             Error_IDs = c("CNA probability", "Selection rate"),
-                                            #  Error_metrics = c("Var", "Sd", "RMSE"),
-                                            #  Error_titles = c("All parameters", "Prob(misseg)", "Sel. rates"),
                                             copynumber_DATA = NULL,
                                             parameters_truth = NULL,
                                             list_parameters,
@@ -1509,7 +1448,7 @@ statistics_fitting_and_plotting <- function(library_name,
                                             plot_name) {
     library(ggplot2)
     library(tidyr)
-    list_Error <- data.frame(matrix(ncol = 5, nrow = 0))
+    list_Error <- data.frame(matrix(ncol = 4, nrow = 0))
     colnames(list_Error) <- c("Error_Targets", "Statistics_values", "Error", "Error_Titles", "Target_Titles")
     for (stat_value in statistics_values) {
         library_name_mini <- paste0(library_statistics_name, "_", stat_value)
@@ -1570,20 +1509,16 @@ statistics_fitting_and_plotting <- function(library_name,
     }
 
     list_Error$Error <- as.numeric(list_Error$Error)
-
     list_Error$Error_Targets <- factor(list_Error$Error_Targets, levels = Error_targets)
     list_Error$Error_Titles <- factor(list_Error$Error_Titles, levels = statistics_IDs)
-
     list_Error <<- list_Error
     print(list_Error)
     p <- ggplot(data = list_Error, aes(x = Error_Titles, y = Error, fill = Target_Titles)) +
         geom_bar(stat = "identity", position = position_dodge(), width = 0.6) +
         scale_fill_manual(values = c("#774d28", "#70c972"))
-    # scale_fill_manual(values = c("" = "#dd4751", "Selection_rate" = "darkblue", alpha = 0.3))
     p <- p +
         xlab(statistics_title) +
         ylab("RMSE") +
-        # scale_y_continuous() +
         theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
         theme(text = element_text(size = fontsize)) +
         theme(axis.text.x = element_text(angle = 20, hjust = 1)) +
