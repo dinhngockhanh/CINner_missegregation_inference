@@ -1527,3 +1527,64 @@ statistics_fitting_and_plotting <- function(library_name,
     print(p)
     dev.off()
 }
+#' @export
+statistics <- function(sample_phylogeny, sample_clone_assignment, list_targets) {
+    library(vegan)
+    library(matrixStats)
+    library(transport)
+    library(ape)
+    library(phyloTop)
+    library(treebalance)
+    #---------------------------------Compute statistics for sample data
+    statistics <- list()
+    for (stat in list_targets) {
+        stat_details <- strsplit(stat, ";")[[1]]
+        stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
+        stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
+        stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
+        if (stat_variable == "shannon") {           
+            #-------------------------------------Collect clonal frequency table
+            #   Create clonal assignment table and convert to list
+            sample_frequency_table <- summarise(group_by(sample_clone_assignment, clone_id), cell_number = n_distinct(cell_id))
+            sample_frequency_table <- list(clone_id = sample_frequency_table$clone_id, cell_number = as.integer(sample_frequency_table$cell_number))
+            #   Remove cells with no clone assignment
+            none_index <- which(sample_frequency_table$clone_id == "None")
+            retain_index <- which(sample_frequency_table$clone_id != "None")
+            if (length(none_index) > 0) {
+                sample_frequency_table <- sample_frequency_table[-none_index, ]
+            }
+            #   Get Shannon index
+            statistics[[stat_ID]] <- diversity(table(sample_frequency_table$clone_id), index = "shannon")
+        } else if (stat_variable == "cherries") {
+            #   Get number of cherries
+            statistics[[stat_ID]] <- cherries(sample_phylogeny, normalise = TRUE)
+        } else if (stat_variable == "pitchforks") {
+            #   Get number of pitchforks
+            statistics[[stat_ID]] <- pitchforks(sample_phylogeny, normalise = TRUE)
+        } else if (stat_variable == "colless") {
+            #   Get colless index
+            statistics[[stat_ID]] <- colless.phylo(sample_phylogeny, normalise = TRUE)
+        } else if (stat_variable == "sackin") {
+            #   Get sackin index
+            statistics[[stat_ID]] <- sackin.phylo(sample_phylogeny, normalise = TRUE)
+        } else if (stat_variable == "IL_number") {
+            #   Get IL_number
+            statistics[[stat_ID]] <- ILnumber(sample_phylogeny, normalise = TRUE)
+        } else if (stat_variable == "avgLadder") {
+            #   Get avgLadder
+            statistics[[stat_ID]] <- avgLadder(sample_phylogeny, normalise = TRUE)
+        } else if (stat_variable == "maxDepth") {
+            #   Get maxDepth
+            statistics[[stat_ID]] <- maxDepth(sample_phylogeny)
+        } else if (stat_variable == "stairs") {
+            #   Get stairness
+            statistics[[stat_ID]] <- stairs(sample_phylogeny)[1]
+        } else if (stat_variable == "B2") {
+            #   Get B2Index
+            statistics[[stat_ID]] <- B2I(sample_phylogeny, logbase = 2)
+        } else {
+            stop(paste0("Error: Unknown statistic: ", stat))
+        }
+    }
+    return(statistics)
+}

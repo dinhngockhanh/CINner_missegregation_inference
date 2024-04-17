@@ -568,3 +568,127 @@ plot_ABC_correlation <- function(inference_result = parameters_inferred,
     print(corr_plot)
     dev.off()
 }
+plot_stats_corr <- function(true_stat,combined_df) {
+    library(ggplot2)
+    library(grid)
+    library(gridExtra)
+    layout <- matrix(NA, nrow = 3, ncol = 5)
+    gs <- list()
+    id <- 0
+    id_tmp<-0
+    true_stat <- true_stat[true_stat$simulation %in% combined_df$Simulation, ]
+    variables <- c("data.sc.target.genome.variable.event_count.type.clonal.event.missegregation",   
+               "data.sc.target.genome.variable.event_count.type.subclonal.event.missegregation",
+               "data.sc.target.genome.variable.cherries",                                       
+               "data.sc.target.genome.variable.pitchforks",                                     
+               "data.sc.target.genome.variable.IL_number",                                      
+               "data.sc.target.genome.variable.avgLadder",                                      
+               "data.sc.target.genome.variable.stairs",                                         
+               "data.sc.target.genome.variable.colless",                                        
+               "data.sc.target.genome.variable.sackin",                                         
+               "data.sc.target.genome.variable.B2",                                             
+               "data.sc.target.genome.variable.maxDepth"
+               )
+    for (var in variables){
+        id <- id + 1
+        if (var=="data.sc.target.genome.variable.cherries"){
+            id<-6
+        }else if (var=="data.sc.target.genome.variable.stairs"){
+            id<-11
+        }
+        print(id)
+        col <- id %% 5
+        if (col == 0) {
+            col <- 5
+        }
+        print(col)
+        row <- ceiling(id / 5)
+        print(row)
+        id_tmp<-id_tmp+1
+        layout[row, col] <- id_tmp
+        x <- true_stat[, var]
+        y <- combined_df[,var]
+        log10_misseg_rate <- combined_df[,'log10_misseg_rate']
+        if(length(x) != length(y)) {
+            stop("x and y must be of the same length")
+        }
+        data_for_plot <- data.frame(x = x, y = y, misseg = log10_misseg_rate)
+        if (var == "data.sc.target.genome.variable.cherries") {
+            title <- "cherry count"
+            title_color <- "#619CFF"
+        } else if (var == "data.sc.target.genome.variable.pitchforks") {
+            title <- "pitchfork count"
+            title_color <- "#619CFF"
+        } else if (var == "data.sc.target.genome.variable.IL_number") {
+            title <- "IL number"
+            title_color <- "#619CFF"
+        } else if (var == "data.sc.target.genome.variable.avgLadder") {
+            title <- "average ladder"
+            title_color <- "#619CFF"
+        } else if (var == "data.sc.target.genome.variable.stairs") {
+            title <- "stairs"
+            title_color <- "#F8766D"
+        } else if (var == "data.sc.target.genome.variable.colless") {
+            title <- "Colless index"
+            title_color <- "#F8766D"
+        } else if (var == "data.sc.target.genome.variable.sackin") {
+            title <- "Sackin index"
+            title_color <- "#F8766D"
+        } else if (var == "data.sc.target.genome.variable.B2") {
+            title <- "B2 index"
+            title_color <- "#F8766D"
+        } else if (var == "data.sc.target.genome.variable.maxDepth") {
+            title <- "max depth"
+            title_color <- "#F8766D"
+        } else if (var == "data.sc.target.genome.variable.event_count.type.clonal.event.missegregation") {
+            title <- "clonal misseg. count"
+            title_color <- "#00BA38"
+        } else if (var == "data.sc.target.genome.variable.event_count.type.subclonal.event.missegregation") {
+            title <- "subclonal misseg. count"
+            title_color <- "#00BA38"
+        }
+        if (var == "data.sc.target.genome.variable.event_count.type.subclonal.event.missegregation") {
+            labels = waiver()
+        } else {
+            labels = NULL
+        }
+        gs[[id_tmp]] <- ggplot(data_for_plot, aes(x = x, y = y, color = misseg)) +
+            geom_point(size = 10, alpha=0.3) +
+            scale_color_gradient(limits = c(-5,-3),low="#dc1dbf", high="#00fff7",labels=labels) +
+            labs(color=NULL)+
+            theme(legend.key.size = unit(1, 'cm'),
+            legend.key.height = unit(2, 'cm'), #change legend key height
+            legend.key.width = unit(1, 'cm') #change legend key width
+            )+
+            xlab("Ground truth") +
+            ylab("Medicc2") + 
+            xlim(min(min(x), min(y)), max(max(x), max(y))) +
+            ylim(min(min(x), min(y)), max(max(x), max(y))) +
+            ggtitle(title) +
+            theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
+            theme(text = element_text(size = 30)) +
+            theme(plot.title = element_text(color = title_color))+
+            theme(aspect.ratio = 1) +
+            geom_abline(intercept = 0, slope = 1)
+        filename <- 'MEDICC_correlation_plot.jpg'
+        jpeg(filename, width = 2500, height = 1500)
+        p <- grid.arrange(grobs = gs, layout_matrix = layout)
+        print(p)
+        dev.off()
+    }
+    
+}
+plot_RF <- function(df) {
+    library(ggplot2)
+    library(grid)
+    library(gridExtra)
+    plot <- ggplot(df, aes(x = log10_misseg_rate, y = TreeDistance)) +
+        geom_point(colour = "#a8a0a0", size = 10, alpha=0.5) +
+        xlab("log10(prob_misseg)") +
+        ylab("Generalized RF distance") +
+        theme(panel.background = element_rect(fill = "white", colour = "grey50")) +
+        theme(text = element_text(size = 50)) 
+    jpeg('MEDICC_RF_plot.jpg', width = 2000, height = 1000)
+    print(plot)
+    dev.off()
+}

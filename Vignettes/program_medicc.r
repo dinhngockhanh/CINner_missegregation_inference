@@ -213,6 +213,9 @@ mediccinput <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
 })
 stopCluster(cl)
 
+
+
+
 # =======================================COMPUTE GROUND-TRUTH STATISTICS
 # ---Get single-cell statistics & CN profiles
 # ---Get statistics & clonal CN profiles for each single-cell sample
@@ -289,52 +292,91 @@ for (i in 2:n_simulations) {
 stats_comb <- cbind(simulation = simulation_labels, stats_comb)
 write.csv(stats_comb, "Statistics_simulation.csv")
 # =============================================COMPUTE MEDICC STATISTICS
-setwd(R_outputPaths)
-list_medicc <- list.files(pattern = "*.new$")
-n_library <- length(list_medicc)
-eventsFiles <- list.files(pattern = "*copynumber_events_df.tsv$")
-# list_groundtruth <- list.files(pattern = "*.newick$")
+library(ape)
+library(caper)
+library(TreeDist)
+# ---Set up list stats
+list_targets_library <- c(
+    #---Single-cell DNA: phylo stats for tips
+    "data=sc;target=genome;statistic=mean;variable=cherries", # number of internal nodes with 2 tips
+    "data=sc;target=genome;statistic=mean;variable=pitchforks", # number of internal tips with 3 tips
+    "data=sc;target=genome;statistic=mean;variable=IL_number", # number of internal nodes with single tip childs
+    "data=sc;target=genome;statistic=mean;variable=avgLadder", # mean size of ladder (sequence of internal nodes, each with single tip childs)
+    "data=sc;target=genome;statistic=var;variable=cherries",
+    "data=sc;target=genome;statistic=var;variable=pitchforks",
+    "data=sc;target=genome;statistic=var;variable=IL_number",
+    "data=sc;target=genome;statistic=var;variable=avgLadder",
+    #---Single-cell DNA: phylo stats for balance
+    "data=sc;target=genome;statistic=mean;variable=stairs", # proportion of subtrees that are imbalanced
+    "data=sc;target=genome;statistic=mean;variable=colless", # balance index of phylogeny tree
+    "data=sc;target=genome;statistic=mean;variable=sackin", # balance index of phylogeny tree
+    "data=sc;target=genome;statistic=mean;variable=B2", # balance index of phylogeny tree
+    "data=sc;target=genome;statistic=mean;variable=maxDepth", # height of phylogeny tree
+    "data=sc;target=genome;statistic=var;variable=stairs",
+    "data=sc;target=genome;statistic=var;variable=colless",
+    "data=sc;target=genome;statistic=var;variable=sackin",
+    "data=sc;target=genome;statistic=var;variable=B2",
+    "data=sc;target=genome;statistic=var;variable=maxDepth"
+)
+start_time<-Sys.time()
+print(start_time)
+medicc_Paths <- '/Users/lexie/Documents/DNA/scDNA/1128_Medicc_simulations'
+setwd(medicc_Paths) 
+true_stat <- read.csv('Statistics_simulation.csv',row.names = 1)
+misseg <- read.csv('misseg_rate_df.csv', row.names=1)
+medicc_outputPath <- '/Users/lexie/Documents/DNA/scDNA/1128_medicc'
 
-setwd(R_workplace)
+list_output <- list.dirs(path=medicc_outputPath, full.names = TRUE, recursive = FALSE)
+dir_numbers <- as.numeric(gsub("^.*_(\\d+)$", "\\1", basename(list_output)))
+list_output <- list_output[order(dir_numbers)]
+n_library <- length(list_output)
 combined_df <- data.frame()
+###================LOOP FOR SIMULATION
 for (i in 1:n_library) {
-    ### ========== phylogeny Stat
-    medicc_phylogeny <- read.tree(file = paste0(R_newickPaths, list_medicc[i]))
-    new_tree <- drop.tip(medicc_phylogeny, "diploid")
-    medicc_stat <- statistics(sample_phylogeny = new_tree, sample_clone_assignment = None, list_targets = list_targets_library)
-    medicc_df <- as.data.frame(t(as.data.frame(medicc_stat)))
-    prefix <- paste(head(strsplit(list_medicc[i], "_")[[1]], -2), collapse = "_")
-    colnames(medicc_df) <- paste0(prefix, "_medicc")
-    if (i == 1) {
-        combined_df <- medicc_df
-    } else {
-        combined_df <- cbind(combined_df, medicc_df)
+    if(length(list.files(path = list_output[i])) == 0) {
+        next  
     }
-    # groundtruth_phylogeny <- read.newick(file = paste0(R_newickPaths, list_groundtruth[i]))
-    # groundtruth_stat <- statistics(sample_phylogeny = groundtruth_phylogeny, sample_clone_assignment=None, list_targets = list_targets_library)
-    # groundtruth_df <- as.data.frame(t(as.data.frame(groundtruth_stat)))
-    # colnames(groundtruth_df) <- paste0(strsplit(list_medicc[i], "_")[[1]][1], "_groundtruth")
-    # combined_df <- cbind(combined_df, groundtruth_df)
-
-    ### ========== clonal
-    file_id <- sapply(eventsFiles, function(x) grepl(paste0(prefix, "_"), x))
-    filename <- eventsFiles[file_id]
-    events_df <- read.table(paste0(R_outputPaths, filename), sep = "\t", header = TRUE)
-
+    newick_file <- list.files(path = list_output[i], pattern = "*.new$", full.names = TRUE)
+    medicc_phylogeny <- read.tree(file = newick_file)
+    new_tree <- drop.tip(medicc_phylogeny,'diploid')
+    groundtruth_newick <- paste0(medicc_Paths, '/Medicc_testing_',i,'/Medicc_testing_cell_phylogeny_1.newick')
+    groundtruth_phylogeny <- read.tree(file = groundtruth_newick)
+    ###========== clonal
+    events_file <- list.files(path = list_output[i], pattern = "*copynumber_events_df.tsv$", full.names = TRUE)
+    events_df <- read.table(events_file, sep="\t", header=TRUE)
     unique_ids <- unique(events_df$sample_id)
-    results <- data.frame(sample_id = character(0), Ncells = numeric(0))
-
+    results <- data.frame(sample_id = character(0), Ncells = numeric(0) )
     Ntips <- Ntip(new_tree)
     match_indices <- match(unique_ids, c(new_tree$tip.label, new_tree$node.label))
     for (id in unique_ids) {
         match_number <- match(id, c(new_tree$tip.label, new_tree$node.label))
-        descendents <- clade.members(match_number, new_tree, tip.labels = FALSE, include.nodes = FALSE)
+        descendents <- clade.members(match_number, new_tree, tip.labels = FALSE, include.nodes=FALSE)
         Ncells <- length(descendents)
         results <- rbind(results, data.frame(sample_id = id, Ncells = Ncells))
     }
     merged_data <- merge(events_df, results, by = "sample_id")
-    merged_data$clonal_flag <- merged_data$Ncells == Ntips
-    write.table(merged_data, file = paste0(R_resultPaths, prefix, "_clonal.tsv"), sep = "\t", row.names = FALSE)
+    event_count.clonal <- sum(merged_data$Ncells == Ntips)
+    event_count.subclonal <- sum(merged_data$Ncells[merged_data$Ncells != 1 & merged_data$Ncells != Ntips]) / Ntips
+    ###========== phylogeny Stat
+    medicc_stat <- statistics(sample_phylogeny = new_tree, sample_clone_assignment=None, list_targets = list_targets_library)
+    medicc_df <- as.data.frame(medicc_stat) 
+    medicc_df['data.sc.target.genome.variable.event_count.type.clonal.event.missegregation'] <- event_count.clonal
+    medicc_df['data.sc.target.genome.variable.event_count.type.subclonal.event.missegregation'] <- event_count.subclonal
+    medicc_df['TreeDistance'] <- TreeDistance(groundtruth_phylogeny , new_tree) 
+    medicc_df['Simulation'] <- paste0('Simulation', i)
+    medicc_df['log10_misseg_rate'] <- misseg[i,2]
+    if (i==1) {
+        combined_df <- medicc_df
+    } else {
+        combined_df <- rbind(combined_df, medicc_df)
+    }
+    if (i%%100 ==0) {
+        print(paste0('simulation', i, ' finished.'))
+    }
 }
-combined_df <- data.frame(Statistic = rownames(combined_df), combined_df)
-write.table(combined_df, file = paste0(R_resultPaths, "compare_stats_1026_prune.tsv"), sep = "\t", row.names = FALSE)
+print('Finished.')
+# # =====================================================PLOTTING
+plot_stats_corr(true_stat, combined_df)
+plot_RF(combined_df)
+end_time<-Sys.time()
+print(end_time)
