@@ -16,7 +16,6 @@ R_libPaths <- ""
 R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/R"
 medicc_Paths <- "/Users/lexie/Documents/DNA/scDNA/1128_Medicc_simulations"
 medicc_outputPath <- "/Users/lexie/Documents/DNA/scDNA/1128_medicc"
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
