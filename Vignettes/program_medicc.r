@@ -14,6 +14,9 @@
 R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/1128_Medicc_simulations"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/R"
+medicc_Paths <- "/Users/lexie/Documents/DNA/scDNA/1128_Medicc_simulations"
+medicc_outputPath <- "/Users/lexie/Documents/DNA/scDNA/1128_medicc"
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
 # R_workplace <- getwd()
 # R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
@@ -194,7 +197,6 @@ e <- new.env()
 e$libs <- .libPaths()
 clusterExport(cl, "libs", envir = e)
 clusterEvalQ(cl, .libPaths(libs))
-
 pbo <- pboptions(type = "txt")
 mediccinput <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
     R_inputplace <- paste0(R_workplace, "/Medicc_testing_", i)
@@ -212,10 +214,29 @@ mediccinput <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
     write.table(new_df, file = file_path, sep = "\t", quote = FALSE, row.names = FALSE)
 })
 stopCluster(cl)
-
-
-
-
+# =================================TRANSFERING GROUNDTRUTH MISSEG RATE TO ONE DF
+cat(paste0("Transferring ", n_simulations, " ground-truth missg rate to missg_rate_df...\n"))
+n_cores <- max(detectCores() - 1, 1)
+cl <- makePSOCKcluster(n_cores)
+clusterExport(cl, varlist = c("read.csv", "write.table", "R_workplace"))
+e <- new.env()
+e$libs <- .libPaths()
+clusterExport(cl, "libs", envir = e)
+clusterEvalQ(cl, .libPaths(libs))
+pbo <- pboptions(type = "txt")
+misseg_rates <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
+    R_inputplace <- paste0(R_workplace, "/Medicc_testing_", i)
+    data <- read.csv(paste0(R_inputplace, "/Medicc_testing_ground_truth_1.csv"))
+    misseg_rate <- data$Value[which(data$Parameter == "log10_misseg_rate")]
+    return(misseg_rate)
+})
+stopCluster(cl)
+misseg_rate_df <- data.frame(
+    Simulation_id = paste0("Simulation_", 1:n_simulations),
+    log10_misseg_rate = unlist(misseg_rates)
+)
+# Write the dataframe to a CSV file
+write.csv(misseg_rate_df, file = paste0(R_workplace, "/misseg_rate_df.csv"), row.names = FALSE)
 # =======================================COMPUTE GROUND-TRUTH STATISTICS
 # ---Get single-cell statistics & CN profiles
 # ---Get statistics & clonal CN profiles for each single-cell sample
@@ -233,11 +254,9 @@ e$libs <- .libPaths()
 clusterExport(cl, "libs", envir = e)
 clusterEvalQ(cl, .libPaths(libs))
 pbo <- pboptions(type = "txt")
-
 ls_cn_sc_ground_truth <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
     R_inputplace <- paste0(R_workplace, "/Medicc_testing_", i)
     load(paste0(R_inputplace, "/", model_name, "_simulation_1", ".rda"))
-
     simulations <- list()
     simulations[[1]] <- simulation
     ls_each_sim <- list()
@@ -318,65 +337,63 @@ list_targets_library <- c(
     "data=sc;target=genome;statistic=var;variable=B2",
     "data=sc;target=genome;statistic=var;variable=maxDepth"
 )
-start_time<-Sys.time()
+start_time <- Sys.time()
 print(start_time)
-medicc_Paths <- '/Users/lexie/Documents/DNA/scDNA/1128_Medicc_simulations'
-setwd(medicc_Paths) 
-true_stat <- read.csv('Statistics_simulation.csv',row.names = 1)
-misseg <- read.csv('misseg_rate_df.csv', row.names=1)
-medicc_outputPath <- '/Users/lexie/Documents/DNA/scDNA/1128_medicc'
-
-list_output <- list.dirs(path=medicc_outputPath, full.names = TRUE, recursive = FALSE)
+##########
+setwd(medicc_Paths)
+true_stat <- read.csv("Statistics_simulation.csv", row.names = 1)
+misseg <- read.csv("misseg_rate_df.csv", row.names = 1)
+list_output <- list.dirs(path = medicc_outputPath, full.names = TRUE, recursive = FALSE)
 dir_numbers <- as.numeric(gsub("^.*_(\\d+)$", "\\1", basename(list_output)))
 list_output <- list_output[order(dir_numbers)]
 n_library <- length(list_output)
 combined_df <- data.frame()
-###================LOOP FOR SIMULATION
+### ================LOOP FOR SIMULATION
 for (i in 1:n_library) {
-    if(length(list.files(path = list_output[i])) == 0) {
-        next  
+    if (length(list.files(path = list_output[i])) == 0) {
+        next
     }
     newick_file <- list.files(path = list_output[i], pattern = "*.new$", full.names = TRUE)
     medicc_phylogeny <- read.tree(file = newick_file)
-    new_tree <- drop.tip(medicc_phylogeny,'diploid')
-    groundtruth_newick <- paste0(medicc_Paths, '/Medicc_testing_',i,'/Medicc_testing_cell_phylogeny_1.newick')
+    new_tree <- drop.tip(medicc_phylogeny, "diploid")
+    groundtruth_newick <- paste0(medicc_Paths, "/Medicc_testing_", i, "/Medicc_testing_cell_phylogeny_1.newick")
     groundtruth_phylogeny <- read.tree(file = groundtruth_newick)
-    ###========== clonal
+    ### ========== clonal
     events_file <- list.files(path = list_output[i], pattern = "*copynumber_events_df.tsv$", full.names = TRUE)
-    events_df <- read.table(events_file, sep="\t", header=TRUE)
+    events_df <- read.table(events_file, sep = "\t", header = TRUE)
     unique_ids <- unique(events_df$sample_id)
-    results <- data.frame(sample_id = character(0), Ncells = numeric(0) )
+    results <- data.frame(sample_id = character(0), Ncells = numeric(0))
     Ntips <- Ntip(new_tree)
     match_indices <- match(unique_ids, c(new_tree$tip.label, new_tree$node.label))
     for (id in unique_ids) {
         match_number <- match(id, c(new_tree$tip.label, new_tree$node.label))
-        descendents <- clade.members(match_number, new_tree, tip.labels = FALSE, include.nodes=FALSE)
+        descendents <- clade.members(match_number, new_tree, tip.labels = FALSE, include.nodes = FALSE)
         Ncells <- length(descendents)
         results <- rbind(results, data.frame(sample_id = id, Ncells = Ncells))
     }
     merged_data <- merge(events_df, results, by = "sample_id")
     event_count.clonal <- sum(merged_data$Ncells == Ntips)
     event_count.subclonal <- sum(merged_data$Ncells[merged_data$Ncells != 1 & merged_data$Ncells != Ntips]) / Ntips
-    ###========== phylogeny Stat
-    medicc_stat <- statistics(sample_phylogeny = new_tree, sample_clone_assignment=None, list_targets = list_targets_library)
-    medicc_df <- as.data.frame(medicc_stat) 
-    medicc_df['data.sc.target.genome.variable.event_count.type.clonal.event.missegregation'] <- event_count.clonal
-    medicc_df['data.sc.target.genome.variable.event_count.type.subclonal.event.missegregation'] <- event_count.subclonal
-    medicc_df['TreeDistance'] <- TreeDistance(groundtruth_phylogeny , new_tree) 
-    medicc_df['Simulation'] <- paste0('Simulation', i)
-    medicc_df['log10_misseg_rate'] <- misseg[i,2]
-    if (i==1) {
+    ### ========== phylogeny Stat
+    medicc_stat <- statistics(sample_phylogeny = new_tree, sample_clone_assignment = None, list_targets = list_targets_library)
+    medicc_df <- as.data.frame(medicc_stat)
+    medicc_df["data.sc.target.genome.variable.event_count.type.clonal.event.missegregation"] <- event_count.clonal
+    medicc_df["data.sc.target.genome.variable.event_count.type.subclonal.event.missegregation"] <- event_count.subclonal
+    medicc_df["TreeDistance"] <- TreeDistance(groundtruth_phylogeny, new_tree)
+    medicc_df["Simulation"] <- paste0("Simulation", i)
+    medicc_df["log10_misseg_rate"] <- misseg[i, 2]
+    if (i == 1) {
         combined_df <- medicc_df
     } else {
         combined_df <- rbind(combined_df, medicc_df)
     }
-    if (i%%100 ==0) {
-        print(paste0('simulation', i, ' finished.'))
+    if (i %% 100 == 0) {
+        print(paste0("simulation", i, " finished."))
     }
 }
-print('Finished.')
+print("Finished.")
 # # =====================================================PLOTTING
 plot_stats_corr(true_stat, combined_df)
 plot_RF(combined_df)
-end_time<-Sys.time()
+end_time <- Sys.time()
 print(end_time)
