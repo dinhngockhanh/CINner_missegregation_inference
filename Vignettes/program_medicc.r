@@ -213,7 +213,7 @@ mediccinput <- pblapply(cl = cl, X = 1:n_simulations, FUN = function(i) {
     write.table(new_df, file = file_path, sep = "\t", quote = FALSE, row.names = FALSE)
 })
 stopCluster(cl)
-# =================================TRANSFERING GROUNDTRUTH MISSEG RATE TO ONE DF
+# ==========================TRANSFERING GROUNDTRUTH MISSEG RATE TO ONE DF
 cat(paste0("Transferring ", n_simulations, " ground-truth missg rate to missg_rate_df...\n"))
 n_cores <- max(detectCores() - 1, 1)
 cl <- makePSOCKcluster(n_cores)
@@ -309,7 +309,33 @@ for (i in 2:n_simulations) {
 }
 stats_comb <- cbind(simulation = simulation_labels, stats_comb)
 write.csv(stats_comb, "Statistics_simulation.csv")
-# =============================================COMPUTE MEDICC STATISTICS
+# ====================================================RUN MEDICC COMMANDS
+conda_init_script <- "/Users/xiangzijin/opt/anaconda3/etc/profile.d/conda.sh"
+env_name <- "medicc_env"
+input_file <- "/Users/xiangzijin/Downloads/medicc_workspace/Simulation1.tsv"
+output_folder <- "/Users/xiangzijin/Downloads/medicc_workspace"
+# ---Medicc2 command
+medicc2_command <- paste(
+    "medicc2",
+    input_file,
+    output_folder,
+    "--events --plot none"
+)
+# ---Create a temporary script
+temp_script <- tempfile(fileext = ".sh")
+# ---Write the temporary script
+writeLines(c(
+    paste("source", conda_init_script),
+    paste("conda activate", env_name),
+    medicc2_command
+), temp_script)
+# ---Give the script permission
+Sys.chmod(temp_script, "0755")
+# ---Run the script
+system2("bash", c("-c", temp_script))
+# ---Clean the script
+unlink(temp_script)
+# ==============================================COMPUTE MEDICC STATISTICS
 library(ape)
 library(caper)
 library(TreeDist)
