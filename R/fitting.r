@@ -412,6 +412,7 @@ sample_distance <- function(from_clonal_CN_populations,
             cost_matrix[i, j] <- cn_distance(from_CN_profile, to_CN_profile, metric)
         }
     }
+    cost_matrix <- round(cost_matrix, 5)
     #   Normalize clonal populations
     from_clonal_CN_populations <- from_clonal_CN_populations / sum(from_clonal_CN_populations)
     to_clonal_CN_populations <- to_clonal_CN_populations / sum(to_clonal_CN_populations)
@@ -1542,7 +1543,7 @@ statistics <- function(sample_phylogeny, sample_clone_assignment, list_targets) 
         stat_target <- strsplit(stat_details[grep("target=", stat_details)], "=")[[1]][2]
         stat_ID <- paste(stat_details[!grepl("statistic=", stat_details)], collapse = ";")
         stat_variable <- strsplit(stat_details[grep("variable=", stat_details)], "=")[[1]][2]
-        if (stat_variable == "shannon") {           
+        if (stat_variable == "shannon") {
             #-------------------------------------Collect clonal frequency table
             #   Create clonal assignment table and convert to list
             sample_frequency_table <- summarise(group_by(sample_clone_assignment, clone_id), cell_number = n_distinct(cell_id))
