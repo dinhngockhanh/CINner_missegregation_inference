@@ -1,0 +1,17 @@
+---
+title:"Inference of Chromosome Selection Parameters and Missegregation Rate in Cancer from DNA-Sequencing Data"
+author: "Zijin Xiang, Zhihan Liu, Khanh N. Dinh"
+output: html_document
+---
+
+# Introduction
+
+This document aims to explore the inference of selection and missegregation parameters in cancer from DNA-sequencing data.
+
+# Data Preparation
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
