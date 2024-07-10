@@ -1,45 +1,8 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/simulation/1124_medicc"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-# R_workplace <- "/Users/lexie/Documents/DNA/DLPdata/vignettes"
-# R_resultPaths <- "/Users/lexie/Documents/DNA/DLPdata/Results/"
-# R_outputPaths <- "/Users/lexie/Library/CloudStorage/GoogleDrive-zl3213@columbia.edu/.shortcut-targets-by-id/10rccHeZeICEtbkkvEtKGaMZdk7yOe5PB/2023-10-26.Ground truth for Zhihan/output/"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
-R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/1128_Medicc_simulations"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/R"
-medicc_Paths <- "/Users/lexie/Documents/DNA/scDNA/1128_Medicc_simulations"
-medicc_outputPath <- "/Users/lexie/Documents/DNA/scDNA/1128_medicc"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
-# =======================================SET UP FOLDER PATHS & LIBRARIES
-.libPaths(R_libPaths)
+library(CINner)
+library(CINner_missegregation_inference)
 library(readxl)
-library(CancerSimulator)
 library(parallel)
 library(pbapply)
-setwd(R_libPaths_extra)
-files_sources <- list.files(pattern = "*.r$")
-sapply(files_sources, source)
-
-# setwd("/Users/dinhngockhanh/CancerSimulator/R")
-# files_sources <- list.files(pattern = "*.r$")
-# sapply(files_sources, source)
-
-setwd(R_workplace)
-# devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
 # ==================================================IMPORTANT PARAMETERS
 #   Number of simulations
 n_simulations <- 1200

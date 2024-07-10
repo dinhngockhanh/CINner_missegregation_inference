@@ -1,34 +1,8 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-R_workplace <- getwd()
-R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-R_libPaths_extra <- "/burg/iicd/users/zx2406/R"
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/simulation/Sensitivity_plotting"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/xiangzijin/DLPfit/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh&Zijin - Macmini
-# R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/experiment"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/DLPfit/testR"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/knd2127/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/knd2127/test/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/DLPfit/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/DLPfit/R"
-# =======================================SET UP FOLDER PATHS & LIBRARIES
-.libPaths(R_libPaths)
+library(CINner)
+library(CINner_missegregation_inference)
 library(readxl)
-library(CancerSimulator)
 library(parallel)
 library(pbapply)
-setwd(R_libPaths_extra)
-files_sources <- list.files(pattern = "*.r$")
-sapply(files_sources, source)
-setwd(R_workplace)
-# devtools::install_github("dinhngockhanh/CancerSimulator", force = TRUE)
 # ==================================================IMPORTANT PARAMETERS
 #   Number of single-cell samples in ground-truth data & ABC simulations
 N_data_sc <- 50
