@@ -11,7 +11,7 @@ devtools::install_github("dinhngockhanh/CINner_missegregation_inference")
 
 ## Vignettes
 
-The file `vignettes/Inference for selection and missegregation parameters.r` 
+The file `vignettes/Inference for selection and missegregation parameters.Rmd` reproduces results from our inference method for selection parameters and missegregation rate from a mixture of bulk and single-cell DNA sequencing data (Results sections 2 & 3, [2]).
 
 ## References
 1.  Dinh KN, Vázquez-García I, Chan A, Malhotra R, Weiner A, McPherson AW, Tavaré S. CINner: modeling and simulation of chromosomal instability in cancer at single-cell resolution. bioRxiv. 2024.
