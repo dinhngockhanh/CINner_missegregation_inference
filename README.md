@@ -12,6 +12,7 @@ devtools::install_github("dinhngockhanh/CINner_missegregation_inference")
 ##  Vignettes
 
 The file `vignettes/Inference for selection and missegregation parameters.r` reproduces results from our inference method for selection parameters and missegregation rate from a mixture of bulk and single-cell DNA sequencing data (Results sections 2 & 3, [2]).
+![Image](Figure1.png)
 
 The files `vignettes/Sensitivity of bulk DNA sample count.r` and `vignettes/Sensitivity of single-cell DNA sample count.r` reproduce our sensitivity studies to analyze the performance of the inference method with respect to the number of bulk and single-cell samples, respectively (Results section 4, [2]).
 
