@@ -1,5 +1,4 @@
 library(CINner)
-library(CINner_missegregation_inference)
 library(readxl)
 library(parallel)
 library(pbapply)
