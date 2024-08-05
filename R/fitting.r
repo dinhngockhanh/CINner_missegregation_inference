@@ -48,6 +48,7 @@ get_arm_CN_profiles <- function(clonal_CN_profiles) {
     return(clonal_CN_profiles_arm)
 }
 
+#' @export
 get_each_clonal_CN_profiles <- function(simulations,
                                         arm_level = FALSE,
                                         cn_table = NULL,

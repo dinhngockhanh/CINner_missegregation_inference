@@ -2,12 +2,13 @@
 
 ##  Installation
 
-The CINner simulator [1] and this repository for CINner-based inference of chromosome selection parameters and missegregation rate [2] can be installed with
+The CINner simulator [1] can be installed with
 
 ```R
 devtools::install_github("dinhngockhanh/CINner")
-devtools::install_github("dinhngockhanh/CINner_missegregation_inference")
 ```
+
+To perform CINner-based inference of chromosome selection parameters and missegregation rate in [2], the functions in the `R` folder must be loaded, then functions in the `vignettes` folder (detailed below) can be performed.
 
 ##  Result vignettes
 
